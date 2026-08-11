@@ -1,0 +1,36 @@
+# Linara Mobile — Pull Request Verification & Compile Safety Check
+# Automatically executes Static Application Security Testing (SAST) and compiler validations.
+
+name: Mobile PR Verification
+
+on:
+  pull_request:
+    branches:
+      - main
+      - development
+
+jobs:
+  validate:
+    runs-on: ubuntu-latest
+    steps:
+      # 1. Fetch Repository Source Code
+      - name: Checkout Code
+        uses: actions/checkout@v4
+
+      # 2. Setup High-Performance Runtime Node & Bun
+      - name: Setup Bun Runtime
+        uses: oven-sh/setup-bun@v2
+        with:
+          bun-version: latest
+
+      # 3. Cache & Install Project Dependencies
+      - name: Install Dependencies
+        run: bun install --frozen-lockfile
+
+      # 4. Execute Static Application Security Testing (SAST) Checks
+      - name: Static Analysis (SAST Linter)
+        run: bun run lint
+
+      # 5. Execute TypeScript Compiler Validity Check
+      - name: TypeScript Validity Check
+        run: bun run typecheck

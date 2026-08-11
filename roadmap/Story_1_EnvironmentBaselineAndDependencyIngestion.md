@@ -1,20 +1,25 @@
 # Story 1: Environment Baseline & Dependency Ingestion
 
 ## Objective
+
 Bootstrap the Expo native TypeScript application, audit lockfiles, configure robust `.gitignore` rules to avoid committing cache bundles, map path aliases, and verify clean local compilation of base dependencies. This story must be completed before any application logic is written.
 
 ## Context References
+
 - **PRD Specs:** [`../LINARA_MOBILE/plan.md`](../LINARA_MOBILE/plan.md:Story 1)
 - **Technical Architecture:** [`../LINARA_MOBILE/architecture.md`](../LINARA_MOBILE/architecture.md:Section 11)
 - **Existing Asset References:** [`package.json`](package.json) (use as dependency coordinate guide).
 
 ## Explicit Dependencies
+
 - None (Initial story of Phase 1).
 
 ## Explicit Inputs
+
 - **File System:** Existing environment parameters layout from [`.env.example`](.env.example).
 
 ## Step-by-Step Implementation Instructions
+
 1. Navigate to the `LINARA_MOBILE` workspace parent. Initialize the React Native Expo app utilizing Bun:
    ```bash
    bun create expo-app LINARA_MOBILE --template expo-template-blank-typescript
@@ -36,16 +41,19 @@ Bootstrap the Expo native TypeScript application, audit lockfiles, configure rob
 6. Document variables inside the template file `.env.example`.
 
 ## Expected Output
+
 - A compile-ready, empty Expo project directory with fully audited dependencies.
 - A functional `.gitignore` file that screens binary logs.
 - Path aliases configured inside `tsconfig.json` and a `.env.example` template mapping regional parameters.
 
 ## Acceptance Criteria
+
 - Running `bun install` resolves all dependencies with zero unresolved packages or conflicting lockfiles.
 - Running `bun run start` successfully boots the Metro bundler.
 - Compiles successfully on local simulated devices with zero warnings or absolute path resolution failures.
 
 ## Definition of Done
+
 - Metro bundler loads the empty template.
 - All configurations match strict TypeScript parameters.
 - Git excludes cache packages.

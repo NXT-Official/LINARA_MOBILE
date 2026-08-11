@@ -9,11 +9,13 @@ This document defines the complete technical architecture, data contracts, state
 **Linara Mobile** is the dedicated native client for the household staff ("invited users") in the Philippines. It models domestic workflows under the metaphor of a "restaurant management system for the home" where tasks are represented as tickets, and household helpers are assigned to specific operational "stations" (Yaya, Cook, Laundry, Driver, House).
 
 ### 1.1 Core Objectives
+
 - **Dignity by Design:** The helper is a first-class user who claims and owns their account. Their work history, completed SOP records, and payslips remain their portable property.
 - **Offline Resilience:** Philippine networks suffer from high latency and frequent disconnects. The mobile client acts as a reliable, standalone queue that records status mutations and offline photos, syncing them sequentially when network status returns.
 - **Low-Cognition Ergonomics:** Features high-contrast typography, large touch-targets, and deep support for Taglish phrasing to ensure ease of use for non-technical users.
 
 ### 1.2 Technology Stack
+
 - **Native Runtime:** React Native inside Expo SDK 52+ (managed workflow via EAS).
 - **Navigation Shell:** Expo Router (file-based layout under `app/`).
 - **Client Cache:** TanStack Query v5 (React Query) utilizing a localized client provider.
@@ -76,6 +78,7 @@ The system coordinates mobile runtime states with the central Supabase tables, e
 The mobile app employs Expo Router conventions to split authentication contexts from authenticated bottom tabs.
 
 ### 3.1 Directory Structure
+
 ```text
 LINARA_MOBILE/
 ├── app/
@@ -106,6 +109,7 @@ LINARA_MOBILE/
 ```
 
 ### 3.2 State Management & Client-Side Cache
+
 1. **TanStack Query Cache:** Represents the single source of truth for remote tables (`tickets`, `helper_profiles`, `pantry_items`, `vales`). Leverages the Supabase JS client for fetching data and uses Query Invalidation to trigger reactive updates.
 2. **`GroceryCtx` (React Context):** Synchronizes the active grocery checklist locally across views, converting completed purchases into restocked pantry inventory items.
 3. **SQLite Client Queue:** The persistent offline log. All status changes made while offline are saved to SQLite. Once connection is restored, a hook automatically processes the queue in sequential chronological order.
@@ -131,10 +135,12 @@ LINARA_MOBILE/
 ## 5. External Integration Designs
 
 ### 5.1 Supabase Object Storage Media Pipeline
+
 - **Evidence uploads:** Photo evidence and paper receipt captures utilize `expo-image-picker`. Images are resized client-side to a maximum width of 1200px and 80% compression to reduce mobile data usage.
 - **Signed Storage Pipe:** The app generates temporary pre-signed S3 URLs via Supabase Storage client nodes to write compressed JPEGs directly into the private `household-evidence` storage bucket with a strict 15-minute expiry, keeping household records private.
 
 ### 5.2 HitPay / Xendit Fintech Payout Pipeline
+
 - **Ledger Ingestion:** Payout confirmations triggered on the web dashboard (via HitPay or Xendit webhook notifications) map directly to active rows in `public.ledger_entries`.
 - **Transparency Display:** The mobile client queries these ledger updates to generate a clear, unified financial breakdown in the `Pay` tab, mapping base wages, SSS/PhilHealth/Pag-IBIG statutory deductions, approved vales, and premium pay balances.
 
@@ -143,6 +149,7 @@ LINARA_MOBILE/
 ## 6. Step-by-Step Data Flow
 
 ### 6.1 Onboarding handshake and flagging terms
+
 ```
 [Helper App]                   [Supabase / DB]                  [Admin Web]
       │                               │                               │
@@ -160,6 +167,7 @@ LINARA_MOBILE/
 ```
 
 ### 6.2 Offline-First Ticket Completion
+
 ```
 [Helper App (Offline)]           [SQLite Queue]               [Supabase Storage/DB]
           │                             │                              │
@@ -183,6 +191,7 @@ LINARA_MOBILE/
 The mobile client consumes type-safe server queries and database updates using direct Supabase Client interfaces, maintaining full compliance with the core API endpoints of the central architecture:
 
 ### 7.1 Invitation Audit & Claiming
+
 - **Verify Invitation terms:**
   - `GET /api/helpers/claim/verify?code=LN98A2` (Read-only, pre-onboarding terms extraction).
 - **Flag terms mismatch:**
@@ -191,12 +200,14 @@ The mobile client consumes type-safe server queries and database updates using d
   - `POST /api/helpers/claim` (Registers email and locks account credentials).
 
 ### 7.2 Ticket Operations
+
 - **Update ticket status:**
   - `PATCH /api/tickets/:id/status` (Sets status to `todo`, `in_progress`, `done`, or `blocked`).
 - **Complete task with evidence:**
   - `POST /api/tickets/:id/complete` (Signed multipart media post containing compressed image URL and optional notes).
 
 ### 7.3 Ephemeral Messaging
+
 - **Acknowledge Quick Uto:**
   - `POST /api/utos/:id/ack` (Updates target `ack_state` to `done`).
 
@@ -281,19 +292,28 @@ CREATE TABLE public.vales (
 ## 9. State and Context Handling
 
 ### 9.1 Reactive Realtime Synchronizations
+
 The mobile client instantiates a single persistent connection to Supabase Realtime Channels on startup:
+
 ```typescript
 const ticketSubscription = supabase
-  .channel('public:tickets')
-  .on('postgres_changes', { event: '*', filter: `helper_id=eq.${myHelperId}`, schema: 'public', table: 'tickets' }, (payload) => {
-    queryClient.invalidateQueries({ queryKey: ['tickets'] });
-  })
+  .channel("public:tickets")
+  .on(
+    "postgres_changes",
+    { event: "*", filter: `helper_id=eq.${myHelperId}`, schema: "public", table: "tickets" },
+    (payload) => {
+      queryClient.invalidateQueries({ queryKey: ["tickets"] });
+    },
+  )
   .subscribe();
 ```
+
 This channel forces TanStack Query to invalidate cache lines when tasks are assigned, modified, or completed, ensuring real-time UI synchronization without requiring manual refresh gestures.
 
 ### 9.2 Local Grocery Checklist State Context
+
 `GroceryCtx` handles local purchase lists:
+
 - The context queries `public.grocery_items` where `bought = false`.
 - The checklist calculates remaining petty-cash allocations: `remainingBudget = initialBudget - sum(actual_cost)`.
 - Compressing receipt photos runs as an inline promise before writing updates back to the shared storage bucket.
@@ -302,7 +322,7 @@ This channel forces TanStack Query to invalidate cache lines when tasks are assi
 
 ## 10. Error Handling Strategy
 
-- **Token Expiry Handlers:** Intercepts outgoing Supabase database requests. If session authentication fails due to expired JWT credentials, it triggers the GoTrue token refresh protocol. If refresh fails, it clears local state and displays a Taglish fallback modal: *"Nawalan ng session. Pakisuyong mag-login muli."*
+- **Token Expiry Handlers:** Intercepts outgoing Supabase database requests. If session authentication fails due to expired JWT credentials, it triggers the GoTrue token refresh protocol. If refresh fails, it clears local state and displays a Taglish fallback modal: _"Nawalan ng session. Pakisuyong mag-login muli."_
 - **Offline Upload Restarts:** If image uploads fail mid-task because of spotty coverage, the task status modification is safely retained in the local SQLite table. The sync controller automatically retries the payload sequentially when internet reconnects.
 - **Empty / Incomplete Responses:** If a network call fails to fetch standard SOP images, the client falls back to cached standard vector icons or displays simplified text checklists, preventing app crashes.
 
@@ -311,6 +331,7 @@ This channel forces TanStack Query to invalidate cache lines when tasks are assi
 ## 11. Local Deployment Model
 
 ### 11.1 Local Environment Variables (`.env`)
+
 Create a `.env` file in the root of the `LINARA_MOBILE` folder:
 
 ```env
@@ -323,6 +344,7 @@ REGIONAL_MINIMUM_WAGE=6000.00
 ```
 
 ### 11.2 Development Setup & Verification
+
 1. **Configure Environment:** Install Node.js (v20+), Bun, and the Expo Go client app on your physical test device.
 2. **Install Dependencies:**
    ```bash

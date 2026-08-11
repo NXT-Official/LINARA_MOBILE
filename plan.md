@@ -3,6 +3,7 @@
 This document defines the complete product specifications, technical architecture, user flows, and step-by-step implementation roadmap for **Linara Mobile**, a React Native (Expo) application designed specifically for household staff in the Philippines (helpers, yayas, cooks, drivers, all-around).
 
 By separating the user-facing roles, we establish an **Admin Web App + Mobile Native App** ecosystem:
+
 - **Admin Web App (retaining the `LINARA` workspace):** A React/TanStack Start web dashboard for on-site family managers and Remote Admins (OFWs).
 - **Mobile Native App (the `LINARA_MOBILE` workspace):** A lightweight, high-contrast, offline-first React Native (Expo) app for invited and claimed household staff ("invited users").
 
@@ -13,8 +14,9 @@ Both applications access and synchronize state through the same **Supabase Datab
 ## 1. High-Level Vision & Filipino-First Realities
 
 The informal domestic work sector in the Philippines operates primarily on word-of-mouth and manual payouts (cash, GCash, Maya). **Linara Mobile** ensures **Dignity by Design**:
+
 - **Portable Verified History:** Complete task completions, on-time records, and digital payslips belong strictly to the helper’s self-claimed account, allowing them to carry their verified work history to future households.
-- **Transparency in Terms:** The helper reviews terms of work (base wage, shift start/end, daily rest breaks, and weekly rest days) *before* claiming their account, flagging any discrepancies directly back to the employer's dashboard.
+- **Transparency in Terms:** The helper reviews terms of work (base wage, shift start/end, daily rest breaks, and weekly rest days) _before_ claiming their account, flagging any discrepancies directly back to the employer's dashboard.
 - **Batas Kasambahay Compliance:** Automates regional minimum wage compliance checks (NCR: ₱6,000/mo) and statutory splits (SSS, PhilHealth, Pag-IBIG) while accruing overtime/after-hours work as Rest Owed (Time-Off in Lieu) or premium rates (1.3x multiplier) on the pay ledger.
 - **Domestic Philippine Fintech:** Fully supports local payment aggregator APIs like **HitPay** (Primary Choice, support for GCash, Maya, GrabPay, and banks) and **Xendit** (Alternative) to enable instant salary disbursements and vale (cash advance) payouts.
 
@@ -69,17 +71,20 @@ To prevent employer account-hijacking, onboarding is a secure digital handshake:
 Once authenticated, the app renders a bottom-tab navigation layout:
 
 #### Tab 1: Today Page (`(app)/today.tsx`)
-- **Dignity Header:** Displays a Taglish greeting (*"Magandang umaga, Ate Rosa."*), current shift indicators, and a countdown to the upcoming weekly rest day.
-- **Active Focus Card:** Renders the single high-priority task. Integrates **House Standards (SOPs)** as interactive image/text slides (e.g., *"Bottle: 4oz warm water, 2 level scoops"*).
-- **Ephemeral Quick Utos Feed:** Lightweight floating banners for momentary small asks (e.g., *"+ Rice"*, *"Come to living room"*). Features a single `"Got It"` or `"Done"` tap action that updates the web dashboard in real time.
+
+- **Dignity Header:** Displays a Taglish greeting (_"Magandang umaga, Ate Rosa."_), current shift indicators, and a countdown to the upcoming weekly rest day.
+- **Active Focus Card:** Renders the single high-priority task. Integrates **House Standards (SOPs)** as interactive image/text slides (e.g., _"Bottle: 4oz warm water, 2 level scoops"_).
+- **Ephemeral Quick Utos Feed:** Lightweight floating banners for momentary small asks (e.g., _"+ Rice"_, _"Come to living room"_). Features a single `"Got It"` or `"Done"` tap action that updates the web dashboard in real time.
 - **Private Notes Scratchpad:** Private text area + microphone audio memo tool completely isolated behind Supabase RLS (Row-Level Security). Managers cannot view or search these notes. Features a `"Promote to Board"` trigger to convert a personal reminder into a public task card.
 
 #### Tab 2: Pantry & Palengke (`(app)/pantry.tsx`)
+
 - **Stock Indicators:** Replicates pantry listings (refer to [`src/features/pantry/pantry.constants.ts`](../LINARA/src/features/pantry/pantry.constants.ts)), showing items running below par thresholds.
 - **Palengke Shopping Checklist:** Synchronizes with `GroceryCtx` to display the active marketing list, required units, and the allocated petty-cash budget.
 - **Expense Receipt Slot:** The helper enters actual item costs and attaches a picture of the paper receipt before completing the Palengke Run task.
 
 #### Tab 3: My Pay (`(app)/pay.tsx`)
+
 - **Digital Payslips:** Transparent semi-monthly/monthly ledger history containing base wages, statutory contribution breakdowns (SSS, PhilHealth, Pag-IBIG), and HitPay payment confirmations.
 - **Vale Ledger:** Lists pending, approved, or declined salary advance requests with simple form inputs to request new vales.
 - **Rest Owed Counter:** Live ledger total showing accumulated after-hours rest hours/minutes (Time-Off in Lieu) accrued from working off-shift or during rest days.
@@ -144,6 +149,7 @@ The mobile app reads and writes to the centralized database. RLS policies are ap
 This 10-story roadmap coordinates the bootstrapping, layout development, feature migration, offline capability, and final deployment of **Linara Mobile**.
 
 ### Story 1: Project Bootstrapping & Core Native Ingestion
+
 - **Objective:** Initialize the Expo project, configure directory extraction rules, and install dependencies.
 - **Tasks:**
   1. Boot React Native Expo using Bun: `bun create expo-app LINARA_MOBILE -t expo-template-blank-typescript`.
@@ -153,6 +159,7 @@ This 10-story roadmap coordinates the bootstrapping, layout development, feature
 - **Definition of Done:** Empty Expo project boots successfully on both iOS Simulator and Android Emulator with styling and TS working.
 
 ### Story 2: Handshake & Claim Screens Implementation
+
 - **Objective:** Re-create the pre-onboarding, flagging, and registration screens in React Native.
 - **Tasks:**
   1. Build `(auth)/welcome.tsx` containing the 6-digit invitation entry field.
@@ -162,6 +169,7 @@ This 10-story roadmap coordinates the bootstrapping, layout development, feature
 - **Definition of Done:** A tester can input a valid invite code from the database, review terms, flag incorrect data, or successfully input credentials and claim the account.
 
 ### Story 3: Worker's Station Layout & Tab Navigation
+
 - **Objective:** Set up the main navigation shell, bottom tabs, and the Dignity Header.
 - **Tasks:**
   1. Build the root layout `(app)/_layout.tsx` featuring standard bottom tabs (Today, Pantry, Pay).
@@ -170,6 +178,7 @@ This 10-story roadmap coordinates the bootstrapping, layout development, feature
 - **Definition of Done:** Authenticated users land in the Today tab and can toggle their reachability status smoothly with visible shift information.
 
 ### Story 4: Active Task Detail & Standard SOP Slides
+
 - **Objective:** Create the main interactive task focus card that embeds house standards.
 - **Tasks:**
   1. Fetch active tasks using TanStack Query, isolating tickets assigned to the active helper ID.
@@ -179,6 +188,7 @@ This 10-story roadmap coordinates the bootstrapping, layout development, feature
 - **Definition of Done:** The Today page displays the next upcoming task. Swiping through SOP guidelines works, and tapping Start or Done updates the database status field.
 
 ### Story 5: Ephemeral Quick Utos Live Feed
+
 - **Objective:** Set up real-time floating banners for short-order tasks.
 - **Tasks:**
   1. Implement a WebSocket channel listener connecting to `public.quick_utos` for the active helper.
@@ -187,6 +197,7 @@ This 10-story roadmap coordinates the bootstrapping, layout development, feature
 - **Definition of Done:** A task sent from the manager's web console triggers an immediate floating banner on the mobile screen, which vanishes instantly upon acknowledgment.
 
 ### Story 6: Private Notes Scratchpad
+
 - **Objective:** Create the private scratchpad notepad secure behind RLS.
 - **Tasks:**
   1. Implement a private text editor inside `(app)/today.tsx` writing rows to `public.helper_notes`.
@@ -195,6 +206,7 @@ This 10-story roadmap coordinates the bootstrapping, layout development, feature
 - **Definition of Done:** Private text notes save correctly to the database. Tapping promote turns the private note into an active household task on the manager's board.
 
 ### Story 7: My Pay Tab & statutory calculation displays
+
 - **Objective:** Recreate the financial ledger, vale advances, and compliance tables on mobile.
 - **Tasks:**
   1. Build the ledger viewer in `(app)/pay.tsx` showing accrued base wages, contribution tables, and payment statuses.
@@ -203,6 +215,7 @@ This 10-story roadmap coordinates the bootstrapping, layout development, feature
 - **Definition of Done:** Payslips, active vales, and rest hours display accurate information mapped directly from backend tables.
 
 ### Story 8: AsyncStorage/SQLite Offline-First Sync Queue
+
 - **Objective:** Enable robust offline-first capabilities for ticket completion and expense uploads.
 - **Tasks:**
   1. Create a SQLite or AsyncStorage sync queue table storing actions, timestamps, and payloads.
@@ -212,6 +225,7 @@ This 10-story roadmap coordinates the bootstrapping, layout development, feature
 - **Definition of Done:** A tester can complete tasks and upload receipts while in airplane mode. Re-connecting to the internet syncs all data and images sequentially to Supabase storage.
 
 ### Story 9: Supabase Realtime Channels Integration
+
 - **Objective:** Establish automatic sync of boards, schedules, and pay details.
 - **Tasks:**
   1. Initialize Supabase Realtime channels in `(app)/_layout.tsx` targeting updates in `public.tickets`, `public.helper_profiles`, and `public.ledger_entries`.
@@ -219,6 +233,7 @@ This 10-story roadmap coordinates the bootstrapping, layout development, feature
 - **Definition of Done:** Changes made on the Manager's Web console (e.g., rescheduling an appointment, approving a vale) reflect on the mobile screen instantly without manually pulling to refresh.
 
 ### Story 10: Performance Optimization, Polish, and Expo Pre-flight
+
 - **Objective:** Apply brand style design tokens, layout transitions, and build production packages.
 - **Tasks:**
   1. Configure custom brand typography (Fraunces and Nunito Sans) on mobile.

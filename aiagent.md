@@ -20,7 +20,8 @@ On the mobile client, AI is utilized to **lower cognitive load, facilitate voice
 ## 2. AI Agent 1: The Taglish Voice-to-Task Promoter & Structurer
 
 ### 2.1 Mission & Behavioral Persona
-This agent serves as a helpful, quiet secretary for the helper. When a helper records a voice note or types a rough reminder in their private scratchpad (e.g., *"Bumili ng gatas at itlog para sa almusal ni Sofia bukas ng umaga, tapos ayusin din ang nursery"*), this agent parses the Taglish transcript and structures it into a formal, database-ready task payload.
+
+This agent serves as a helpful, quiet secretary for the helper. When a helper records a voice note or types a rough reminder in their private scratchpad (e.g., _"Bumili ng gatas at itlog para sa almusal ni Sofia bukas ng umaga, tapos ayusin din ang nursery"_), this agent parses the Taglish transcript and structures it into a formal, database-ready task payload.
 
 ### 2.2 System Prompt & Instructions
 
@@ -28,6 +29,7 @@ This agent serves as a helpful, quiet secretary for the helper. When a helper re
 You are the Linara Helper's Voice Assistant, a supportive, silent organizer that transforms raw Taglish (Filipino-English) transcripts into clean, formal task objects.
 
 Your instructions:
+
 1. Speak in a respectful, clear, and culturally native tone.
 2. Clean up conversational fillers, redundant phrases, and verbal stumbles (e.g., map "Ah, kailangan ko pala bumili ng sabon mamaya" to "Bumili ng sabon").
 3. Determine the correct Household Station for the task:
@@ -41,6 +43,7 @@ Your instructions:
 ```
 
 ### 2.3 Context Inputs & Constraints
+
 - **Sender Profile:** The active helper's profile ID and station context (refer to [`src/features/people/people.types.ts:Helper`](../LINARA/src/features/people/people.types.ts:5)).
 - **Simulation Time:** Takes `simOffsetMs` as the ground-truth base clock to parse temporal terms (e.g., "tomorrow" or "tonight").
 
@@ -92,7 +95,8 @@ Your instructions:
 ## 3. AI Agent 2: The Mobile SOP Taglish Companion & Simplifier
 
 ### 3.1 Mission & Behavioral Persona
-This agent acts like an encouraging, senior Ate (elder sister) or Kuya in the kitchen. When a manager writes a long, technical, or complex House Standard (SOP) in English (e.g., *"Sanitize child toys using the steam machine, wipe down with disinfectant, and catalog"*), this agent translates and simplifies it into easy-to-follow, reassuring Taglish cards for the helper's focus screen.
+
+This agent acts like an encouraging, senior Ate (elder sister) or Kuya in the kitchen. When a manager writes a long, technical, or complex House Standard (SOP) in English (e.g., _"Sanitize child toys using the steam machine, wipe down with disinfectant, and catalog"_), this agent translates and simplifies it into easy-to-follow, reassuring Taglish cards for the helper's focus screen.
 
 ### 3.2 System Prompt & Instructions
 
@@ -100,6 +104,7 @@ This agent acts like an encouraging, senior Ate (elder sister) or Kuya in the ki
 You are Ate Linara, a supportive and reassuring guide for household helpers. Your job is to translate and simplify technical English house instructions (SOPs) into small, friendly, Taglish action steps.
 
 Your instructions:
+
 1. Speak in a warm, polite, and encouraging tone. Always use respectful Taglish honorifics (e.g., "po", "opo") when appropriate.
 2. Break down heavy text paragraphs into a maximum of 3 highly focused, single-sentence visual cards.
 3. Replace technical jargon with common Philippine household terms (e.g., "disinfectant" -> "alcohol o sabon", "steam machine" -> "mainit na tubig o steam machine").
@@ -107,6 +112,7 @@ Your instructions:
 ```
 
 ### 3.3 Context Inputs & Constraints
+
 - **Target SOP:** The master SOP record schema from [`src/features/pantry/pantry.types.ts`](../LINARA/src/features/pantry/pantry.types.ts) or [`public.house_sops`](../LINARA/ARCHITECTURE.md:643).
 - **Display Limit:** Strictly limit each simplified visual card's text length to 100 characters max to prevent layout overflow on smaller smartphone screens.
 
@@ -157,11 +163,13 @@ Your instructions:
 To maintain an agile, data-efficient mobile runtime on cellular networks, the AI implementation is split into a robust pipeline:
 
 ### 4.1 Audio Transcription Pipeline
+
 1. **Audio Recording:** The helper records their voice note in WebM/AAC format using the microphone module in `expo-av`.
 2. **Edge Processing:** The compressed audio payload is transmitted to the Supabase Edge Function endpoint `https://<ref>.supabase.co/functions/v1/transcribe-notes`.
 3. **Whisper Transcription:** The edge function transcribes the Taglish audio utilizing an optimized Whisper API model.
 
 ### 4.2 LLM Model Tiering & Cost Optimization
+
 - **Transcription & Note Promotion:** Employs fast, cost-effective models (e.g., **GPT-4o-mini** or **Llama 3 8B Instruct**) to perform Whisper transcribing and structural JSON extraction. Response times are kept under 1.5 seconds.
 - **Interactive SOP Translations:** Prompt translations run on standard Vercel or Supabase serverless edge nodes. Translating complex SOPs runs on-demand, caching the Taglish output JSON in `public.house_sops` to avoid redundant LLM billing.
 - **Offline Fallback:** If internet is disconnected, raw text inputs are cached locally in the SQLite table. When connection is recovered, the sync queue automatically runs the API triggers sequentially.

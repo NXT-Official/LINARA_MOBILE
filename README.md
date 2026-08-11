@@ -8,9 +8,9 @@ This application connects to the centralized **Supabase Database Instance** shar
 
 ## 🚀 Core Product Capabilities
 
-- **Onboarding Handshake:** Handshake code registration that allows workers to review terms (base wage, shift start/end, daily rest breaks, and weekly rest days) *before* claiming their account. If terms mismatch verbal agreements, helpers can flag discrepancies directly back to the employer's dashboard.
-- **The Today Screen:** Displays a welcoming Taglish greeting (*"Magandang umaga, Ate Rosa."*), visual rest-day countdowns, and a single-focus card highlighting the active task with swipable **House Standard (SOP)** visual steps.
-- **Quick Utos Live Feed:** Lightweight floating notification banners for immediate short-order requests (e.g., *"+ Rice"*, *"Come to kitchen"*). Tapping `"Got It"` updates the web dashboard in real time with sub-second latency.
+- **Onboarding Handshake:** Handshake code registration that allows workers to review terms (base wage, shift start/end, daily rest breaks, and weekly rest days) _before_ claiming their account. If terms mismatch verbal agreements, helpers can flag discrepancies directly back to the employer's dashboard.
+- **The Today Screen:** Displays a welcoming Taglish greeting (_"Magandang umaga, Ate Rosa."_), visual rest-day countdowns, and a single-focus card highlighting the active task with swipable **House Standard (SOP)** visual steps.
+- **Quick Utos Live Feed:** Lightweight floating notification banners for immediate short-order requests (e.g., _"+ Rice"_, _"Come to kitchen"_). Tapping `"Got It"` updates the web dashboard in real time with sub-second latency.
 - **Private Notes Scratchpad:** RLS-isolated personal notepad allowing helpers to capture text and record audio notes in Taglish. Features an `"Add to Board"` trigger to promote private reminders into active, shared task tickets.
 - **My Pay Tab:** Displays payslip history, SSS/PhilHealth/Pag-IBIG compliance sheets, vale (salary advance) submission forms, and a live overtime counter representing accrued Rest Owed (Time-Off in Lieu) from the After-Hours Ledger.
 
@@ -19,6 +19,7 @@ This application connects to the centralized **Supabase Database Instance** shar
 ## 🛠️ Technical Architecture Overview
 
 Refer to [`architecture.md`](architecture.md) for full specifications:
+
 - **Framework:** React Native inside Expo SDK 52+ (managed workflow).
 - **Navigation:** Expo Router (typed file-based layouts under `app/`).
 - **Cache & Sync:** TanStack Query v5 configured with a centralized Supabase JS client.
@@ -50,28 +51,37 @@ REGIONAL_MINIMUM_WAGE=6000.00
 Ensure you have **Node.js (v20+)**, **Bun**, and the **Expo Go** client app (installed on your physical iOS or Android testing device) ready before proceeding.
 
 ### 1. Install Project Dependencies
+
 Verify that your terminal is active inside the `LINARA_MOBILE` workspace folder, then run:
+
 ```bash
 bun install
 ```
 
 ### 2. Connect to the Central Database
+
 Make sure your local Supabase database container is running and contains the applied public schema (refer to Section 8 in [`../LINARA/ARCHITECTURE.md`](../LINARA/ARCHITECTURE.md:611)):
+
 ```bash
 # Verify local Supabase is active
 supabase status
 ```
 
 ### 3. Boot the Development Bundler
+
 Start the local Expo development bundler:
+
 ```bash
 bun run start
 ```
+
 - **Run on Simulators:** Press `i` to launch on the iOS Simulator, or press `a` to run on the Android Emulator.
 - **Run on Physical Devices (Recommended):** Scan the generated terminal QR code using your phone's native camera app (iOS) or the Expo Go app scanner (Android). Your phone must be connected to the same Wi-Fi network as your computer.
 
 ### 4. Create Local Pre-flight Builds
+
 To configure or compile native binaries locally utilizing EAS (Expo Application Services):
+
 ```bash
 # 1. Login to your Expo developer account
 eas login
@@ -101,6 +111,7 @@ bun run format
 ```
 
 All folder and module file allocations must conform to the unidirectional import hierarchy specified in [`architecture.md`](architecture.md):
+
 - Core features belong inside localized folders under `components/features/`.
 - Cross-feature imports are strictly forbidden unless importing types or constants downstream.
-- Conversational Taglish labels and toast notices must remain polite, warm, and highly respectful (utilizing Taglish honorifics like *"po"* and *"opo"*).
+- Conversational Taglish labels and toast notices must remain polite, warm, and highly respectful (utilizing Taglish honorifics like _"po"_ and _"opo"_).
