@@ -1,4 +1,6 @@
 roadmap/LINARA.code-workspace
+app_dev_rules.md
+
 # Learn more https://docs.github.com/en/get-started/getting-started-with-git/ignoring-files
 
 # dependencies
@@ -42,3 +44,4 @@ example
 # generated native folders
 /ios
 /android
+
