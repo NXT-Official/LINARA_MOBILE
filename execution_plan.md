@@ -22,7 +22,7 @@ The execution roadmap is divided into six sequential phases:
 
 ### Phase 3: Frontend Core (Shell, Navigation, & Screens)
 
-- **[`Story_5_MobileShellAndBottomNavigationTabs.md`](roadmap/Story_5_MobileShellAndBottomNavigationTabs.md):** Establish the root layouts, Expo Router bottom tabs, and the high-contrast custom brand themes.
+- **(complete)[`Story_5_MobileShellAndBottomNavigationTabs.md`](roadmap/Story_5_MobileShellAndBottomNavigationTabs.md):** Establish the root layouts, Expo Router bottom tabs, and the high-contrast custom brand themes.
 - **[`Story_6_OnboardingHandshakeAndClaimScreens.md`](roadmap/Story_6_OnboardingHandshakeAndClaimScreens.md):** Construct the invitation lookup, read-only contract review, flag logging, and claim forms.
 - **[`Story_7_TodayActiveFocusCardAndSOPCarousel.md`](roadmap/Story_7_TodayActiveFocusCardAndSOPCarousel.md):** Create the focus card displaying active tickets with interactive swipable SOP visual cards.
 - **[`Story_8_PantryAndPalengkeBudgetChecklists.md`](roadmap/Story_8_PantryAndPalengkeBudgetChecklists.md):** Bind pantry inventories, grocery checklists, budget dials, and photo receipt capture slots.
