@@ -18,7 +18,7 @@ The execution roadmap is divided into six sequential phases:
 ### Phase 2: Backend Core (Supabase Integrations)
 
 - **(complete)[`Story_3_DatabaseRealtimeAndStoragePipes.md`](roadmap/Story_3_DatabaseRealtimeAndStoragePipes.md):** Implement Supabase client instances, media upload pipelines with local image compression, and Realtime Broadcast listeners.
-- **[`Story_4_HandshakeInvitationAndClaimAPIs.md`](roadmap/Story_4_HandshakeInvitationAndClaimAPIs.md):** Connect invitation verification, discrepancy flagging, and profile activation claiming endpoints.
+- **(complete)[`Story_4_HandshakeInvitationAndClaimAPIs.md`](roadmap/Story_4_HandshakeInvitationAndClaimAPIs.md):** Connect invitation verification, discrepancy flagging, and profile activation claiming endpoints.
 
 ### Phase 3: Frontend Core (Shell, Navigation, & Screens)
 
