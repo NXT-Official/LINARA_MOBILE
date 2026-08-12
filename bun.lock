@@ -8,9 +8,11 @@
         "@react-native-async-storage/async-storage": "^3.1.1",
         "@supabase/supabase-js": "^2.112.3",
         "@tanstack/react-query": "^5.101.4",
+        "base64-arraybuffer": "^1.0.2",
         "expo": "~57.0.12",
         "expo-av": "^16.0.8",
         "expo-camera": "^57.0.3",
+        "expo-image-manipulator": "~57.0.9",
         "expo-image-picker": "^57.0.9",
         "expo-router": "^57.0.12",
         "expo-sqlite": "^57.0.1",
@@ -582,6 +584,8 @@
 
     "barcode-detector": ["barcode-detector@3.2.1", "", { "dependencies": { "zxing-wasm": "3.1.1" } }, "sha512-zLL7AbT9uNJBUzYpKg9v5tUA4yQGReExSi60q0g660Mj0wjUhKmN0GrUF3qELo8ITW9THzyJXdZQkXLMnsieiw=="],
 
+    "base64-arraybuffer": ["base64-arraybuffer@1.0.2", "", {}, "sha512-I3yl4r9QB5ZRY3XuJVEPfc2XhZO6YweFPI+UovAzn+8/hb3oJ6lnysaFcjVpkCPfVWFUDvoZ8kmVDP7WyRtYtQ=="],
+
     "base64-js": ["base64-js@1.5.1", "", {}, "sha512-AKpaYlHn8t4SVbOHCy+b5+KKgvR4vrsD8vbvrbiQJps7fKDTkjkDry6ji0rUJjC0kzbNePLwzxq8iypo41qeWA=="],
 
     "baseline-browser-mapping": ["baseline-browser-mapping@2.11.13", "", { "bin": { "baseline-browser-mapping": "dist/cli.cjs" } }, "sha512-k9HNuUVMlqVjQ9UHzfPjIqiDbWw7WqT1AoT7GL8VwvF3r0ZfArtgiSPAlmupyNquNgOJHTuH4CKYf8ttMTWBTQ=="],
@@ -793,6 +797,8 @@
     "expo-glass-effect": ["expo-glass-effect@57.0.1", "", { "peerDependencies": { "expo": "*", "react": "*", "react-native": "*" } }, "sha512-m/n8maxqNcHk6ZDhuqXBfD5Kt1Iz3M8xykVgdB0iSCIXvF70IqWXmQhX8Psswhrp8eZ+3r0mAD0Jh/2gFA3QaA=="],
 
     "expo-image-loader": ["expo-image-loader@57.0.1", "", { "peerDependencies": { "expo": "*" } }, "sha512-uhrZKLT/cTl2mXyR28kPpVkS5O+PK9N1QA/07IFM4f5T4g0lTW1JHT3NEWwEEsGFldPmVX4j7LwUVVZxE+woug=="],
+
+    "expo-image-manipulator": ["expo-image-manipulator@57.0.9", "", { "dependencies": { "expo-image-loader": "~57.0.1" }, "peerDependencies": { "expo": "*" } }, "sha512-G/h0W9LM5Ju505rj2sQO7TdUi1Jz44ht0se66NB9VyZaSqAv+k3pP6eOAFNabf/LA8bAWO5c8p5Fpm1+CD49zg=="],
 
     "expo-image-picker": ["expo-image-picker@57.0.9", "", { "dependencies": { "expo-image-loader": "~57.0.1" }, "peerDependencies": { "expo": "*" } }, "sha512-tXs3N/f1yDON31KbOsI6DZuLZU8rgxyAo/r0JJm0DG/KPv8sZBp+enVwbgc0SkJ++RAaAuUReUaErUWgfb+6IQ=="],
 
