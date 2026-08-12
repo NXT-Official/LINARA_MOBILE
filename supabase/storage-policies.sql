@@ -27,22 +27,25 @@ on conflict (id) do nothing;
 -- 3. storage.objects has Row-Level Security enabled by default on every
 --    Supabase project. Restrict all operations on this bucket to session
 --    profiles whose household_id matches the object's leading path segment.
+--
+--    Uses public.current_household_id() rather than re-deriving household_id
+--    with a raw subquery here. That function is defined in
+--    ../LINARA/supabase/fix-household-rls-recursion.sql — run that script
+--    FIRST (or already have) before (re-)running this one, or this policy
+--    will fail with "function public.current_household_id() does not
+--    exist." A raw subquery against public.user_profiles was tried here
+--    originally and hit Postgres error 42P17 (infinite recursion) once it
+--    triggered user_profiles' own (at the time self-referencing) policy —
+--    see that script's header comment for the full root cause.
+drop policy if exists household_evidence_isolation on storage.objects;
 create policy household_evidence_isolation
   on storage.objects
   for all
   using (
     bucket_id = 'household-evidence'
-    and (storage.foldername(name))[1] = (
-      select household_id::text
-      from public.user_profiles
-      where id = auth.uid()
-    )
+    and (storage.foldername(name))[1] = public.current_household_id()::text
   )
   with check (
     bucket_id = 'household-evidence'
-    and (storage.foldername(name))[1] = (
-      select household_id::text
-      from public.user_profiles
-      where id = auth.uid()
-    )
+    and (storage.foldername(name))[1] = public.current_household_id()::text
   );
