@@ -7,7 +7,16 @@
     "icon": "./assets/icon.png",
     "scheme": "linaramobile",
     "userInterfaceStyle": "light",
-    "plugins": ["expo-router"],
+    "plugins": [
+      "expo-router",
+      [
+        "expo-image-picker",
+        {
+          "cameraPermission": "Linara uses the camera to capture Palengke receipt photos and task completion evidence.",
+          "photosPermission": "Linara accesses your photos to attach evidence images."
+        }
+      ]
+    ],
     "experiments": {
       "typedRoutes": true
     },

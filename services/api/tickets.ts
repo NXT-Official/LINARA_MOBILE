@@ -86,14 +86,53 @@ export async function startTicket(ticketId: string): Promise<void> {
   }
 }
 
-/** Marks a ticket done, stamping `actual_end` for the shift record. */
-export async function completeTicket(ticketId: string): Promise<void> {
+/**
+ * Marks a ticket done, stamping `actual_end` for the shift record. Pass
+ * `photoEvidenceUrl` for tickets that require photo proof (e.g. a Palengke
+ * Run receipt, roadmap Story 8 step 4) to persist it in the same write.
+ */
+export async function completeTicket(ticketId: string, photoEvidenceUrl?: string): Promise<void> {
   const { error } = await supabase
     .from("tickets")
-    .update({ status: "done", actual_end: new Date().toISOString() })
+    .update({
+      status: "done",
+      actual_end: new Date().toISOString(),
+      ...(photoEvidenceUrl ? { photo_evidence_url: photoEvidenceUrl } : {}),
+    })
     .eq("id", ticketId);
 
   if (error) {
     throw new Error(error.message);
   }
+}
+
+export interface PalengkeTicket {
+  id: string;
+  title: string;
+  status: FocusTask["status"];
+}
+
+/**
+ * Finds the helper's active Palengke Run ticket, if any, so the Pantry tab
+ * can surface its receipt-capture completion step (roadmap Story 8, step
+ * 4). "Palengke Run" isn't a distinct ticket type in the shared schema --
+ * the web dashboard identifies it the same way, by title
+ * (see ../LINARA/src/features/tasks/task.utils.ts's `isPalengke`).
+ */
+export async function getActivePalengkeTicket(helperId: string): Promise<PalengkeTicket | null> {
+  const { data, error } = await supabase
+    .from("tickets")
+    .select("id, title, status")
+    .eq("helper_id", helperId)
+    .neq("status", "done")
+    .or("title.ilike.%palengke%,title.ilike.%marketing run%")
+    .order("scheduled_start", { ascending: true })
+    .limit(1)
+    .maybeSingle();
+
+  if (error) {
+    throw new Error(error.message);
+  }
+
+  return data as PalengkeTicket | null;
 }

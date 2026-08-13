@@ -56,7 +56,7 @@ export default function TodayScreen() {
   });
 
   const completeMutation = useMutation({
-    mutationFn: completeTicket,
+    mutationFn: (ticketId: string) => completeTicket(ticketId),
     onSuccess: () => queryClient.invalidateQueries({ queryKey: ["focus-task", helperId] }),
   });
 
