@@ -22,3 +22,17 @@ export function formatShiftTime(time: string): string {
   const displayHours = hours % 12 === 0 ? 12 : hours % 12;
   return `${displayHours}:${minutes.toString().padStart(2, "0")} ${period}`;
 }
+
+/** Matches the web reference's `fmtPeso` (../LINARA/src/features/groceries/grocery.utils.ts). */
+export function formatPeso(amount: number): string {
+  return `₱${Math.round(amount).toLocaleString()}`;
+}
+
+/** Matches the web reference's `fmtHoursMinutes` (../LINARA/src/features/ledger/ledger.utils.ts). */
+export function formatHoursMinutes(totalMinutes: number): string {
+  const hours = Math.floor(totalMinutes / 60);
+  const minutes = totalMinutes % 60;
+  if (hours === 0) return `${minutes}m`;
+  if (minutes === 0) return `${hours}h`;
+  return `${hours}h ${minutes}m`;
+}
