@@ -21,15 +21,28 @@
         {
           "microphonePermission": "Linara uses the microphone to record your private voice notes. These stay yours -- managers can never see or hear them."
         }
+      ],
+      "expo-font",
+      [
+        "expo-splash-screen",
+        {
+          "image": "./assets/splash-icon.png",
+          "resizeMode": "contain",
+          "backgroundColor": "#F7F3EC"
+        }
       ]
     ],
     "experiments": {
       "typedRoutes": true
     },
     "ios": {
-      "supportsTablet": true
+      "supportsTablet": true,
+      "bundleIdentifier": "com.linara.mobile",
+      "buildNumber": "1"
     },
     "android": {
+      "package": "com.linara.mobile",
+      "versionCode": 1,
       "adaptiveIcon": {
         "backgroundColor": "#E6F4FE",
         "foregroundImage": "./assets/android-icon-foreground.png",
