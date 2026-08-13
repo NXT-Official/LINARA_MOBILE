@@ -11,7 +11,7 @@ import {
 } from "react-native";
 
 import { colors } from "@/lib/theme";
-import { buildSopSlides } from "@/lib/sop";
+import { useSopSlides } from "@/hooks/use-sop-slides";
 import type { FocusTaskSop } from "@/services/api/tickets";
 
 /**
@@ -27,7 +27,7 @@ export function SopCarousel({ sop }: { sop: FocusTaskSop }) {
   const [slideWidth, setSlideWidth] = useState(windowWidth);
   const [activeIndex, setActiveIndex] = useState(0);
 
-  const slides = buildSopSlides(sop);
+  const slides = useSopSlides(sop);
 
   const onScrollEnd = (event: NativeSyntheticEvent<NativeScrollEvent>) => {
     if (slideWidth <= 0) return;
