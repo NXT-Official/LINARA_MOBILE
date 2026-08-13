@@ -15,6 +15,12 @@
           "cameraPermission": "Linara uses the camera to capture Palengke receipt photos and task completion evidence.",
           "photosPermission": "Linara accesses your photos to attach evidence images."
         }
+      ],
+      [
+        "expo-audio",
+        {
+          "microphonePermission": "Linara uses the microphone to record your private voice notes. These stay yours -- managers can never see or hear them."
+        }
       ]
     ],
     "experiments": {
