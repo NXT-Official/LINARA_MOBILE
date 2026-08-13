@@ -16,6 +16,8 @@ import {
 } from "@/services/api/notes";
 import { createTicket } from "@/services/api/tickets";
 import { promoteVoiceTask, transcribeAudio } from "@/services/voice-pipeline";
+import { enqueueSyncAction } from "@/services/sqlite-queue";
+import { isOffline } from "@/lib/network";
 
 type Station = "Yaya" | "Cook" | "Laundry" | "Driver" | "House";
 
@@ -60,10 +62,24 @@ export function PrivateScratchpad({
     queryClient.invalidateQueries({ queryKey: ["helper-notes", helperId] });
 
   const addTextMutation = useMutation({
-    mutationFn: (text: string) => createTextNote(helperId, text),
-    onSuccess: () => {
+    mutationFn: async (text: string) => {
+      if (await isOffline()) {
+        await enqueueSyncAction("add_text_note", { helperId, text });
+        return { queued: true };
+      }
+      await createTextNote(helperId, text);
+      return { queued: false };
+    },
+    onSuccess: (result, text) => {
       setDraft("");
-      invalidateNotes();
+      if (result.queued) {
+        queryClient.setQueryData<HelperNote[]>(["helper-notes", helperId], (old) => [
+          { id: `pending-${Date.now()}`, text, done: false, createdAt: new Date().toISOString() },
+          ...(old ?? []),
+        ]);
+      } else {
+        invalidateNotes();
+      }
     },
   });
 
