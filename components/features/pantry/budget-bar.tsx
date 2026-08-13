@@ -10,8 +10,11 @@ function fmtPeso(amount: number): string {
 /**
  * Spent-vs-allocated budget dial for the Palengke run (roadmap Story 8,
  * step 2 / plan.md 3.2). Mirrors the web reference's BudgetBar layout.
- * Tapping the allocated figure opens an inline editor -- see
- * hooks/use-palengke-budget.ts for why this value is device-local.
+ * `onChangeBudget` is optional: `households.petty_cash_budget` is
+ * manager-writable from the web dashboard only (see
+ * hooks/use-palengke-budget.ts and services/api/household.ts) -- when this
+ * prop isn't passed, the allocated figure renders as plain, non-tappable
+ * text instead of opening an inline editor.
  */
 export function BudgetBar({
   spent,
@@ -20,7 +23,7 @@ export function BudgetBar({
 }: {
   spent: number;
   budget: number;
-  onChangeBudget: (n: number) => void;
+  onChangeBudget?: (n: number) => void;
 }) {
   const [editing, setEditing] = useState(false);
   const [draft, setDraft] = useState(String(budget));
@@ -31,7 +34,7 @@ export function BudgetBar({
   const commit = () => {
     const parsed = parseFloat(draft);
     if (!Number.isNaN(parsed)) {
-      onChangeBudget(parsed);
+      onChangeBudget?.(parsed);
     } else {
       setDraft(String(budget));
     }
@@ -53,10 +56,12 @@ export function BudgetBar({
               keyboardType="decimal-pad"
               style={styles.budgetInput}
             />
-          ) : (
+          ) : onChangeBudget ? (
             <Pressable onPress={() => setEditing(true)}>
               <Text style={styles.budget}>/ {fmtPeso(budget)}</Text>
             </Pressable>
+          ) : (
+            <Text style={styles.budget}>/ {fmtPeso(budget)}</Text>
           )}
         </View>
         <Text style={[styles.remaining, over && styles.remainingOver]}>

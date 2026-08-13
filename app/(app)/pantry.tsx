@@ -29,7 +29,6 @@ import { ReceiptCaptureCard } from "@/components/features/pantry/receipt-capture
  */
 export default function PantryScreen() {
   const queryClient = useQueryClient();
-  const { budget, setBudget } = usePalengkeBudget();
   const [receiptUri, setReceiptUri] = useState<string | null>(null);
   const [receiptPendingUpload, setReceiptPendingUpload] = useState(false);
   const [uploading, setUploading] = useState(false);
@@ -40,6 +39,7 @@ export default function PantryScreen() {
     queryFn: getMyHelperProfile,
   });
   const helperId = profileQuery.data?.id ?? null;
+  const { budget } = usePalengkeBudget(profileQuery.data?.householdId ?? null);
 
   const pantryQuery = useQuery({
     queryKey: ["pantry-items"],
@@ -155,7 +155,7 @@ export default function PantryScreen() {
         </View>
       ) : (
         <>
-          <BudgetBar spent={spent} budget={budget} onChangeBudget={setBudget} />
+          <BudgetBar spent={spent} budget={budget} />
 
           <View style={styles.section}>
             <Text style={styles.sectionTitle}>Palengke checklist</Text>
