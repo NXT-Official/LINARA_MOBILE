@@ -9,6 +9,8 @@ export interface HelperProfileSummary {
   shiftStart: string;
   shiftEnd: string;
   weeklyRestDay: number;
+  monthlyRate: number;
+  paydayInterval: "semi_monthly" | "monthly";
 }
 
 /**
@@ -30,7 +32,9 @@ export async function getMyHelperProfile(): Promise<HelperProfileSummary> {
 
   const { data, error } = await supabase
     .from("helper_profiles")
-    .select("id, household_id, name, station, shift_start, shift_end, weekly_rest_day")
+    .select(
+      "id, household_id, name, station, shift_start, shift_end, weekly_rest_day, monthly_rate, payday_interval",
+    )
     .eq("user_id", user.id)
     .single();
 
@@ -47,5 +51,7 @@ export async function getMyHelperProfile(): Promise<HelperProfileSummary> {
     shiftStart: data.shift_start,
     shiftEnd: data.shift_end,
     weeklyRestDay: data.weekly_rest_day,
+    monthlyRate: Number(data.monthly_rate),
+    paydayInterval: data.payday_interval,
   };
 }
