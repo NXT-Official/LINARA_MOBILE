@@ -2,6 +2,8 @@ import { supabase } from "@/services/supabase";
 
 export interface HelperProfileSummary {
   id: string;
+  userId: string;
+  householdId: string;
   name: string;
   station: "Yaya" | "Cook" | "Laundry" | "Driver" | "House";
   shiftStart: string;
@@ -28,7 +30,7 @@ export async function getMyHelperProfile(): Promise<HelperProfileSummary> {
 
   const { data, error } = await supabase
     .from("helper_profiles")
-    .select("id, name, station, shift_start, shift_end, weekly_rest_day")
+    .select("id, household_id, name, station, shift_start, shift_end, weekly_rest_day")
     .eq("user_id", user.id)
     .single();
 
@@ -38,6 +40,8 @@ export async function getMyHelperProfile(): Promise<HelperProfileSummary> {
 
   return {
     id: data.id,
+    userId: user.id,
+    householdId: data.household_id,
     name: data.name,
     station: data.station,
     shiftStart: data.shift_start,
