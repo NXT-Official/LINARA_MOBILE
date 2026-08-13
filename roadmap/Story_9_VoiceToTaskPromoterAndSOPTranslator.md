@@ -14,6 +14,20 @@ Implement client-side voice recorders, hook transcripts to transcription APIs, p
 
 - `Story_8_PantryAndPalengkeBudgetChecklists.md`
 
+## Known Gap to Resolve Before Step 5
+
+`public.house_sops` currently only has `title`/`description`/`standard_image_url`
+-- there is no persisted `steps` array, even though the AI SOP Creator edge
+function already returns one (see `../LINARA/architecture.md`'s note above
+the `house_sops` table definition, and `../LINARA/src/features/tasks/task.actions.ts`'s
+`HouseStandardSOP` type). `LINARA_MOBILE/lib/sop.ts` works around this for
+Story 7's carousel by splitting `description` on newlines, which is not a
+real substitute for structured steps. Step 5 here ("Translates complex
+English steps into 3 single-sentence Taglish cards") needs actual `steps`
+input to translate -- confirm with the user whether to close the schema
+gap on the `LINARA` (schema-owning) side first, or route this step through
+the same newline-splitting workaround.
+
 ## Explicit Inputs
 
 - **Hardware Plugins:** `expo-av` for voice recording.
