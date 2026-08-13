@@ -15,6 +15,8 @@ import {
 } from "@/services/api/grocery";
 import { completeTicket, getActivePalengkeTicket } from "@/services/api/tickets";
 import { uploadEvidenceImage } from "@/services/media-upload";
+import { enqueueSyncAction } from "@/services/sqlite-queue";
+import { isOffline } from "@/lib/network";
 import { PantryStockList } from "@/components/features/pantry/pantry-stock-list";
 import { BudgetBar } from "@/components/features/pantry/budget-bar";
 import { PalengkeChecklist } from "@/components/features/pantry/palengke-checklist";
@@ -29,6 +31,7 @@ export default function PantryScreen() {
   const queryClient = useQueryClient();
   const { budget, setBudget } = usePalengkeBudget();
   const [receiptUri, setReceiptUri] = useState<string | null>(null);
+  const [receiptPendingUpload, setReceiptPendingUpload] = useState(false);
   const [uploading, setUploading] = useState(false);
   const [captureError, setCaptureError] = useState<string | null>(null);
 
@@ -66,12 +69,35 @@ export default function PantryScreen() {
   });
 
   const completeRunMutation = useMutation({
-    mutationFn: ({ ticketId, photoUrl }: { ticketId: string; photoUrl: string }) =>
-      completeTicket(ticketId, photoUrl),
-    onSuccess: () => {
+    mutationFn: async ({
+      ticketId,
+      photoUrl,
+      localUri,
+    }: {
+      ticketId: string;
+      photoUrl: string | null;
+      localUri: string | null;
+    }) => {
+      if (localUri) {
+        await enqueueSyncAction(
+          "complete_ticket",
+          { ticketId, householdId: profileQuery.data?.householdId ?? "" },
+          localUri,
+        );
+        return { queued: true };
+      }
+      await completeTicket(ticketId, photoUrl ?? undefined);
+      return { queued: false };
+    },
+    onSuccess: (result) => {
       setReceiptUri(null);
-      queryClient.invalidateQueries({ queryKey: ["palengke-ticket", helperId] });
-      queryClient.invalidateQueries({ queryKey: ["focus-task", helperId] });
+      setReceiptPendingUpload(false);
+      if (result.queued) {
+        queryClient.setQueryData(["palengke-ticket", helperId], null);
+      } else {
+        queryClient.invalidateQueries({ queryKey: ["palengke-ticket", helperId] });
+        queryClient.invalidateQueries({ queryKey: ["focus-task", helperId] });
+      }
     },
   });
 
@@ -93,11 +119,21 @@ export default function PantryScreen() {
       return;
     }
 
+    const localUri = result.assets[0].uri;
+
+    if (await isOffline()) {
+      setReceiptUri(localUri);
+      setReceiptPendingUpload(true);
+      return;
+    }
+
     setUploading(true);
     try {
-      const storagePath = `${helperId ?? "unknown"}/palengke/${Date.now()}.jpg`;
-      const uploaded = await uploadEvidenceImage(result.assets[0].uri, storagePath);
+      const householdId = profileQuery.data?.householdId ?? "unknown";
+      const storagePath = `${householdId}/tickets/${Date.now()}.jpg`;
+      const uploaded = await uploadEvidenceImage(localUri, storagePath);
       setReceiptUri(uploaded.signedUrl);
+      setReceiptPendingUpload(false);
     } catch (err) {
       setCaptureError(
         err instanceof Error ? err.message : "Hindi na-upload ang larawan ng resibo.",
@@ -143,7 +179,11 @@ export default function PantryScreen() {
             onCapture={captureReceipt}
             onComplete={() => {
               if (receiptUri) {
-                completeRunMutation.mutate({ ticketId: palengkeTicket.id, photoUrl: receiptUri });
+                completeRunMutation.mutate({
+                  ticketId: palengkeTicket.id,
+                  photoUrl: receiptPendingUpload ? null : receiptUri,
+                  localUri: receiptPendingUpload ? receiptUri : null,
+                });
               }
             }}
           />
