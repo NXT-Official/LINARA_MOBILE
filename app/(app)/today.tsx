@@ -8,6 +8,7 @@ import { useRealtimeSubscription } from "@/hooks/use-realtime-subscription";
 import { DignityHeader } from "@/components/features/today/dignity-header";
 import { ActiveFocusCard } from "@/components/features/today/active-focus-card";
 import { FloatingQuickUtosFeed } from "@/components/features/utos/floating-quick-utos-feed";
+import { PrivateScratchpad } from "@/components/features/notes/PrivateScratchpad";
 import { getMyHelperProfile } from "@/services/api/helper-profile";
 import { getFocusTask, startTicket, completeTicket } from "@/services/api/tickets";
 import { acknowledgeQuickUto, getPendingQuickUtos } from "@/services/api/quick-utos";
@@ -117,6 +118,13 @@ export default function TodayScreen() {
                 <Text style={styles.emptyText}>Walang task ngayon. Magandang break, po!</Text>
               </View>
             )}
+
+            <PrivateScratchpad
+              helperId={profileQuery.data.id}
+              householdId={profileQuery.data.householdId}
+              userId={profileQuery.data.userId}
+              station={profileQuery.data.station}
+            />
           </>
         )}
       </ScrollView>
