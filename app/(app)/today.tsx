@@ -10,8 +10,10 @@ import { ActiveFocusCard } from "@/components/features/today/active-focus-card";
 import { FloatingQuickUtosFeed } from "@/components/features/utos/floating-quick-utos-feed";
 import { PrivateScratchpad } from "@/components/features/notes/PrivateScratchpad";
 import { getMyHelperProfile } from "@/services/api/helper-profile";
-import { getFocusTask, startTicket, completeTicket } from "@/services/api/tickets";
+import { getFocusTask, startTicket, completeTicket, type FocusTask } from "@/services/api/tickets";
 import { acknowledgeQuickUto, getPendingQuickUtos } from "@/services/api/quick-utos";
+import { enqueueSyncAction } from "@/services/sqlite-queue";
+import { isOffline } from "@/lib/network";
 
 /**
  * Today tab (roadmap Story 7). Hosts the Dignity Header (Story 5), the
@@ -52,13 +54,64 @@ export default function TodayScreen() {
   });
 
   const startMutation = useMutation({
-    mutationFn: startTicket,
-    onSuccess: () => queryClient.invalidateQueries({ queryKey: ["focus-task", helperId] }),
+    mutationFn: async (ticketId: string) => {
+      if (await isOffline()) {
+        await enqueueSyncAction("start_ticket", { ticketId });
+        return { queued: true };
+      }
+      await startTicket(ticketId);
+      return { queued: false };
+    },
+    onMutate: async (ticketId) => {
+      await queryClient.cancelQueries({ queryKey: ["focus-task", helperId] });
+      const previous = queryClient.getQueryData<FocusTask | null>(["focus-task", helperId]);
+      queryClient.setQueryData<FocusTask | null>(["focus-task", helperId], (old) =>
+        old && old.id === ticketId ? { ...old, status: "in_progress" } : old,
+      );
+      return { previous };
+    },
+    onError: (_err, _ticketId, context) => {
+      if (context) {
+        queryClient.setQueryData(["focus-task", helperId], context.previous);
+      }
+    },
+    onSuccess: (result) => {
+      if (!result.queued) {
+        queryClient.invalidateQueries({ queryKey: ["focus-task", helperId] });
+      }
+    },
   });
 
   const completeMutation = useMutation({
-    mutationFn: (ticketId: string) => completeTicket(ticketId),
-    onSuccess: () => queryClient.invalidateQueries({ queryKey: ["focus-task", helperId] }),
+    mutationFn: async (ticketId: string) => {
+      if (await isOffline()) {
+        await enqueueSyncAction("complete_ticket", {
+          ticketId,
+          householdId: profileQuery.data?.householdId ?? "",
+        });
+        return { queued: true };
+      }
+      await completeTicket(ticketId);
+      return { queued: false };
+    },
+    onMutate: async (ticketId) => {
+      await queryClient.cancelQueries({ queryKey: ["focus-task", helperId] });
+      const previous = queryClient.getQueryData<FocusTask | null>(["focus-task", helperId]);
+      queryClient.setQueryData<FocusTask | null>(["focus-task", helperId], (old) =>
+        old && old.id === ticketId ? null : old,
+      );
+      return { previous };
+    },
+    onError: (_err, _ticketId, context) => {
+      if (context) {
+        queryClient.setQueryData(["focus-task", helperId], context.previous);
+      }
+    },
+    onSuccess: (result) => {
+      if (!result.queued) {
+        queryClient.invalidateQueries({ queryKey: ["focus-task", helperId] });
+      }
+    },
   });
 
   const ackMutation = useMutation({
