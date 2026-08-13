@@ -13,6 +13,7 @@ workspace. Before implementing, reviewing, or modifying anything here, read:
 3. [`aiagent.md`](aiagent.md) — system prompts and JSON schemas for the two on-device AI agents (Voice-to-Task Promoter, SOP Taglish Simplifier).
 4. [`execution_plan.md`](execution_plan.md) — the authoritative 11-story roadmap and per-story files under [`roadmap/`](roadmap/). This is the current source of truth for "what story am I on" — it supersedes the older 10-story roadmap embedded in `plan.md` Section 6 where the two disagree.
 5. [`app_dev_rules.md`](app_dev_rules.md) — mandatory execution rules for implementing a story (pre-existing-context priority, scope discipline, git hygiene, terminology sanitization).
+6. [`../LINARA/KNOWN_GAPS.md`](../LINARA/KNOWN_GAPS.md) — shared, cross-repo log of mismatches between the docs/roadmap and what the schema/code actually support. Lives in `LINARA` since it's the schema-owning repo, but covers gaps found from either app. Check it before starting a story that might touch a listed gap, and add to it the moment you find a new one — don't silently work around it and let the next session rediscover it.
 
 **Cross-repo context — do not treat this app in isolation:**
 
