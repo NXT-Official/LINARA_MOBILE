@@ -1,0 +1,114 @@
+import { StyleSheet, Text, View } from "react-native";
+
+import { colors, fonts } from "@/lib/theme";
+import { formatPeso } from "@/lib/format";
+import { computeStatutorySplit, LegalContributionSplit } from "./legal-contribution-split";
+
+/**
+ * Digital payslip for the current cutoff (roadmap Story 11 step 1). Base pay
+ * and the statutory split are both real, derived from `helper_profiles`'
+ * `monthly_rate`/`payday_interval` -- unlike the web reference's
+ * `PayRecord`/`SpendAndPayday`, which hardcode a demo `baseSalary = 8000`
+ * unrelated to any real wage column. HitPay payment confirmations and a
+ * multi-cutoff payslip history aren't shown: no table backs either yet
+ * (../LINARA/architecture.md Section 5.3 marks outbound fintech "Future
+ * Phase 3" -- see KNOWN_GAPS.md).
+ */
+export function DigitalPayslip({
+  monthlyRate,
+  paydayInterval,
+  approvedValeTotal,
+}: {
+  monthlyRate: number;
+  paydayInterval: "semi_monthly" | "monthly";
+  approvedValeTotal: number;
+}) {
+  const cutoffsPerMonth = paydayInterval === "semi_monthly" ? 2 : 1;
+  const basePay = monthlyRate / cutoffsPerMonth;
+  const split = computeStatutorySplit(monthlyRate);
+  const employeeShareThisCutoff = split.totalEmployee / cutoffsPerMonth;
+  const netEstimate = Math.max(0, basePay - employeeShareThisCutoff - approvedValeTotal);
+
+  return (
+    <View style={styles.card}>
+      <Text style={styles.eyebrow}>
+        {paydayInterval === "semi_monthly" ? "This cutoff (half-month)" : "This cutoff (monthly)"}
+      </Text>
+      <Text style={styles.netPay}>{formatPeso(netEstimate)}</Text>
+      <Text style={styles.netPayHint}>Estimated take-home</Text>
+
+      <View style={styles.divider} />
+
+      <View style={styles.lineRow}>
+        <Text style={styles.lineLabel}>Base pay</Text>
+        <Text style={styles.lineValue}>{formatPeso(basePay)}</Text>
+      </View>
+      <View style={styles.lineRow}>
+        <Text style={styles.lineLabel}>SSS / PhilHealth / Pag-IBIG share</Text>
+        <Text style={[styles.lineValue, styles.deduction]}>
+          − {formatPeso(employeeShareThisCutoff)}
+        </Text>
+      </View>
+      {approvedValeTotal > 0 ? (
+        <View style={styles.lineRow}>
+          <Text style={styles.lineLabel}>Vale deduction</Text>
+          <Text style={[styles.lineValue, styles.deduction]}>
+            − {formatPeso(approvedValeTotal)}
+          </Text>
+        </View>
+      ) : null}
+
+      <LegalContributionSplit wagePHP={monthlyRate} />
+    </View>
+  );
+}
+
+const styles = StyleSheet.create({
+  card: {
+    borderRadius: 20,
+    padding: 16,
+    backgroundColor: colors.cardCream,
+    borderWidth: 1,
+    borderColor: colors.border,
+    gap: 12,
+  },
+  eyebrow: {
+    fontSize: 11,
+    fontWeight: "700",
+    letterSpacing: 0.4,
+    textTransform: "uppercase",
+    color: colors.terracottaGold,
+  },
+  netPay: {
+    fontFamily: fonts.display,
+    fontSize: 34,
+    color: colors.ink,
+  },
+  netPayHint: {
+    fontSize: 12,
+    color: colors.mutedInk,
+    marginTop: -8,
+  },
+  divider: {
+    height: 1,
+    backgroundColor: colors.border,
+  },
+  lineRow: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+  },
+  lineLabel: {
+    fontSize: 13,
+    color: colors.ink,
+    flexShrink: 1,
+    paddingRight: 8,
+  },
+  lineValue: {
+    fontSize: 13,
+    fontWeight: "600",
+    color: colors.ink,
+  },
+  deduction: {
+    color: colors.mutedInk,
+  },
+});
