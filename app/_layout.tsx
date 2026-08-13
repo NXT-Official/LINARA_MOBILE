@@ -4,6 +4,19 @@ import { StatusBar } from "expo-status-bar";
 
 import { queryClient } from "@/lib/query-client";
 import { SessionProvider } from "@/lib/session-context";
+import { useOfflineSync } from "@/hooks/use-offline-sync";
+
+/** Needs a QueryClientProvider ancestor for useOfflineSync's cache invalidation, so it can't live in RootLayout itself. */
+function AppShell() {
+  useOfflineSync();
+
+  return (
+    <>
+      <Stack screenOptions={{ headerShown: false }} />
+      <StatusBar style="dark" />
+    </>
+  );
+}
 
 /**
  * Root provider shell (roadmap Story 5, step 1). Mounts the persisted
@@ -14,8 +27,7 @@ export default function RootLayout() {
   return (
     <SessionProvider>
       <QueryClientProvider client={queryClient}>
-        <Stack screenOptions={{ headerShown: false }} />
-        <StatusBar style="dark" />
+        <AppShell />
       </QueryClientProvider>
     </SessionProvider>
   );
