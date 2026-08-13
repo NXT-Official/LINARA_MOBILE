@@ -6,6 +6,10 @@ export interface ValeRequest {
   reason: string;
   status: "pending" | "approved" | "declined";
   createdAt: string;
+  /** The payslip that already deducted this vale, if any -- see
+   * ../LINARA/supabase/add-payslips-table.sql. Still null means "approved
+   * but not yet paid out." */
+  settledInPayslipId: string | null;
 }
 
 interface ValeRow {
@@ -14,6 +18,7 @@ interface ValeRow {
   reason: string;
   status: "pending" | "approved" | "declined";
   created_at: string;
+  settled_in_payslip_id: string | null;
 }
 
 /**
@@ -25,7 +30,7 @@ interface ValeRow {
 export async function getMyVales(helperId: string): Promise<ValeRequest[]> {
   const { data, error } = await supabase
     .from("vales")
-    .select("id, amount, reason, status, created_at")
+    .select("id, amount, reason, status, created_at, settled_in_payslip_id")
     .eq("helper_id", helperId)
     .order("created_at", { ascending: false });
 
@@ -39,6 +44,7 @@ export async function getMyVales(helperId: string): Promise<ValeRequest[]> {
     reason: row.reason,
     status: row.status,
     createdAt: row.created_at,
+    settledInPayslipId: row.settled_in_payslip_id,
   }));
 }
 

@@ -4,8 +4,10 @@ import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { colors, fonts } from "@/lib/theme";
 import { getMyHelperProfile } from "@/services/api/helper-profile";
 import { getMyLedgerEntries, restOwedMinutes } from "@/services/api/ledger";
+import { getMyPayslips } from "@/services/api/payslips";
 import { getMyVales, requestVale } from "@/services/api/vales";
 import { DigitalPayslip } from "@/components/features/pay/digital-payslip";
+import { PayslipHistory } from "@/components/features/pay/payslip-history";
 import { RestOwedCounter } from "@/components/features/pay/rest-owed-counter";
 import { ValeRequestForm } from "@/components/features/pay/vale-request-form";
 
@@ -35,6 +37,12 @@ export default function PayScreen() {
     enabled: Boolean(helperId),
   });
 
+  const payslipsQuery = useQuery({
+    queryKey: ["payslips", helperId],
+    queryFn: () => getMyPayslips(helperId as string),
+    enabled: Boolean(helperId),
+  });
+
   const valeMutation = useMutation({
     mutationFn: ({ amount, reason }: { amount: number; reason: string }) =>
       requestVale(helperId as string, amount, reason),
@@ -43,7 +51,7 @@ export default function PayScreen() {
 
   const vales = valesQuery.data ?? [];
   const approvedValeTotal = vales
-    .filter((v) => v.status === "approved")
+    .filter((v) => v.status === "approved" && !v.settledInPayslipId)
     .reduce((sum, v) => sum + v.amount, 0);
   const restMinutes = restOwedMinutes(ledgerQuery.data ?? []);
 
@@ -64,6 +72,8 @@ export default function PayScreen() {
             paydayInterval={profileQuery.data.paydayInterval}
             approvedValeTotal={approvedValeTotal}
           />
+
+          {!payslipsQuery.isLoading && <PayslipHistory payslips={payslipsQuery.data ?? []} />}
 
           {ledgerQuery.isLoading ? (
             <View style={styles.loading}>

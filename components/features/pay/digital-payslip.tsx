@@ -5,14 +5,15 @@ import { formatPeso } from "@/lib/format";
 import { computeStatutorySplit, LegalContributionSplit } from "./legal-contribution-split";
 
 /**
- * Digital payslip for the current cutoff (roadmap Story 11 step 1). Base pay
- * and the statutory split are both real, derived from `helper_profiles`'
- * `monthly_rate`/`payday_interval` -- unlike the web reference's
- * `PayRecord`/`SpendAndPayday`, which hardcode a demo `baseSalary = 8000`
- * unrelated to any real wage column. HitPay payment confirmations and a
- * multi-cutoff payslip history aren't shown: no table backs either yet
- * (../LINARA/architecture.md Section 5.3 marks outbound fintech "Future
- * Phase 3" -- see KNOWN_GAPS.md).
+ * Digital payslip for the *current, not-yet-paid-out* cutoff (roadmap
+ * Story 11 step 1) -- computed live from `helper_profiles`'
+ * `monthly_rate`/`payday_interval`, same as the web reference's
+ * `SpendAndPayday` Pay Dial. Once a manager runs "Pay Now" (LINARA's Money
+ * tab) for this cutoff, the confirmed payout shows up in
+ * `PayslipHistory` below instead (see payslip-history.tsx and
+ * ../LINARA/KNOWN_GAPS.md's Closed Gap for #9) -- this card never reflects
+ * payout status itself, only the live estimate for whatever cutoff hasn't
+ * been paid yet.
  */
 export function DigitalPayslip({
   monthlyRate,
