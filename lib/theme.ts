@@ -13,3 +13,15 @@ export const colors = {
   mutedInk: "#5C6B69",
   border: "#E4DCCB",
 } as const;
+
+/**
+ * Custom typography (roadmap Story 11 step 4): Fraunces for display
+ * headers/figures, Nunito Sans for everything else. Loaded via `useFonts`
+ * in app/_layout.tsx; these family names must match the keys passed there.
+ */
+export const fonts = {
+  display: "Fraunces_600SemiBold",
+  displayBold: "Fraunces_700Bold",
+  body: "NunitoSans_400Regular",
+  bodyBold: "NunitoSans_700Bold",
+} as const;

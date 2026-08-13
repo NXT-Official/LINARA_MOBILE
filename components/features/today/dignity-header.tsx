@@ -1,6 +1,6 @@
 import { StyleSheet, Text, View } from "react-native";
 
-import { colors } from "@/lib/theme";
+import { colors, fonts } from "@/lib/theme";
 import { formatShiftTime, weekdayName } from "@/lib/format";
 import type { RosaAvailabilityStatus } from "@/lib/availability";
 import { RosaAvailControl } from "@/components/features/availability/rosa-avail-control";
@@ -62,8 +62,8 @@ const styles = StyleSheet.create({
   },
   greeting: {
     marginTop: 6,
+    fontFamily: fonts.displayBold,
     fontSize: 24,
-    fontWeight: "700",
     color: colors.cardCream,
   },
   statsRow: {

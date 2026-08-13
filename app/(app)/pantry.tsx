@@ -3,7 +3,7 @@ import { ActivityIndicator, ScrollView, StyleSheet, Text, View } from "react-nat
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import * as ImagePicker from "expo-image-picker";
 
-import { colors } from "@/lib/theme";
+import { colors, fonts } from "@/lib/theme";
 import { usePalengkeBudget } from "@/hooks/use-palengke-budget";
 import { getMyHelperProfile } from "@/services/api/helper-profile";
 import { getPantryItems } from "@/services/api/pantry";
@@ -216,8 +216,8 @@ const styles = StyleSheet.create({
     gap: 16,
   },
   header: {
+    fontFamily: fonts.displayBold,
     fontSize: 22,
-    fontWeight: "700",
     color: colors.ink,
   },
   section: {
