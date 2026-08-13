@@ -29,11 +29,11 @@ The execution roadmap is divided into six sequential phases:
 
 ### Phase 4: AI Intelligence (Taglish voice transcribing)
 
-- **[`Story_9_VoiceToTaskPromoterAndSOPTranslator.md`](roadmap/Story_9_VoiceToTaskPromoterAndSOPTranslator.md):** Integrate voice audio note recorders, transcribe WebM audio via Whisper, and simplify complex English SOPs into Taglish slides.
+- **(complete)[`Story_9_VoiceToTaskPromoterAndSOPTranslator.md`](roadmap/Story_9_VoiceToTaskPromoterAndSOPTranslator.md):** Integrate voice audio note recorders, transcribe WebM audio via Whisper, and simplify complex English SOPs into Taglish slides.
 
 ### Phase 5: Interaction (Offline-First State Sync)
 
-- **[`Story_10_SQLiteOfflineFirstSyncQueueAndRealtime.md`](roadmap/Story_10_SQLiteOfflineFirstSyncQueueAndRealtime.md):** Implement persistent offline queues, intercept disconnected status writes, and automate chronological sync runs.
+- **(complete)[`Story_10_SQLiteOfflineFirstSyncQueueAndRealtime.md`](roadmap/Story_10_SQLiteOfflineFirstSyncQueueAndRealtime.md):** Implement persistent offline queues, intercept disconnected status writes, and automate chronological sync runs.
 
 ### Phase 6: Polish (Accrual Dials & native builds)
 
