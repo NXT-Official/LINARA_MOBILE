@@ -3,6 +3,7 @@ import { ActivityIndicator, ScrollView, StyleSheet, Text, View } from "react-nat
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 
 import { colors } from "@/lib/theme";
+import { OFF_AVAILABILITY, type ManualAvailability } from "@/lib/availability";
 import { useRosaAvailability } from "@/hooks/use-rosa-availability";
 import { useRealtimeSubscription } from "@/hooks/use-realtime-subscription";
 import { DignityHeader } from "@/components/features/today/dignity-header";
@@ -10,6 +11,7 @@ import { ActiveFocusCard } from "@/components/features/today/active-focus-card";
 import { FloatingQuickUtosFeed } from "@/components/features/utos/floating-quick-utos-feed";
 import { PrivateScratchpad } from "@/components/features/notes/PrivateScratchpad";
 import { getMyHelperProfile } from "@/services/api/helper-profile";
+import { setHelperAvailability, setHelperOff } from "@/services/api/availability";
 import { getFocusTask, startTicket, completeTicket, type FocusTask } from "@/services/api/tickets";
 import { acknowledgeQuickUto, getPendingQuickUtos } from "@/services/api/quick-utos";
 import { enqueueSyncAction } from "@/services/sqlite-queue";
@@ -31,6 +33,11 @@ export default function TodayScreen() {
   });
   const helperId = profileQuery.data?.id ?? null;
 
+  const manual: ManualAvailability =
+    profileQuery.data?.manualStatus === "available" && profileQuery.data.manualAvailableUntil
+      ? { manual: "available", availableUntil: profileQuery.data.manualAvailableUntil }
+      : OFF_AVAILABILITY;
+
   const availability = useRosaAvailability(
     profileQuery.data
       ? {
@@ -39,7 +46,19 @@ export default function TodayScreen() {
           weeklyRestDay: profileQuery.data.weeklyRestDay,
         }
       : null,
+    manual,
   );
+
+  const invalidateProfile = () =>
+    queryClient.invalidateQueries({ queryKey: ["my-helper-profile"] });
+  const setAvailableMutation = useMutation({
+    mutationFn: (hours: number) => setHelperAvailability(helperId as string, hours),
+    onSuccess: invalidateProfile,
+  });
+  const setOffMutation = useMutation({
+    mutationFn: () => setHelperOff(helperId as string),
+    onSuccess: invalidateProfile,
+  });
 
   const focusTaskQuery = useQuery({
     queryKey: ["focus-task", helperId],
@@ -145,9 +164,12 @@ export default function TodayScreen() {
           <>
             <DignityHeader
               profile={profileQuery.data}
-              availability={availability.status}
-              onAvailable={availability.setAvailable}
-              onOff={availability.setOff}
+              availability={availability}
+              onAvailable={(hours) => {
+                if (availability.quiet || !helperId) return;
+                setAvailableMutation.mutate(hours);
+              }}
+              onOff={() => helperId && setOffMutation.mutate()}
             />
 
             {focusTaskQuery.isLoading ? (

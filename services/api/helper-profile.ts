@@ -11,6 +11,10 @@ export interface HelperProfileSummary {
   weeklyRestDay: number;
   monthlyRate: number;
   paydayInterval: "semi_monthly" | "monthly";
+  /** Real, synced "Available for N hours" opt-in -- see ../../LINARA/MULTI_HELPER_HANDLING.md.
+   * `manualAvailableUntil` is an epoch ms timestamp, or null if there's no active override. */
+  manualStatus: "available" | "off" | null;
+  manualAvailableUntil: number | null;
 }
 
 /**
@@ -33,7 +37,7 @@ export async function getMyHelperProfile(): Promise<HelperProfileSummary> {
   const { data, error } = await supabase
     .from("helper_profiles")
     .select(
-      "id, household_id, name, station, shift_start, shift_end, weekly_rest_day, monthly_rate, payday_interval",
+      "id, household_id, name, station, shift_start, shift_end, weekly_rest_day, monthly_rate, payday_interval, manual_status, manual_available_until",
     )
     .eq("user_id", user.id)
     .single();
@@ -53,5 +57,9 @@ export async function getMyHelperProfile(): Promise<HelperProfileSummary> {
     weeklyRestDay: data.weekly_rest_day,
     monthlyRate: Number(data.monthly_rate),
     paydayInterval: data.payday_interval,
+    manualStatus: data.manual_status,
+    manualAvailableUntil: data.manual_available_until
+      ? new Date(data.manual_available_until).getTime()
+      : null,
   };
 }
