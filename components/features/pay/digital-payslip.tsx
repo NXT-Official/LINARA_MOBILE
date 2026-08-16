@@ -2,6 +2,7 @@ import { StyleSheet, Text, View } from "react-native";
 
 import { colors, fonts } from "@/lib/theme";
 import { formatPeso } from "@/lib/format";
+import { formatCutoffRange } from "@/lib/cutoff";
 import { computeStatutorySplit, LegalContributionSplit } from "./legal-contribution-split";
 
 /**
@@ -19,10 +20,20 @@ export function DigitalPayslip({
   monthlyRate,
   paydayInterval,
   approvedValeTotal,
+  cutoffStart,
+  cutoffEnd,
 }: {
   monthlyRate: number;
   paydayInterval: "semi_monthly" | "monthly";
   approvedValeTotal: number;
+  /**
+   * The current cutoff's boundaries, from `getHouseholdCutoff` (the shared
+   * Postgres RPC). Optional so the card still renders while the query is in
+   * flight -- it falls back to the interval label it showed before dates
+   * existed here. Never computed locally: see services/api/cutoff.ts.
+   */
+  cutoffStart?: string;
+  cutoffEnd?: string;
 }) {
   const cutoffsPerMonth = paydayInterval === "semi_monthly" ? 2 : 1;
   const basePay = monthlyRate / cutoffsPerMonth;
@@ -30,10 +41,13 @@ export function DigitalPayslip({
   const employeeShareThisCutoff = split.totalEmployee / cutoffsPerMonth;
   const netEstimate = Math.max(0, basePay - employeeShareThisCutoff - approvedValeTotal);
 
+  const intervalLabel =
+    paydayInterval === "semi_monthly" ? "This cutoff (half-month)" : "This cutoff (monthly)";
+
   return (
     <View style={styles.card}>
       <Text style={styles.eyebrow}>
-        {paydayInterval === "semi_monthly" ? "This cutoff (half-month)" : "This cutoff (monthly)"}
+        {cutoffStart && cutoffEnd ? formatCutoffRange(cutoffStart, cutoffEnd) : intervalLabel}
       </Text>
       <Text style={styles.netPay}>{formatPeso(netEstimate)}</Text>
       <Text style={styles.netPayHint}>Estimated take-home</Text>

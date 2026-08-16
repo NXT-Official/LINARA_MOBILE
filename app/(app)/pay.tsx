@@ -2,10 +2,13 @@ import { ActivityIndicator, ScrollView, StyleSheet, Text, View } from "react-nat
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 
 import { colors, fonts } from "@/lib/theme";
+import { getHouseholdCutoff } from "@/services/api/cutoff";
 import { getMyHelperProfile } from "@/services/api/helper-profile";
 import { getMyLedgerEntries, restOwedMinutes } from "@/services/api/ledger";
 import { getMyPayslips } from "@/services/api/payslips";
+import { getMyRestOffRequests, getRestOwedBalance, requestRestOff } from "@/services/api/rest-off";
 import { getMyVales, requestVale } from "@/services/api/vales";
+import { RestOffRequestForm } from "@/components/features/pay/rest-off-request-form";
 import { DigitalPayslip } from "@/components/features/pay/digital-payslip";
 import { PayslipHistory } from "@/components/features/pay/payslip-history";
 import { RestOwedCounter } from "@/components/features/pay/rest-owed-counter";
@@ -43,6 +46,48 @@ export default function PayScreen() {
     enabled: Boolean(helperId),
   });
 
+  // Server-derived cutoff boundaries -- keyed on the interval because that is
+  // what the RPC takes. See services/api/cutoff.ts for why this isn't computed
+  // locally.
+  const paydayInterval = profileQuery.data?.paydayInterval ?? null;
+  const cutoffQuery = useQuery({
+    queryKey: ["household-cutoff", paydayInterval],
+    queryFn: () => getHouseholdCutoff(paydayInterval as "semi_monthly" | "monthly"),
+    enabled: Boolean(paydayInterval),
+  });
+
+  // Rest-off redemption. Balance comes from the shared Postgres function, not
+  // summed here, so it matches the manager's number and the approval guard's.
+  const restOffQuery = useQuery({
+    queryKey: ["rest-off-requests", helperId],
+    queryFn: () => getMyRestOffRequests(helperId as string),
+    enabled: Boolean(helperId),
+  });
+
+  const restBalanceQuery = useQuery({
+    queryKey: ["rest-owed-balance", helperId],
+    queryFn: () => getRestOwedBalance(helperId as string),
+    enabled: Boolean(helperId),
+  });
+
+  const restOffMutation = useMutation({
+    mutationFn: ({
+      restDate,
+      startTime,
+      endTime,
+      note,
+    }: {
+      restDate: string;
+      startTime: string;
+      endTime: string;
+      note?: string;
+    }) => requestRestOff(helperId as string, restDate, startTime, endTime, note),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["rest-off-requests", helperId] });
+      queryClient.invalidateQueries({ queryKey: ["rest-owed-balance", helperId] });
+    },
+  });
+
   const valeMutation = useMutation({
     mutationFn: ({ amount, reason }: { amount: number; reason: string }) =>
       requestVale(helperId as string, amount, reason),
@@ -71,6 +116,8 @@ export default function PayScreen() {
             monthlyRate={profileQuery.data.monthlyRate}
             paydayInterval={profileQuery.data.paydayInterval}
             approvedValeTotal={approvedValeTotal}
+            cutoffStart={cutoffQuery.data?.cutoffStart}
+            cutoffEnd={cutoffQuery.data?.cutoffEnd}
           />
 
           {!payslipsQuery.isLoading && <PayslipHistory payslips={payslipsQuery.data ?? []} />}
@@ -80,7 +127,22 @@ export default function PayScreen() {
               <ActivityIndicator color={colors.pineTeal} />
             </View>
           ) : (
-            <RestOwedCounter minutes={restMinutes} />
+            // The REDEEMABLE balance (accrued minus already-approved rest off),
+            // not the raw accrual -- same number the manager's dashboard shows
+            // and the same one the approval guard enforces. Falls back to the
+            // local accrual only while the balance query is still resolving.
+            <RestOwedCounter minutes={restBalanceQuery.data ?? restMinutes} />
+          )}
+
+          {!restBalanceQuery.isLoading && (
+            <RestOffRequestForm
+              balanceMinutes={restBalanceQuery.data ?? 0}
+              requests={restOffQuery.data ?? []}
+              submitting={restOffMutation.isPending}
+              onSubmit={(restDate, startTime, endTime, note) =>
+                restOffMutation.mutate({ restDate, startTime, endTime, note })
+              }
+            />
           )}
 
           {valesQuery.isLoading ? (
