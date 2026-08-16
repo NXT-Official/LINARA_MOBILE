@@ -18,6 +18,19 @@ export interface ShiftWindow {
   shiftEnd: string;
   /** 0 = Sunday, matching helper_profiles.weekly_rest_day. */
   weeklyRestDay: number;
+  /**
+   * The protected mid-shift break (`helper_profiles.break_start`/`break_end`,
+   * added by ../LINARA/supabase/add-shift-break-columns.sql). Both null when
+   * the household hasn't set one. Time inside this window is NOT on-shift --
+   * it's exactly the "on a break" friction trigger from plan.md's After-Hours
+   * Friction Gating section, and the manager dashboard's `isMinuteInShift`
+   * (../LINARA/src/features/shifts/shift.utils.ts) excludes it too. Keep the
+   * two in step: if they disagree, the manager sees a break the helper's own
+   * device doesn't, and the Ledger's `rest_break` pay classification follows
+   * the manager's view.
+   */
+  breakStart?: string | null;
+  breakEnd?: string | null;
 }
 
 export type ManualAvailability = {
@@ -56,8 +69,13 @@ export function deriveRosaStatus(
   }
 
   const minutes = minutesOfDay(now);
+  const onBreak =
+    Boolean(shift.breakStart && shift.breakEnd) &&
+    minutes >= parseTimeToMinutes(shift.breakStart as string) &&
+    minutes < parseTimeToMinutes(shift.breakEnd as string);
   const onShift =
     !isRestDay &&
+    !onBreak &&
     minutes >= parseTimeToMinutes(shift.shiftStart) &&
     minutes < parseTimeToMinutes(shift.shiftEnd);
 

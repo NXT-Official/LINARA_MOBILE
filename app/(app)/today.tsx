@@ -43,6 +43,8 @@ export default function TodayScreen() {
       ? {
           shiftStart: profileQuery.data.shiftStart,
           shiftEnd: profileQuery.data.shiftEnd,
+          breakStart: profileQuery.data.breakStart,
+          breakEnd: profileQuery.data.breakEnd,
           weeklyRestDay: profileQuery.data.weeklyRestDay,
         }
       : null,
