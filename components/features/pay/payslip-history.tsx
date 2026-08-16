@@ -10,6 +10,7 @@ const STATUS_LABEL: Record<PayoutStatus, string> = {
   processing: "Pinoproseso",
   succeeded: "Nabayaran",
   failed: "Hindi na-send",
+  needs_review: "Nire-review",
 };
 
 const STATUS_COLOR: Record<PayoutStatus, string> = {
@@ -17,6 +18,7 @@ const STATUS_COLOR: Record<PayoutStatus, string> = {
   processing: colors.terracottaGold,
   succeeded: colors.pineTeal,
   failed: colors.terracottaGold,
+  needs_review: colors.terracottaGold,
 };
 
 /**

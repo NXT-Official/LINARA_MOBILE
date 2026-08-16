@@ -1,7 +1,11 @@
 import { supabase } from "@/services/supabase";
 
 export type PayoutChannelCode = "PH_GCASH" | "PH_PAYMAYA";
-export type PayoutStatus = "pending_send" | "processing" | "succeeded" | "failed";
+// 'needs_review' mirrors ../LINARA/src/features/pay/pay.types.ts -- an
+// ambiguous payout the manager must reconcile against Xendit on the web Money
+// tab. Read-only here (this app never initiates a payout), but the digital
+// payslip must render the status without crashing, so it's part of the union.
+export type PayoutStatus = "pending_send" | "processing" | "succeeded" | "failed" | "needs_review";
 
 export interface Payslip {
   id: string;
