@@ -40,7 +40,8 @@
     "eslint-plugin-react-hooks": "^7.1.1",
     "prettier": "^3.9.6",
     "tailwindcss": "^4.3.3",
-    "typescript": "~6.0.3"
+    "typescript": "~6.0.3",
+    "vitest": "^4.1.10"
   },
   "scripts": {
     "start": "expo start",
@@ -48,6 +49,8 @@
     "ios": "expo start --ios",
     "web": "expo start --web",
     "lint": "eslint .",
+    "test": "vitest run",
+    "test:watch": "vitest",
     "format": "prettier --write .",
     "typecheck": "tsc --noEmit"
   },
