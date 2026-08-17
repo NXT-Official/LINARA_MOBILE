@@ -56,12 +56,33 @@ export function ledgerEntryMinutes(entry: LedgerEntry): number {
 }
 
 /**
- * Total minutes owed back as time-off-in-lieu (roadmap Story 11's Rest Owed
- * Counter / plan.md 3.2). Premium-pay entries are paid in cash instead
- * (architecture.md Section 5.2) and deliberately excluded here.
+ * Total minutes accrued as time-off-in-lieu (roadmap Story 11's Rest Owed
+ * Counter / plan.md 3.2).
+ *
+ * FALLBACK ONLY. The authoritative number is `rest_owed_balance_minutes`
+ * (../LINARA/supabase/add-rest-off-requests.sql), read via
+ * `getRestOwedBalance` -- the manager's dashboard, this app and the approval
+ * guard all use it precisely so the three cannot disagree. This local sum
+ * exists to show something while that query is in flight, and it is an
+ * OVER-estimate: it does not subtract minutes already redeemed through an
+ * approved rest-off request.
+ *
+ * `premium_pay` entries are COUNTED, matching the RPC's COUNT_PREMIUM_AS_REST
+ * behaviour. This previously excluded them, on the strength of a comment
+ * saying they were "paid in cash instead" -- they never were. Nothing has ever
+ * paid a premium entry, so excluding them accrued rest-day work to NOTHING,
+ * and the 2026-08-16 decision (../LINARA/KNOWN_GAPS.md C39) settled that
+ * after-hours work is time, not money, with rest-day premium explicitly not
+ * paid in cash either.
+ *
+ * ../LINARA's Session E / E2 made this urgent: for a few hours the default was
+ * derived from employment, so a live-out helper's entries were all tagged
+ * `premium_pay` and the old filter would have shown her a flat zero here until
+ * the real balance arrived. That derivation was then removed
+ * (fix-resolution-default-to-rest.sql) -- but a manager can still set the
+ * premium tag per helper or per entry, so counting both remains necessary, not
+ * merely defensive.
  */
 export function restOwedMinutes(entries: LedgerEntry[]): number {
-  return entries
-    .filter((entry) => entry.resolutionType === "rest_owed")
-    .reduce((sum, entry) => sum + ledgerEntryMinutes(entry), 0);
+  return entries.reduce((sum, entry) => sum + ledgerEntryMinutes(entry), 0);
 }
