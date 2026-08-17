@@ -109,3 +109,35 @@ export async function requestRestOff(
     balanceAfterIfApproved: row.balance_after_if_approved,
   };
 }
+
+/**
+ * Withdraw a request the kasambahay made herself, while it is still PENDING.
+ *
+ * The `cancelled` status has existed in the table's CHECK constraint since it
+ * was created and nothing ever set it (../LINARA/KNOWN_GAPS.md C39), so a
+ * mistyped date could only be undone by asking a manager to DECLINE it -- which
+ * records a refusal in the history where there was only a typo. Closed by
+ * ../LINARA/supabase/add-rest-off-validation.sql.
+ *
+ * An APPROVED request cannot be cancelled here: the balance is already debited
+ * and a day off may have been arranged around it, so unwinding it is a
+ * conversation with the manager rather than a button. The RPC refuses, and the
+ * button below is only rendered on pending rows.
+ */
+export async function cancelRestOffRequest(
+  requestId: string,
+): Promise<{ status: RestOffStatus; balanceMinutes: number }> {
+  const { data, error } = await supabase.rpc("cancel_rest_off_request", {
+    p_request_id: requestId,
+  });
+
+  if (error) throw new Error(error.message);
+
+  const row = (
+    data as { request_id: string; resulting_status: RestOffStatus; balance_after: number }[] | null
+  )?.[0];
+
+  if (!row) throw new Error("Failed to cancel the rest-off request");
+
+  return { status: row.resulting_status, balanceMinutes: Number(row.balance_after ?? 0) };
+}

@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { StyleSheet, Text, View } from "react-native";
+import { Pressable, StyleSheet, Text, View } from "react-native";
 
 import { colors, fonts } from "@/lib/theme";
 import { formatHoursMinutes } from "@/lib/format";
@@ -40,11 +40,20 @@ export function RestOffRequestForm({
   requests,
   onSubmit,
   submitting,
+  onCancel,
+  cancellingId,
+  /** The household's civil date from Postgres, "YYYY-MM-DD". Optional so the
+   *  form still works while it loads -- absent, the past-date hint is simply
+   *  not shown and the server remains the authority either way. */
+  householdToday,
 }: {
   balanceMinutes: number;
   requests: RestOffRequest[];
   onSubmit: (restDate: string, startTime: string, endTime: string, note?: string) => void;
   submitting: boolean;
+  onCancel?: (requestId: string) => void;
+  cancellingId?: string | null;
+  householdToday?: string;
 }) {
   const [restDate, setRestDate] = useState("");
   const [startTime, setStartTime] = useState("");
@@ -67,7 +76,21 @@ export function RestOffRequestForm({
     .reduce((sum, r) => sum + r.minutes, 0);
   const uncommitted = balanceMinutes - pendingMinutes;
 
-  const canSubmit = validShape && minutesAsked > 0 && minutesAsked <= uncommitted && !submitting;
+  // Advisory only, like the balance check above it: the authority is
+  // `request_rest_off`, which compares against household_today() on the
+  // Postgres clock (../LINARA/supabase/add-rest-off-validation.sql). Comparing
+  // ISO date strings is safe -- both are YYYY-MM-DD in the household's zone, so
+  // this never parses a Date and never touches the device's timezone, which is
+  // the mistake C38 was about.
+  const isPastDate = Boolean(
+    householdToday && DATE_RE.test(restDate.trim()) && restDate.trim() < householdToday,
+  );
+
+  // Overlap is deliberately NOT checked here. It would need every existing
+  // window for that date, and a stale client list refusing a legitimate request
+  // is worse than the server refusing an illegitimate one with a clear message.
+  const canSubmit =
+    validShape && minutesAsked > 0 && minutesAsked <= uncommitted && !isPastDate && !submitting;
 
   const handleSubmit = () => {
     if (!canSubmit) return;
@@ -87,6 +110,11 @@ export function RestOffRequestForm({
         {formatHoursMinutes(uncommitted)} ang pwede mong hilingin
         {pendingMinutes > 0 ? ` (${formatHoursMinutes(pendingMinutes)} naghihintay)` : ""}.
       </Text>
+      {isPastDate ? (
+        <Text style={styles.warning}>
+          Lumipas na ang petsang iyon{householdToday ? ` (ngayon: ${householdToday})` : ""}.
+        </Text>
+      ) : null}
 
       <TextField
         label="Petsa (YYYY-MM-DD)"
@@ -140,9 +168,28 @@ export function RestOffRequestForm({
                   <Text style={styles.rowMeta}>{r.note}</Text>
                 ) : null}
               </View>
-              <Text style={[styles.status, { color: STATUS_COLOR[r.status] }]}>
-                {STATUS_LABEL[r.status]}
-              </Text>
+              {/* Cancel is offered on PENDING rows only. An approved request has
+                  already debited the balance and a day may have been arranged
+                  around it -- that is a conversation with the manager, not a
+                  button, and the RPC refuses it anyway. */}
+              {r.status === "pending" && onCancel ? (
+                <Pressable
+                  onPress={() => onCancel(r.id)}
+                  disabled={cancellingId === r.id}
+                  hitSlop={8}
+                  accessibilityRole="button"
+                  accessibilityLabel={`Kanselahin ang request para sa ${r.restDate}`}
+                  style={styles.cancelButton}
+                >
+                  <Text style={styles.cancelText}>
+                    {cancellingId === r.id ? "…" : "Kanselahin"}
+                  </Text>
+                </Pressable>
+              ) : (
+                <Text style={[styles.status, { color: STATUS_COLOR[r.status] }]}>
+                  {STATUS_LABEL[r.status]}
+                </Text>
+              )}
             </View>
           ))}
         </View>
@@ -202,5 +249,22 @@ const styles = StyleSheet.create({
   status: {
     fontSize: 11,
     fontFamily: fonts.bodyBold,
+  },
+  warning: {
+    fontSize: 12,
+    fontFamily: fonts.bodyBold,
+    color: colors.terracottaGold,
+  },
+  cancelButton: {
+    paddingHorizontal: 10,
+    paddingVertical: 4,
+    borderRadius: 999,
+    borderWidth: 1,
+    borderColor: colors.mutedInk,
+  },
+  cancelText: {
+    fontSize: 11,
+    fontFamily: fonts.bodyBold,
+    color: colors.mutedInk,
   },
 });

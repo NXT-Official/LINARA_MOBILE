@@ -6,7 +6,12 @@ import { getHouseholdCutoff } from "@/services/api/cutoff";
 import { getMyHelperProfile } from "@/services/api/helper-profile";
 import { getMyLedgerEntries, restOwedMinutes } from "@/services/api/ledger";
 import { getMyPayslips } from "@/services/api/payslips";
-import { getMyRestOffRequests, getRestOwedBalance, requestRestOff } from "@/services/api/rest-off";
+import {
+  cancelRestOffRequest,
+  getMyRestOffRequests,
+  getRestOwedBalance,
+  requestRestOff,
+} from "@/services/api/rest-off";
 import { getMyVales, requestVale } from "@/services/api/vales";
 import { RestOffRequestForm } from "@/components/features/pay/rest-off-request-form";
 import { DigitalPayslip } from "@/components/features/pay/digital-payslip";
@@ -88,6 +93,19 @@ export default function PayScreen() {
     },
   });
 
+  // Withdrawing a pending request. Invalidates the balance as well as the list
+  // even though cancelling a PENDING request cannot change it -- pending
+  // minutes were never debited. Cheap, and it keeps the refresh rule the same
+  // for every rest-off mutation rather than making the reader remember which
+  // ones move the number.
+  const restOffCancelMutation = useMutation({
+    mutationFn: (requestId: string) => cancelRestOffRequest(requestId),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["rest-off-requests", helperId] });
+      queryClient.invalidateQueries({ queryKey: ["rest-owed-balance", helperId] });
+    },
+  });
+
   const valeMutation = useMutation({
     mutationFn: ({ amount, reason }: { amount: number; reason: string }) =>
       requestVale(helperId as string, amount, reason),
@@ -142,6 +160,13 @@ export default function PayScreen() {
               onSubmit={(restDate, startTime, endTime, note) =>
                 restOffMutation.mutate({ restDate, startTime, endTime, note })
               }
+              onCancel={(requestId) => restOffCancelMutation.mutate(requestId)}
+              cancellingId={
+                restOffCancelMutation.isPending ? (restOffCancelMutation.variables ?? null) : null
+              }
+              // The household's civil date from Postgres, never the device's --
+              // a phone with a wrong date must not decide what "past" means.
+              householdToday={cutoffQuery.data?.today}
             />
           )}
 
