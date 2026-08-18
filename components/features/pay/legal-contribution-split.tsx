@@ -3,50 +3,14 @@ import { StyleSheet, Text, View } from "react-native";
 import { colors } from "@/lib/theme";
 import { formatPeso } from "@/lib/format";
 
-export interface StatutorySplit {
-  isUnder5k: boolean;
-  sssEmployer: number;
-  sssEmployee: number;
-  philhealthEmployer: number;
-  philhealthEmployee: number;
-  pagibigEmployer: number;
-  pagibigEmployee: number;
-  totalEmployer: number;
-  totalEmployee: number;
-}
-
 /**
- * Batas Kasambahay's monthly statutory split, ported from the web
- * reference's `LegalContributionSplitCard`
- * (../LINARA/src/features/people/components/legal-contribution-split-card.tsx)
- * -- a deterministic legal formula, not demo data, so this is a straight
- * port rather than a redesign. Exported so the Digital Payslip's net-pay
- * math (digital-payslip.tsx) uses the exact same numbers this table shows.
+ * The split itself lives in lib/statutory.ts so it can be unit-tested without
+ * React Native, and so ../LINARA's suite can compare the two repos' copies
+ * directly (see that file). Re-exported here because this module was the
+ * original home and other files import it from here.
  */
-export function computeStatutorySplit(wagePHP: number): StatutorySplit {
-  const isUnder5k = wagePHP < 5000;
-
-  const sssEmployer = isUnder5k ? 400 : 350;
-  const sssEmployee = isUnder5k ? 0 : 150;
-
-  const philhealthEmployer = isUnder5k ? 150 : 125;
-  const philhealthEmployee = isUnder5k ? 0 : 125;
-
-  const pagibigEmployer = 100;
-  const pagibigEmployee = isUnder5k ? 0 : 100;
-
-  return {
-    isUnder5k,
-    sssEmployer,
-    sssEmployee,
-    philhealthEmployer,
-    philhealthEmployee,
-    pagibigEmployer,
-    pagibigEmployee,
-    totalEmployer: sssEmployer + philhealthEmployer + pagibigEmployer,
-    totalEmployee: sssEmployee + philhealthEmployee + pagibigEmployee,
-  };
-}
+export { computeStatutorySplit, type StatutorySplit } from "@/lib/statutory";
+import { computeStatutorySplit } from "@/lib/statutory";
 
 /** Roadmap Story 11 step 1's statutory split display. */
 export function LegalContributionSplit({ wagePHP }: { wagePHP: number }) {
