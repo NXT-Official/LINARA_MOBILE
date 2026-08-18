@@ -3,6 +3,7 @@ import { Pressable, StyleSheet, Text, View } from "react-native";
 
 import { colors, fonts } from "@/lib/theme";
 import { formatHoursMinutes } from "@/lib/format";
+import { DateTimeField } from "@/components/ui/date-time-field";
 import { TextField } from "@/components/ui/text-field";
 import { PrimaryButton } from "@/components/ui/primary-button";
 import type { RestOffRequest, RestOffStatus } from "@/services/api/rest-off";
@@ -116,23 +117,35 @@ export function RestOffRequestForm({
         </Text>
       ) : null}
 
-      <TextField
-        label="Petsa (YYYY-MM-DD)"
+      {/* Native pickers rather than typed text (E3b). The values are still
+          YYYY-MM-DD / HH:MM strings, so everything downstream is unchanged --
+          see lib/datetime-fields.ts, which converts without ever passing
+          through UTC. */}
+      <DateTimeField
+        label="Petsa"
+        mode="date"
         value={restDate}
-        onChangeText={setRestDate}
-        placeholder="2026-08-20"
+        onChange={setRestDate}
+        placeholder="Pumili ng petsa"
+        // The server refuses a past date against household_today() anyway; this
+        // stops the picker offering one in the first place. Falls back to
+        // unrestricted while the household date is still loading rather than
+        // guessing from the device clock.
+        minimumIsoDate={householdToday}
       />
-      <TextField
-        label="Simula (HH:MM)"
+      <DateTimeField
+        label="Simula"
+        mode="time"
         value={startTime}
-        onChangeText={setStartTime}
-        placeholder="09:00"
+        onChange={setStartTime}
+        placeholder="Anong oras magsisimula?"
       />
-      <TextField
-        label="Katapusan (HH:MM)"
+      <DateTimeField
+        label="Katapusan"
+        mode="time"
         value={endTime}
-        onChangeText={setEndTime}
-        placeholder="13:00"
+        onChange={setEndTime}
+        placeholder="Anong oras matatapos?"
       />
       <TextField
         label="Dahilan (optional)"
