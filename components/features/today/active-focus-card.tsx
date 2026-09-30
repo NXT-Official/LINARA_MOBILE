@@ -1,5 +1,6 @@
 import { useState } from "react";
-import { Pressable, StyleSheet, Text, View } from "react-native";
+import { Image, Pressable, StyleSheet, Text, View } from "react-native";
+import * as ImagePicker from "expo-image-picker";
 
 import { colors } from "@/lib/theme";
 import type { FocusTask } from "@/services/api/tickets";
@@ -27,6 +28,9 @@ const CANT_NOW_REASONS = [
  * magagawa ngayon" puts it on hold with her reason (concept doc §8: saying
  * "not now" is what separates a colleague from a subordinate); the manager
  * sees it in Needs You and can put it back on her board.
+ *
+ * A photo of the finished work is optional -- the Done "plated dish" that
+ * the household's Pass (and an OFW parent's glance) shows. Never required.
  */
 export function ActiveFocusCard({
   task,
@@ -39,16 +43,32 @@ export function ActiveFocusCard({
 }: {
   task: FocusTask;
   onStart: () => void;
-  onComplete: () => void;
+  /** `photoUri` is a local capture to attach, or null to finish without one. */
+  onComplete: (photoUri: string | null) => void;
   onCantNow: (reason: string) => void;
   isStarting: boolean;
   isCompleting: boolean;
   isHolding: boolean;
 }) {
+  const [photoUri, setPhotoUri] = useState<string | null>(null);
+  const [photoError, setPhotoError] = useState<string | null>(null);
   const [askingWhy, setAskingWhy] = useState(false);
   const [picked, setPicked] = useState<string | null>(null);
   const [typed, setTyped] = useState("");
   const reason = typed.trim() || picked;
+
+  const takePhoto = async () => {
+    setPhotoError(null);
+    const permission = await ImagePicker.requestCameraPermissionsAsync();
+    if (!permission.granted) {
+      setPhotoError("Kailangan ng camera access para makakuha ng litrato.");
+      return;
+    }
+    const result = await ImagePicker.launchCameraAsync({ mediaTypes: "images", quality: 0.9 });
+    if (!result.canceled && result.assets?.[0]) {
+      setPhotoUri(result.assets[0].uri);
+    }
+  };
 
   const closeAsk = () => {
     setAskingWhy(false);
@@ -79,7 +99,36 @@ export function ActiveFocusCard({
         <PrimaryButton label="Start Task" loading={isStarting} onPress={onStart} />
       )}
       {task.status === "in_progress" && (
-        <PrimaryButton label="Done" loading={isCompleting} onPress={onComplete} />
+        <>
+          {photoUri ? (
+            <View style={styles.photoRow}>
+              <Image
+                source={{ uri: photoUri }}
+                style={styles.photo}
+                accessibilityLabel="Litrato ng natapos"
+              />
+              <Pressable
+                onPress={() => setPhotoUri(null)}
+                accessibilityRole="button"
+                style={styles.linkButton}
+              >
+                <Text style={styles.linkText}>Alisin ang litrato</Text>
+              </Pressable>
+            </View>
+          ) : (
+            <PrimaryButton
+              label="Ipakita ang natapos mo (optional)"
+              variant="secondary"
+              onPress={takePhoto}
+            />
+          )}
+          {photoError ? <Text style={styles.error}>{photoError}</Text> : null}
+          <PrimaryButton
+            label={photoUri ? "Done, kasama ang litrato" : "Done"}
+            loading={isCompleting}
+            onPress={() => onComplete(photoUri)}
+          />
+        </>
       )}
 
       {(task.status === "todo" || task.status === "in_progress") &&
@@ -179,6 +228,31 @@ const styles = StyleSheet.create({
     fontSize: 14,
     lineHeight: 20,
     color: colors.ink,
+  },
+  photoRow: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 12,
+  },
+  photo: {
+    width: 72,
+    height: 72,
+    borderRadius: 12,
+    backgroundColor: colors.sand,
+  },
+  linkButton: {
+    minHeight: 44,
+    justifyContent: "center",
+  },
+  linkText: {
+    fontSize: 14,
+    fontWeight: "700",
+    color: colors.pineTeal,
+    textDecorationLine: "underline",
+  },
+  error: {
+    fontSize: 13,
+    color: colors.terracottaInk,
   },
   cantNow: {
     minHeight: 44,

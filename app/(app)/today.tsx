@@ -21,6 +21,7 @@ import {
 } from "@/services/api/tickets";
 import { acknowledgeQuickUto, getPendingQuickUtos } from "@/services/api/quick-utos";
 import { enqueueSyncAction } from "@/services/sqlite-queue";
+import { uploadEvidenceImage } from "@/services/media-upload";
 import { isOffline } from "@/lib/network";
 
 /**
@@ -109,19 +110,31 @@ export default function TodayScreen() {
     },
   });
 
+  // Done, with an optional photo of the finished work. Offline, it queues
+  // with the local photo (uploaded on reconnect, same as the palengke
+  // receipt). Online, a failed upload leaves the task in progress rather than
+  // marking it done without the photo she meant to attach.
+  const [completeError, setCompleteError] = useState<string | null>(null);
   const completeMutation = useMutation({
-    mutationFn: async (ticketId: string) => {
+    mutationFn: async ({ ticketId, photoUri }: { ticketId: string; photoUri: string | null }) => {
+      const householdId = profileQuery.data?.householdId ?? "";
       if (await isOffline()) {
-        await enqueueSyncAction("complete_ticket", {
-          ticketId,
-          householdId: profileQuery.data?.householdId ?? "",
-        });
+        await enqueueSyncAction("complete_ticket", { ticketId, householdId }, photoUri);
         return { queued: true };
       }
-      await completeTicket(ticketId);
+      let photoUrl: string | undefined;
+      if (photoUri) {
+        const uploaded = await uploadEvidenceImage(
+          photoUri,
+          `${householdId}/tickets/${ticketId}-${Date.now()}.jpg`,
+        );
+        photoUrl = uploaded.signedUrl;
+      }
+      await completeTicket(ticketId, photoUrl);
       return { queued: false };
     },
-    onMutate: async (ticketId) => {
+    onMutate: async ({ ticketId }) => {
+      setCompleteError(null);
       await queryClient.cancelQueries({ queryKey: ["focus-task", helperId] });
       const previous = queryClient.getQueryData<FocusTask | null>(["focus-task", helperId]);
       queryClient.setQueryData<FocusTask | null>(["focus-task", helperId], (old) =>
@@ -129,10 +142,15 @@ export default function TodayScreen() {
       );
       return { previous };
     },
-    onError: (_err, _ticketId, context) => {
+    onError: (_err, vars, context) => {
       if (context) {
         queryClient.setQueryData(["focus-task", helperId], context.previous);
       }
+      setCompleteError(
+        vars.photoUri
+          ? "Hindi na-upload ang litrato. Subukan ulit, o alisin ang litrato at i-Done."
+          : "Hindi na-save. Subukan ulit.",
+      );
     },
     onSuccess: (result) => {
       if (!result.queued) {
@@ -220,15 +238,23 @@ export default function TodayScreen() {
                 Hindi ma-load ang task mo ngayon. Subukan ulit mamaya.
               </Text>
             ) : focusTask ? (
-              <ActiveFocusCard
-                task={focusTask}
-                onStart={() => startMutation.mutate(focusTask.id)}
-                onComplete={() => completeMutation.mutate(focusTask.id)}
-                onCantNow={(reason) => holdMutation.mutate({ ticketId: focusTask.id, reason })}
-                isStarting={startMutation.isPending}
-                isCompleting={completeMutation.isPending}
-                isHolding={holdMutation.isPending}
-              />
+              <>
+                <ActiveFocusCard
+                  // Fresh per task: a photo or half-typed reason never carries
+                  // over to the next one.
+                  key={focusTask.id}
+                  task={focusTask}
+                  onStart={() => startMutation.mutate(focusTask.id)}
+                  onComplete={(photoUri) =>
+                    completeMutation.mutate({ ticketId: focusTask.id, photoUri })
+                  }
+                  onCantNow={(reason) => holdMutation.mutate({ ticketId: focusTask.id, reason })}
+                  isStarting={startMutation.isPending}
+                  isCompleting={completeMutation.isPending}
+                  isHolding={holdMutation.isPending}
+                />
+                {completeError ? <Text style={styles.errorText}>{completeError}</Text> : null}
+              </>
             ) : (
               <View style={styles.emptyCard}>
                 <Text style={styles.emptyText}>Walang task ngayon. Magandang break, po!</Text>
