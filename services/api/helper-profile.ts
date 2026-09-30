@@ -28,6 +28,11 @@ export interface HelperProfileSummary {
  * post-claim: the caller has a `user_profiles` row and satisfies
  * `helper_profiles_isolation`'s household_id check directly, so no RPC is
  * needed here.
+ *
+ * Her CURRENT employment only. She can also read the rows of households she
+ * has left (helper_profiles_own_read), so without the status filter a second
+ * employment would make `.single()` fail. Throws when she has none; the tab
+ * layout keeps her on My Record in that case (services/api/employment.ts).
  */
 export async function getMyHelperProfile(): Promise<HelperProfileSummary> {
   const {
@@ -45,6 +50,7 @@ export async function getMyHelperProfile(): Promise<HelperProfileSummary> {
       "id, household_id, name, station, shift_start, shift_end, break_start, break_end, weekly_rest_day, monthly_rate, payday_interval, manual_status, manual_available_until",
     )
     .eq("user_id", user.id)
+    .eq("status", "ACTIVE")
     .single();
 
   if (error || !data) {

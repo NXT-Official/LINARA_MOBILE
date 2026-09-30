@@ -1,7 +1,6 @@
 import { WEB_APP_URL } from "@/lib/env";
 import { unregisterForPush } from "@/lib/notifications";
 import { queryClient } from "@/lib/query-client";
-import { getMyHelperProfile } from "@/services/api/helper-profile";
 import { getQueuedActions } from "@/services/sqlite-queue";
 import { supabase } from "@/services/supabase";
 
@@ -11,9 +10,11 @@ import { supabase } from "@/services/supabase";
  * (services/api/handshake.ts) is only for the first time; its invite code is
  * single-use, so this is the only way back in afterwards.
  *
- * A manager account authenticates fine against the same Supabase project but
- * has no helper_profiles row, so it's signed straight back out rather than
- * landing on an empty Today tab.
+ * A manager account authenticates fine against the same Supabase project,
+ * so it's signed straight back out rather than landing on an empty Today tab.
+ * The check is the account's type, not a current employment: a helper whose
+ * household ended her employment can still sign in to read and download her
+ * record, and join a new household (../LINARA/KNOWN_GAPS.md O4).
  */
 export async function signInHelper(email: string, password: string): Promise<void> {
   const { error } = await supabase.auth.signInWithPassword({ email: email.trim(), password });
@@ -27,9 +28,11 @@ export async function signInHelper(email: string, password: string): Promise<voi
     throw new Error(error.message);
   }
 
-  try {
-    await getMyHelperProfile();
-  } catch {
+  const { data: auth } = await supabase.auth.getUser();
+  const { data: profile } = auth.user
+    ? await supabase.from("user_profiles").select("user_type").eq("id", auth.user.id).maybeSingle()
+    : { data: null };
+  if ((profile as { user_type?: string } | null)?.user_type !== "helper") {
     await supabase.auth.signOut();
     throw new Error(
       "Walang helper account na naka-link sa email na ito. Managers: gamitin ang Linara web dashboard.",

@@ -1,20 +1,62 @@
-import { ActivityIndicator, StyleSheet, View } from "react-native";
+import type { ReactNode } from "react";
+import { ActivityIndicator, StyleSheet, View, type StyleProp, type ViewStyle } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
-import { Redirect, Tabs } from "expo-router";
+import { Redirect, Tabs, usePathname } from "expo-router";
+import { useQuery } from "@tanstack/react-query";
 
 import { colors } from "@/lib/theme";
 import { useSession } from "@/lib/session-context";
+import { getMyEmployments } from "@/services/api/employment";
+
+/**
+ * A tab she can see but not open: no household means no board, pantry, week
+ * or pay to show. Greyed rather than hidden, so the app still reads as the
+ * one she knows, waiting for her next household.
+ */
+function LockedTab({
+  children,
+  style,
+  label,
+}: {
+  children?: ReactNode;
+  style?: StyleProp<ViewStyle>;
+  label: string;
+}) {
+  return (
+    <View
+      style={[style, styles.locked]}
+      accessible
+      accessibilityLabel={`${label}, bukas lang kapag may household ka`}
+      accessibilityState={{ disabled: true }}
+    >
+      {children}
+    </View>
+  );
+}
 
 /**
  * Main bottom tab navigator (roadmap Story 5, step 2-3): Today, Pantry, My
  * Pay, themed to the Pine-Teal / Sand brand tokens. Also re-checks the
  * session directly (not just at app/index.tsx) so deep-linking straight into
  * an (app) route can't bypass the auth gate.
+ *
+ * Between households (her employment ended and she hasn't joined a new one,
+ * ../LINARA/KNOWN_GAPS.md O4) only My Record opens: she can read and download
+ * her history and join a new household with an invite code from there. The
+ * other tabs stay visible, greyed out.
  */
 export default function AppTabsLayout() {
   const { session, isLoading } = useSession();
+  const pathname = usePathname();
+  const employmentsQuery = useQuery({
+    queryKey: ["my-employments", session?.user.id],
+    queryFn: getMyEmployments,
+    enabled: Boolean(session),
+    // A household can end her employment while the app is open.
+    refetchInterval: 5 * 60_000,
+  });
 
-  if (isLoading) {
+  if (isLoading || (session && employmentsQuery.isLoading)) {
     return (
       <View style={styles.loading}>
         <ActivityIndicator color={colors.pineTeal} />
@@ -28,6 +70,25 @@ export default function AppTabsLayout() {
   if (!session) {
     return <Redirect href="/(auth)/sign-in" />;
   }
+
+  // Couldn't check (offline, say): don't lock her out of what she had.
+  const employed =
+    employmentsQuery.isError || (employmentsQuery.data ?? []).some((e) => e.status === "ACTIVE");
+
+  if (!employed && pathname !== "/record") {
+    return <Redirect href="/(app)/record" />;
+  }
+
+  const lockedButton = (label: string) =>
+    employed
+      ? {}
+      : {
+          tabBarButton: (props: { children?: ReactNode; style?: StyleProp<ViewStyle> }) => (
+            <LockedTab style={props.style} label={label}>
+              {props.children}
+            </LockedTab>
+          ),
+        };
 
   return (
     <Tabs
@@ -48,6 +109,7 @@ export default function AppTabsLayout() {
           tabBarIcon: ({ color, size }) => (
             <Ionicons name="checkmark-circle" size={size} color={color} />
           ),
+          ...lockedButton("Today"),
         }}
       />
       <Tabs.Screen
@@ -55,6 +117,7 @@ export default function AppTabsLayout() {
         options={{
           title: "My Week",
           tabBarIcon: ({ color, size }) => <Ionicons name="calendar" size={size} color={color} />,
+          ...lockedButton("My Week"),
         }}
       />
       <Tabs.Screen
@@ -62,6 +125,7 @@ export default function AppTabsLayout() {
         options={{
           title: "Pantry",
           tabBarIcon: ({ color, size }) => <Ionicons name="basket" size={size} color={color} />,
+          ...lockedButton("Pantry"),
         }}
       />
       <Tabs.Screen
@@ -69,6 +133,7 @@ export default function AppTabsLayout() {
         options={{
           title: "My Pay",
           tabBarIcon: ({ color, size }) => <Ionicons name="card" size={size} color={color} />,
+          ...lockedButton("My Pay"),
         }}
       />
       <Tabs.Screen
@@ -90,5 +155,11 @@ const styles = StyleSheet.create({
     alignItems: "center",
     justifyContent: "center",
     backgroundColor: colors.sand,
+  },
+  locked: {
+    flex: 1,
+    alignItems: "center",
+    justifyContent: "center",
+    opacity: 0.35,
   },
 });
