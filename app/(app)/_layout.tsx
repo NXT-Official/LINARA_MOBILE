@@ -71,6 +71,15 @@ export default function AppTabsLayout() {
           tabBarIcon: ({ color, size }) => <Ionicons name="card" size={size} color={color} />,
         }}
       />
+      <Tabs.Screen
+        name="record"
+        options={{
+          title: "My Record",
+          tabBarIcon: ({ color, size }) => (
+            <Ionicons name="document-text" size={size} color={color} />
+          ),
+        }}
+      />
     </Tabs>
   );
 }
