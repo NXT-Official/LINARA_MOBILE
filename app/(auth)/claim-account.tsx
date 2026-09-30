@@ -107,6 +107,10 @@ export default function ClaimAccountScreen() {
           Ito ay ise-save nang ligtas sa system. Iyong-iyo lang ang password na ito at hindi ito
           nakikita ng manager mo.
         </Text>
+        <Text style={styles.privacyNote}>
+          May account ka na mula sa dating household? Gamitin ang parehong email at password. Sasali
+          ka lang sa bagong household, at kasama pa rin ang record mo noon.
+        </Text>
 
         {error ? <Text style={styles.errorText}>{error}</Text> : null}
 

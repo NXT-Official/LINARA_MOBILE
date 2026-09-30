@@ -1,9 +1,11 @@
 import { ActivityIndicator, ScrollView, StyleSheet, Text, View } from "react-native";
 import { router, useLocalSearchParams } from "expo-router";
-import { useQuery } from "@tanstack/react-query";
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 
 import { colors } from "@/lib/theme";
 import { formatShiftTime, weekdayName } from "@/lib/format";
+import { useSession } from "@/lib/session-context";
+import { joinHousehold } from "@/services/api/employment";
 import { verifyInviteCode } from "@/services/api/handshake";
 import { PrimaryButton } from "@/components/ui/primary-button";
 
@@ -20,9 +22,26 @@ function TermRow({ label, value }: { label: string; value: string }) {
  * Pre-claim terms audit (roadmap Story 6, step 2 / plan.md 3.1 step 2).
  * Read-only -- the helper confirms these match what was verbally agreed
  * before either flagging a mismatch or proceeding to claim the account.
+ *
+ * Signed in already means she has an account and no current household (her
+ * last employment ended, ../LINARA/KNOWN_GAPS.md O4): the same terms, then
+ * "Sumali" joins this household on the account she has, instead of claiming
+ * a new one.
  */
 export default function ReviewTermsScreen() {
   const { code, flagged } = useLocalSearchParams<{ code: string; flagged?: string }>();
+
+  const { session } = useSession();
+  const queryClient = useQueryClient();
+  const joinMutation = useMutation({
+    mutationFn: () => joinHousehold(code),
+    onSuccess: async () => {
+      // Every cached read belonged to "no household".
+      await queryClient.invalidateQueries();
+      router.replace("/(app)/today");
+    },
+  });
+  const goBack = () => (session ? router.back() : router.replace("/(auth)/welcome"));
 
   const termsQuery = useQuery({
     queryKey: ["invite-terms", code],
@@ -45,11 +64,7 @@ export default function ReviewTermsScreen() {
           <Text style={styles.errorText}>
             Hindi namin nahanap ang code na iyan, o na-claim na ito. Paki-check at subukan ulit.
           </Text>
-          <PrimaryButton
-            label="Bumalik"
-            variant="secondary"
-            onPress={() => router.replace("/(auth)/welcome")}
-          />
+          <PrimaryButton label="Bumalik" variant="secondary" onPress={goBack} />
         </View>
       ) : (
         <>
@@ -87,14 +102,30 @@ export default function ReviewTermsScreen() {
               label="Back"
               variant="secondary"
               style={styles.actionButton}
-              onPress={() => router.replace("/(auth)/welcome")}
+              onPress={goBack}
             />
-            <PrimaryButton
-              label="Looks right — continue"
-              style={styles.actionButton}
-              onPress={() => router.push({ pathname: "/(auth)/claim-account", params: { code } })}
-            />
+            {session ? (
+              <PrimaryButton
+                label="Tama — sumali"
+                style={styles.actionButton}
+                loading={joinMutation.isPending}
+                onPress={() => joinMutation.mutate()}
+              />
+            ) : (
+              <PrimaryButton
+                label="Looks right — continue"
+                style={styles.actionButton}
+                onPress={() => router.push({ pathname: "/(auth)/claim-account", params: { code } })}
+              />
+            )}
           </View>
+          {joinMutation.isError ? (
+            <Text style={styles.joinError}>
+              {joinMutation.error instanceof Error
+                ? joinMutation.error.message
+                : "Hindi nakasali. Subukan ulit."}
+            </Text>
+          ) : null}
         </>
       )}
     </ScrollView>
@@ -133,6 +164,11 @@ const styles = StyleSheet.create({
     fontSize: 14,
     lineHeight: 20,
     color: colors.ink,
+  },
+  joinError: {
+    fontSize: 14,
+    lineHeight: 20,
+    color: colors.terracottaInk,
   },
   flaggedBanner: {
     borderRadius: 16,

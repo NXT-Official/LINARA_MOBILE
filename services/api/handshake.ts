@@ -1,3 +1,4 @@
+import { joinHousehold } from "@/services/api/employment";
 import { supabase } from "@/services/supabase";
 
 /**
@@ -119,6 +120,12 @@ export async function claimProfile(
     password: pass,
   });
 
+  // She already has an account from a previous household (O4): sign in with
+  // it and join this household instead of creating a second account.
+  if (authError && /already registered|already exists/i.test(authError.message)) {
+    return joinWithExistingAccount(code, email, pass);
+  }
+
   if (authError || !authData.user) {
     throw new Error(authError?.message || "Auth signup failed");
   }
@@ -141,6 +148,19 @@ export async function claimProfile(
     .maybeSingle();
   const claimed = claimedData as ClaimHelperInviteRow | null;
 
+  // With email confirmation on, signUp answers an existing address as if it
+  // were new, the sign-in above works with her real password, and only this
+  // claim notices (her user_profiles row already exists). Same outcome: join.
+  if (claimError && /duplicate key|user_profiles_pkey/i.test(claimError.message)) {
+    const joined = await joinHousehold(code);
+    return {
+      accessToken: session.access_token,
+      refreshToken: session.refresh_token,
+      userId: session.user.id,
+      helperId: joined.helperId,
+    };
+  }
+
   if (claimError || !claimed) {
     throw new Error(claimError?.message || "Failed to activate helper profile");
   }
@@ -150,5 +170,26 @@ export async function claimProfile(
     refreshToken: session.refresh_token,
     userId: authData.user.id,
     helperId: claimed.helper_id,
+  };
+}
+
+/** An existing helper account claiming a new household's invite. */
+async function joinWithExistingAccount(
+  code: string,
+  email: string,
+  pass: string,
+): Promise<ClaimedSession> {
+  const { data, error } = await supabase.auth.signInWithPassword({ email, password: pass });
+  if (error || !data.session) {
+    throw new Error(
+      "May account na ang email na ito. Gamitin ang password mo noon, o mag-sign in at i-enter ang code sa My Record.",
+    );
+  }
+  const joined = await joinHousehold(code);
+  return {
+    accessToken: data.session.access_token,
+    refreshToken: data.session.refresh_token,
+    userId: data.session.user.id,
+    helperId: joined.helperId,
   };
 }
