@@ -9,6 +9,8 @@ export const colors = {
   pineTeal: "#1F5A54",
   cardCream: "#FDFBF6",
   terracottaGold: "#D99A6C",
+  /** Terracotta for words on cream (5.6:1); plain terracottaGold is 2.3:1 there. Matches ../LINARA's --terracotta-ink. */
+  terracottaInk: "#9F5021",
   ink: "#1C2E2C",
   mutedInk: "#5C6B69",
   border: "#E4DCCB",

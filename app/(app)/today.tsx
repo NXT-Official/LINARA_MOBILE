@@ -12,7 +12,13 @@ import { FloatingQuickUtosFeed } from "@/components/features/utos/floating-quick
 import { PrivateScratchpad } from "@/components/features/notes/PrivateScratchpad";
 import { getMyHelperProfile } from "@/services/api/helper-profile";
 import { setHelperAvailability, setHelperOff } from "@/services/api/availability";
-import { getFocusTask, startTicket, completeTicket, type FocusTask } from "@/services/api/tickets";
+import {
+  blockTicket,
+  completeTicket,
+  getFocusTask,
+  startTicket,
+  type FocusTask,
+} from "@/services/api/tickets";
 import { acknowledgeQuickUto, getPendingQuickUtos } from "@/services/api/quick-utos";
 import { enqueueSyncAction } from "@/services/sqlite-queue";
 import { isOffline } from "@/lib/network";
@@ -135,6 +141,37 @@ export default function TodayScreen() {
     },
   });
 
+  // "Can't now": on hold with her reason. Shown as on hold straight away; the
+  // next refetch moves the focus card on to her next task.
+  const holdMutation = useMutation({
+    mutationFn: async ({ ticketId, reason }: { ticketId: string; reason: string }) => {
+      if (await isOffline()) {
+        await enqueueSyncAction("block_ticket", { ticketId, reason });
+        return { queued: true };
+      }
+      await blockTicket(ticketId, reason);
+      return { queued: false };
+    },
+    onMutate: async ({ ticketId, reason }) => {
+      await queryClient.cancelQueries({ queryKey: ["focus-task", helperId] });
+      const previous = queryClient.getQueryData<FocusTask | null>(["focus-task", helperId]);
+      queryClient.setQueryData<FocusTask | null>(["focus-task", helperId], (old) =>
+        old && old.id === ticketId ? { ...old, status: "blocked", blockReason: reason } : old,
+      );
+      return { previous };
+    },
+    onError: (_err, _vars, context) => {
+      if (context) {
+        queryClient.setQueryData(["focus-task", helperId], context.previous);
+      }
+    },
+    onSuccess: (result) => {
+      if (!result.queued) {
+        queryClient.invalidateQueries({ queryKey: ["focus-task", helperId] });
+      }
+    },
+  });
+
   const ackMutation = useMutation({
     mutationFn: ({ id, ack }: { id: string; ack: "seen" | "done" }) => acknowledgeQuickUto(id, ack),
     onMutate: ({ id }) => setAckingId(id),
@@ -187,8 +224,10 @@ export default function TodayScreen() {
                 task={focusTask}
                 onStart={() => startMutation.mutate(focusTask.id)}
                 onComplete={() => completeMutation.mutate(focusTask.id)}
+                onCantNow={(reason) => holdMutation.mutate({ ticketId: focusTask.id, reason })}
                 isStarting={startMutation.isPending}
                 isCompleting={completeMutation.isPending}
+                isHolding={holdMutation.isPending}
               />
             ) : (
               <View style={styles.emptyCard}>

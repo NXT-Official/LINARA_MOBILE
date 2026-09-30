@@ -6,10 +6,11 @@ import {
   getQueuedActions,
   removeQueuedAction,
   type AddTextNotePayload,
+  type BlockTicketFields,
   type CompleteTicketPayload,
   type StartTicketPayload,
 } from "@/services/sqlite-queue";
-import { completeTicket, startTicket } from "@/services/api/tickets";
+import { blockTicket, completeTicket, startTicket } from "@/services/api/tickets";
 import { createTextNote } from "@/services/api/notes";
 import { uploadEvidenceImage } from "@/services/media-upload";
 
@@ -56,6 +57,10 @@ export function useOfflineSync(): void {
               await completeTicket(payload.ticketId, photoUrl);
               queryClient.invalidateQueries({ queryKey: ["focus-task"] });
               queryClient.invalidateQueries({ queryKey: ["palengke-ticket"] });
+            } else if (action.actionType === "block_ticket") {
+              const fields = action.payload as BlockTicketFields;
+              await blockTicket(fields.ticketId, fields.reason);
+              queryClient.invalidateQueries({ queryKey: ["focus-task"] });
             } else if (action.actionType === "add_text_note") {
               const payload = action.payload as AddTextNotePayload;
               await createTextNote(payload.helperId, payload.text);

@@ -25,6 +25,8 @@ export interface FocusTask {
   scheduledStart: string;
   /** Sent off-hours through the manager's override or emergency path. */
   afterHours: boolean;
+  /** Her "can't now" reason, while the ticket is on hold. */
+  blockReason: string | null;
   sop: FocusTaskSop | null;
 }
 
@@ -36,6 +38,7 @@ interface TicketWithSopRow {
   scheduled_start: string;
   is_after_hours: boolean;
   emergency: boolean;
+  block_reason: string | null;
   house_sops: {
     id: string;
     title: string;
@@ -89,7 +92,7 @@ export async function getFocusTask(helperId: string): Promise<FocusTask | null> 
   const rows = (
     await getMyTodayRows<TicketWithSopRow>(
       helperId,
-      "id, title, notes, status, scheduled_start, is_after_hours, emergency, house_sops(id, title, description, standard_image_url, steps, tools_required, safety_protocol)",
+      "id, title, notes, status, scheduled_start, is_after_hours, emergency, block_reason, house_sops(id, title, description, standard_image_url, steps, tools_required, safety_protocol)",
     )
   ).filter((row) => row.status !== "done");
 
@@ -105,6 +108,7 @@ export async function getFocusTask(helperId: string): Promise<FocusTask | null> 
     status: focus.status,
     scheduledStart: focus.scheduled_start,
     afterHours: focus.is_after_hours || focus.emergency,
+    blockReason: focus.block_reason,
     sop: focus.house_sops
       ? {
           id: focus.house_sops.id,
@@ -202,6 +206,23 @@ export async function completeTicket(ticketId: string, photoEvidenceUrl?: string
       actual_end: new Date().toISOString(),
       ...(photoEvidenceUrl ? { photo_evidence_url: photoEvidenceUrl } : {}),
     })
+    .eq("id", ticketId);
+
+  if (error) {
+    throw new Error(error.message);
+  }
+}
+
+/**
+ * "Can't now": puts the ticket on hold with her reason. The manager's Pass
+ * shows it in Needs You, where they can reply or put it back on the board.
+ * Being able to say "not now" is what separates a colleague from a
+ * subordinate (concept doc §8), so there is no approval step.
+ */
+export async function blockTicket(ticketId: string, reason: string): Promise<void> {
+  const { error } = await supabase
+    .from("tickets")
+    .update({ status: "blocked", block_reason: reason })
     .eq("id", ticketId);
 
   if (error) {

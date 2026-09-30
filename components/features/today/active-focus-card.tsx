@@ -1,8 +1,10 @@
-import { StyleSheet, Text, View } from "react-native";
+import { useState } from "react";
+import { Pressable, StyleSheet, Text, View } from "react-native";
 
 import { colors } from "@/lib/theme";
 import type { FocusTask } from "@/services/api/tickets";
 import { PrimaryButton } from "@/components/ui/primary-button";
+import { TextField } from "@/components/ui/text-field";
 import { SopCarousel } from "@/components/features/today/sop-carousel";
 
 const STATUS_LABEL: Record<FocusTask["status"], string> = {
@@ -12,30 +14,62 @@ const STATUS_LABEL: Record<FocusTask["status"], string> = {
   done: "Tapos na",
 };
 
+/** One tap for the usual reasons; anything else she can type. */
+const CANT_NOW_REASONS = [
+  "Kulang ang gamit",
+  "Kailangan ko ng paliwanag",
+  "May iba pang pinapagawa sa akin",
+] as const;
+
 /**
- * The Today tab's single high-priority task (roadmap Story 7, step 2 /
- * plan.md 3.2 "Active Focus Card"). `blocked` tickets show status only --
- * the block-reason flow itself (see web's block-reason-modal.tsx) is
- * manager-side scope, not part of this story.
+ * The Today tab's single task (roadmap Story 7, step 2 / plan.md 3.2 "Active
+ * Focus Card"): Start, then Done, with the house standard attached. "Hindi ko
+ * magagawa ngayon" puts it on hold with her reason (concept doc §8: saying
+ * "not now" is what separates a colleague from a subordinate); the manager
+ * sees it in Needs You and can put it back on her board.
  */
 export function ActiveFocusCard({
   task,
   onStart,
   onComplete,
+  onCantNow,
   isStarting,
   isCompleting,
+  isHolding,
 }: {
   task: FocusTask;
   onStart: () => void;
   onComplete: () => void;
+  onCantNow: (reason: string) => void;
   isStarting: boolean;
   isCompleting: boolean;
+  isHolding: boolean;
 }) {
+  const [askingWhy, setAskingWhy] = useState(false);
+  const [picked, setPicked] = useState<string | null>(null);
+  const [typed, setTyped] = useState("");
+  const reason = typed.trim() || picked;
+
+  const closeAsk = () => {
+    setAskingWhy(false);
+    setPicked(null);
+    setTyped("");
+  };
+
   return (
     <View style={styles.card}>
       <Text style={styles.eyebrow}>Focus ngayon</Text>
       <Text style={styles.title}>{task.title}</Text>
       <Text style={styles.status}>{STATUS_LABEL[task.status]}</Text>
+
+      {task.status === "blocked" && (
+        <View style={styles.holdNote}>
+          {task.blockReason ? <Text style={styles.holdReason}>“{task.blockReason}”</Text> : null}
+          <Text style={styles.holdHint}>
+            Nakikita na ito ng manager sa Pass nila. Babalik ito sa listahan mo kapag naayos na.
+          </Text>
+        </View>
+      )}
 
       {task.notes ? <Text style={styles.notes}>{task.notes}</Text> : null}
 
@@ -47,6 +81,59 @@ export function ActiveFocusCard({
       {task.status === "in_progress" && (
         <PrimaryButton label="Done" loading={isCompleting} onPress={onComplete} />
       )}
+
+      {(task.status === "todo" || task.status === "in_progress") &&
+        (askingWhy ? (
+          <View style={styles.ask}>
+            <Text style={styles.askTitle}>Bakit hindi ngayon?</Text>
+            <View style={styles.reasons}>
+              {CANT_NOW_REASONS.map((r) => {
+                const selected = picked === r && !typed.trim();
+                return (
+                  <Pressable
+                    key={r}
+                    onPress={() => {
+                      setPicked(r);
+                      setTyped("");
+                    }}
+                    accessibilityRole="button"
+                    accessibilityState={{ selected }}
+                    style={[styles.reason, selected && styles.reasonSelected]}
+                  >
+                    <Text style={[styles.reasonText, selected && styles.reasonTextSelected]}>
+                      {r}
+                    </Text>
+                  </Pressable>
+                );
+              })}
+            </View>
+            <TextField
+              label="O isulat dito"
+              value={typed}
+              onChangeText={setTyped}
+              placeholder="Hal. Wala pang sabon panlaba"
+              maxLength={200}
+            />
+            <PrimaryButton
+              label="Ipaalam sa manager"
+              loading={isHolding}
+              disabled={!reason}
+              onPress={() => {
+                if (reason) onCantNow(reason);
+                closeAsk();
+              }}
+            />
+            <PrimaryButton label="Huwag na" variant="secondary" onPress={closeAsk} />
+          </View>
+        ) : (
+          <Pressable
+            onPress={() => setAskingWhy(true)}
+            accessibilityRole="button"
+            style={styles.cantNow}
+          >
+            <Text style={styles.cantNowText}>Hindi ko magagawa ngayon</Text>
+          </Pressable>
+        ))}
     </View>
   );
 }
@@ -61,11 +148,9 @@ const styles = StyleSheet.create({
     gap: 12,
   },
   eyebrow: {
-    fontSize: 11,
+    fontSize: 13,
     fontWeight: "700",
-    letterSpacing: 0.6,
-    textTransform: "uppercase",
-    color: colors.terracottaGold,
+    color: colors.terracottaInk,
   },
   title: {
     fontSize: 20,
@@ -73,13 +158,74 @@ const styles = StyleSheet.create({
     color: colors.ink,
   },
   status: {
-    fontSize: 12,
+    fontSize: 13,
     fontWeight: "600",
+    color: colors.mutedInk,
+  },
+  holdNote: {
+    gap: 4,
+  },
+  holdReason: {
+    fontSize: 15,
+    fontStyle: "italic",
+    color: colors.ink,
+  },
+  holdHint: {
+    fontSize: 13,
+    lineHeight: 18,
     color: colors.mutedInk,
   },
   notes: {
     fontSize: 14,
     lineHeight: 20,
     color: colors.ink,
+  },
+  cantNow: {
+    minHeight: 44,
+    alignItems: "center",
+    justifyContent: "center",
+  },
+  cantNowText: {
+    fontSize: 14,
+    fontWeight: "700",
+    color: colors.pineTeal,
+    textDecorationLine: "underline",
+  },
+  ask: {
+    gap: 10,
+    paddingTop: 12,
+    borderTopWidth: 1,
+    borderTopColor: colors.border,
+  },
+  askTitle: {
+    fontSize: 16,
+    fontWeight: "700",
+    color: colors.ink,
+  },
+  reasons: {
+    flexDirection: "row",
+    flexWrap: "wrap",
+    gap: 8,
+  },
+  reason: {
+    minHeight: 44,
+    justifyContent: "center",
+    paddingHorizontal: 14,
+    borderRadius: 12,
+    borderWidth: 1,
+    borderColor: colors.border,
+    backgroundColor: colors.sand,
+  },
+  reasonSelected: {
+    backgroundColor: colors.pineTeal,
+    borderColor: colors.pineTeal,
+  },
+  reasonText: {
+    fontSize: 14,
+    fontWeight: "600",
+    color: colors.ink,
+  },
+  reasonTextSelected: {
+    color: colors.cardCream,
   },
 });

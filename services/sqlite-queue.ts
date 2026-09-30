@@ -10,7 +10,7 @@ const DB_NAME = "linara_offline.db";
  * three-flow diagram in architecture.md Section 4 only calls out task
  * status, receipt capture, and notes.
  */
-export type SyncActionType = "start_ticket" | "complete_ticket" | "add_text_note";
+export type SyncActionType = "start_ticket" | "complete_ticket" | "block_ticket" | "add_text_note";
 
 export interface StartTicketPayload {
   ticketId: string;
@@ -22,12 +22,19 @@ export interface CompleteTicketPayload {
   householdId: string;
 }
 
+/** "Can't now" made while offline; replayed as-is once back online. */
+export interface BlockTicketFields {
+  ticketId: string;
+  reason: string;
+}
+
 export interface AddTextNotePayload {
   helperId: string;
   text: string;
 }
 
-export type SyncActionPayload = StartTicketPayload | CompleteTicketPayload | AddTextNotePayload;
+export type SyncActionPayload =
+  StartTicketPayload | CompleteTicketPayload | BlockTicketFields | AddTextNotePayload;
 
 export interface QueuedSyncAction {
   id: string;
