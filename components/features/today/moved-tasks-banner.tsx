@@ -11,6 +11,8 @@ import { PrimaryButton } from "@/components/ui/primary-button";
 
 const SEEN_KEY = "linara.seenMovedTasks";
 
+const dayAndTime = (iso: string) => `${DAY_NAMES[new Date(iso).getDay()]}, ${formatClockTime(iso)}`;
+
 /** A move is "seen" per ticket and time, so a second move of the same task shows again. */
 const moveKey = (t: MovedTask) => `${t.id}@${t.scheduledStart}`;
 
@@ -60,15 +62,13 @@ export function MovedTasksBanner({ helperId }: { helperId: string }) {
   return (
     <View style={styles.card} accessibilityRole="alert">
       <Text style={styles.title}>May binago sa schedule mo</Text>
-      {unseen.map((t) => {
-        const d = new Date(t.scheduledStart);
-        return (
-          <Text key={moveKey(t)} style={styles.line}>
-            <Text style={styles.task}>{t.title}</Text> — {DAY_NAMES[d.getDay()]},{" "}
-            {formatClockTime(t.scheduledStart)} na ngayon, dahil binago ang {t.appointmentTitle}.
-          </Text>
-        );
-      })}
+      {unseen.map((t) => (
+        <Text key={moveKey(t)} style={styles.line}>
+          <Text style={styles.task}>{t.title}</Text> — {dayAndTime(t.scheduledStart)} na ngayon
+          {t.previousStart ? ` (dati ${dayAndTime(t.previousStart)})` : ""}, dahil binago ang{" "}
+          {t.appointmentTitle}.
+        </Text>
+      ))}
       <PrimaryButton label="Nakita ko" variant="secondary" onPress={() => void markSeen()} />
     </View>
   );

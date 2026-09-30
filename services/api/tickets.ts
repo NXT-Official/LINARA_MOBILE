@@ -223,6 +223,8 @@ export interface MovedTask {
   id: string;
   title: string;
   scheduledStart: string;
+  /** Where it was before the move; null on notices written before O14 was fixed. */
+  previousStart: string | null;
   appointmentTitle: string;
 }
 
@@ -230,9 +232,10 @@ export interface MovedTask {
  * Her upcoming tickets whose time moved because the manager moved their
  * appointment (tickets.reschedule_notice, set by the web's
  * rescheduleAppointmentFn). Concept doc §7: flag the affected worker rather
- * than silently shift her board. Only the new time is shown: the notice's
- * stored oldTime is rendered in the web server's time zone, not hers
- * (../LINARA/KNOWN_GAPS.md O14).
+ * than silently shift her board. The old time comes from the notice's
+ * oldStartIso instant, formatted on her phone. Older notices only carry a
+ * string the web server formatted in its own time zone (../LINARA/
+ * KNOWN_GAPS.md O14), which is wrong for her, so those show the new time only.
  */
 export async function getMovedTasks(helperId: string): Promise<MovedTask[]> {
   const { data, error } = await supabase
@@ -254,12 +257,13 @@ export async function getMovedTasks(helperId: string): Promise<MovedTask[]> {
       id: string;
       title: string;
       scheduled_start: string;
-      reschedule_notice: { appointmentTitle?: string } | null;
+      reschedule_notice: { oldStartIso?: string; appointmentTitle?: string } | null;
     }[]
   ).map((row) => ({
     id: row.id,
     title: row.title,
     scheduledStart: row.scheduled_start,
+    previousStart: row.reschedule_notice?.oldStartIso ?? null,
     appointmentTitle: row.reschedule_notice?.appointmentTitle ?? "isang appointment",
   }));
 }
