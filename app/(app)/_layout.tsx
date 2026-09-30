@@ -51,6 +51,13 @@ export default function AppTabsLayout() {
         }}
       />
       <Tabs.Screen
+        name="week"
+        options={{
+          title: "My Week",
+          tabBarIcon: ({ color, size }) => <Ionicons name="calendar" size={size} color={color} />,
+        }}
+      />
+      <Tabs.Screen
         name="pantry"
         options={{
           title: "Pantry",

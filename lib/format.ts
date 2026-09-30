@@ -23,6 +23,12 @@ export function formatShiftTime(time: string): string {
   return `${displayHours}:${minutes.toString().padStart(2, "0")} ${period}`;
 }
 
+/** A ticket's scheduled instant as the phone's local "7:30 PM". */
+export function formatClockTime(iso: string): string {
+  const d = new Date(iso);
+  return formatShiftTime(`${d.getHours()}:${d.getMinutes()}`);
+}
+
 /** Matches the web reference's `fmtPeso` (../LINARA/src/features/groceries/grocery.utils.ts). */
 export function formatPeso(amount: number): string {
   return `₱${Math.round(amount).toLocaleString()}`;

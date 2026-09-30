@@ -152,6 +152,73 @@ export async function getTodayProgress(helperId: string): Promise<TodayProgress>
   );
 }
 
+export interface WeekTask {
+  id: string;
+  title: string;
+  status: FocusTask["status"];
+  scheduledStart: string;
+  /** The appointment this prepares for, e.g. "Sir's flight" -- only hers, never the household's whole calendar. */
+  appointmentTitle: string | null;
+  /** Its time moved because the manager moved the appointment. */
+  moved: boolean;
+  /** Approved but held until the manager reopens the board. */
+  waiting: boolean;
+  createdById: string | null;
+  createdByName: string | null;
+}
+
+interface WeekTaskRow {
+  id: string;
+  title: string;
+  status: FocusTask["status"];
+  scheduled_start: string;
+  appointment_title: string | null;
+  reschedule_notice: unknown;
+  queued: boolean;
+  created_by: string | null;
+  created_by_profile: { full_name: string | null } | null;
+}
+
+/**
+ * Her own tickets for the next seven days, for My Week. Includes ones queued
+ * for when the board reopens (already approved), but never a remote admin's
+ * suggestion still awaiting approval. Appointments appear only through the
+ * prep tasks assigned to her, as the concept doc asks: her filtered day, not
+ * the household's private schedule.
+ */
+export async function getMyWeek(helperId: string): Promise<WeekTask[]> {
+  const first = startOfToday(new Date());
+  const end = new Date(first);
+  end.setDate(first.getDate() + 7);
+
+  const { data, error } = await supabase
+    .from("tickets")
+    .select(
+      "id, title, status, scheduled_start, appointment_title, reschedule_notice, queued, created_by, created_by_profile:user_profiles(full_name)",
+    )
+    .eq("helper_id", helperId)
+    .eq("suggested", false)
+    .gte("scheduled_start", first.toISOString())
+    .lt("scheduled_start", end.toISOString())
+    .order("scheduled_start", { ascending: true });
+
+  if (error) {
+    throw new Error(error.message);
+  }
+
+  return ((data ?? []) as unknown as WeekTaskRow[]).map((row) => ({
+    id: row.id,
+    title: row.title,
+    status: row.status,
+    scheduledStart: row.scheduled_start,
+    appointmentTitle: row.appointment_title,
+    moved: row.reschedule_notice != null,
+    waiting: row.queued,
+    createdById: row.created_by,
+    createdByName: row.created_by_profile?.full_name ?? null,
+  }));
+}
+
 /**
  * Inserts a new ticket -- the first write path into `public.tickets` anywhere
  * in either app (see ../LINARA/KNOWN_GAPS.md gap #4). Used by the "Promote to
