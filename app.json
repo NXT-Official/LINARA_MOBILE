@@ -1,6 +1,6 @@
 {
   "expo": {
-    "name": "LINARA_MOBILE",
+    "name": "Linara",
     "slug": "linara-mobile",
     "version": "1.0.0",
     "orientation": "portrait",
@@ -45,7 +45,7 @@
       "package": "com.linara.mobile",
       "versionCode": 1,
       "adaptiveIcon": {
-        "backgroundColor": "#E6F4FE",
+        "backgroundColor": "#1F5A54",
         "foregroundImage": "./assets/android-icon-foreground.png",
         "backgroundImage": "./assets/android-icon-background.png",
         "monochromeImage": "./assets/android-icon-monochrome.png"
