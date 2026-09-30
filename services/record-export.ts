@@ -3,7 +3,38 @@ import * as Print from "expo-print";
 import * as Sharing from "expo-sharing";
 import { File, Paths } from "expo-file-system";
 
+import { restTakenMinutes, summarizePay } from "@/lib/record";
 import { recordFileName, recordPdfHtml, type RecordPdfInput } from "@/lib/record-pdf";
+import type { Employment } from "@/services/api/employment";
+import { getMyPayslips } from "@/services/api/payslips";
+import { getMyTasksDone, getMyTermsOnFile } from "@/services/api/record";
+import { getMyRestOffRequests } from "@/services/api/rest-off";
+
+/**
+ * Everything one employment's PDF needs, read fresh. Works for a household
+ * she has left as well as her current one: the *_own_read policies in
+ * ../LINARA/supabase/add-employment-end.sql let her read her own terms,
+ * payslips, time off and tasks there.
+ */
+export async function loadRecordPdfInput(employment: Employment): Promise<RecordPdfInput> {
+  const [terms, payslips, restOff, tasksDone] = await Promise.all([
+    getMyTermsOnFile(employment.helperId),
+    getMyPayslips(employment.helperId),
+    getMyRestOffRequests(employment.helperId),
+    getMyTasksDone(employment.helperId),
+  ]);
+  return {
+    name: employment.name,
+    householdName: employment.householdName,
+    ...terms,
+    tasksDone,
+    pay: summarizePay(payslips),
+    restTaken: restTakenMinutes(restOff),
+    payslips,
+    restOff,
+    generatedAt: new Date(),
+  };
+}
 
 /**
  * Makes her work record into a PDF on the phone and opens the share sheet,

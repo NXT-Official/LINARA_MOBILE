@@ -38,6 +38,8 @@ export interface RecordPdfInput {
   station: string;
   employment: "live-in" | "live-out" | null;
   recordSince: string;
+  /** Her last day there ("YYYY-MM-DD"), for a household she has left. */
+  endedOn?: string | null;
   shiftStart: string;
   shiftEnd: string;
   breakStart: string | null;
@@ -87,6 +89,11 @@ function calendarDay(ymd: string): { y: number; m: number; d: number } {
   const [y, m, d] = ymd.slice(0, 10).split("-").map(Number);
   return { y, m: m - 1, d };
 }
+
+const localDay = (ymd: string) => {
+  const { y, m, d } = calendarDay(ymd);
+  return new Date(y, m, d);
+};
 
 const longDate = (d: Date) => `${d.getDate()} ${MONTHS_LONG[d.getMonth()]} ${d.getFullYear()}`;
 const shortDate = (d: Date) => `${MONTHS[d.getMonth()]} ${d.getDate()}, ${d.getFullYear()}`;
@@ -147,7 +154,9 @@ export function recordPdfHtml(r: RecordPdfInput): string {
           ? "Live-out"
           : "Not recorded",
     ),
-    row("On record since", longDate(new Date(r.recordSince))),
+    r.endedOn
+      ? row("Employed", `${longDate(new Date(r.recordSince))} – ${longDate(localDay(r.endedOn))}`)
+      : row("On record since", longDate(new Date(r.recordSince))),
     row("Working hours", `${clock(r.shiftStart)} – ${clock(r.shiftEnd)}`),
     ...(r.breakStart && r.breakEnd
       ? [row("Daily break", `${clock(r.breakStart)} – ${clock(r.breakEnd)}`)]

@@ -12,19 +12,22 @@ export interface TermsOnFile {
   paydayInterval: "semi_monthly" | "monthly";
   /** When the household's record of her arrangement was created. */
   recordSince: string;
+  /** Her last working day, once that household ended her employment. */
+  endedOn: string | null;
 }
 
 /**
  * The terms the household has on file for her, read-only. The concept doc's
  * "standing transparency view": the same record she reviewed when claiming,
  * visible any time, not only once. helper_profiles_isolation scopes it to her
- * household; the id filter keeps it to her own row.
+ * household, and helper_profiles_own_read lets her read the rows of
+ * households she has left; the id filter keeps it to one employment.
  */
 export async function getMyTermsOnFile(helperId: string): Promise<TermsOnFile> {
   const { data, error } = await supabase
     .from("helper_profiles")
     .select(
-      "station, employment, shift_start, shift_end, break_start, break_end, weekly_rest_day, monthly_rate, payday_interval, created_at",
+      "station, employment, shift_start, shift_end, break_start, break_end, weekly_rest_day, monthly_rate, payday_interval, created_at, ended_on",
     )
     .eq("id", helperId)
     .single();
@@ -44,6 +47,7 @@ export async function getMyTermsOnFile(helperId: string): Promise<TermsOnFile> {
     monthlyRate: Number(data.monthly_rate),
     paydayInterval: data.payday_interval,
     recordSince: data.created_at,
+    endedOn: data.ended_on ?? null,
   };
 }
 

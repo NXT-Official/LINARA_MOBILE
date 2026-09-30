@@ -140,3 +140,12 @@ describe("helpers", () => {
     );
   });
 });
+
+describe("a household she has left", () => {
+  it("shows the whole period she worked there", () => {
+    const out = recordPdfHtml({ ...base, endedOn: "2026-10-03" });
+    expect(out).toContain("Employed");
+    expect(out).toContain("1 July 2026 – 3 October 2026");
+    expect(out).not.toContain("On record since");
+  });
+});
