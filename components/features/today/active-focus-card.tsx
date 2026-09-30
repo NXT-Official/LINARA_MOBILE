@@ -34,6 +34,7 @@ const CANT_NOW_REASONS = [
  */
 export function ActiveFocusCard({
   task,
+  myUserId,
   onStart,
   onComplete,
   onCantNow,
@@ -42,6 +43,8 @@ export function ActiveFocusCard({
   isHolding,
 }: {
   task: FocusTask;
+  /** Her auth user id, to tell her own promoted notes from a manager's asks. */
+  myUserId: string;
   onStart: () => void;
   /** `photoUri` is a local capture to attach, or null to finish without one. */
   onComplete: (photoUri: string | null) => void;
@@ -80,6 +83,11 @@ export function ActiveFocusCard({
     <View style={styles.card}>
       <Text style={styles.eyebrow}>Focus ngayon</Text>
       <Text style={styles.title}>{task.title}</Text>
+      {task.createdById === myUserId ? (
+        <Text style={styles.from}>Ikaw ang nagdagdag nito</Text>
+      ) : task.createdByName ? (
+        <Text style={styles.from}>Mula kay {task.createdByName}</Text>
+      ) : null}
       <Text style={styles.status}>{STATUS_LABEL[task.status]}</Text>
 
       {task.status === "blocked" && (
@@ -205,6 +213,10 @@ const styles = StyleSheet.create({
     fontSize: 20,
     fontWeight: "700",
     color: colors.ink,
+  },
+  from: {
+    fontSize: 13,
+    color: colors.mutedInk,
   },
   status: {
     fontSize: 13,

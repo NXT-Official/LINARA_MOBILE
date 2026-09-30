@@ -27,6 +27,9 @@ export interface FocusTask {
   afterHours: boolean;
   /** Her "can't now" reason, while the ticket is on hold. */
   blockReason: string | null;
+  /** Who added it, so in a multi-admin home she's never left with an ambiguous "Ma'am said". */
+  createdById: string | null;
+  createdByName: string | null;
   sop: FocusTaskSop | null;
 }
 
@@ -39,6 +42,8 @@ interface TicketWithSopRow {
   is_after_hours: boolean;
   emergency: boolean;
   block_reason: string | null;
+  created_by: string | null;
+  created_by_profile: { full_name: string | null } | null;
   house_sops: {
     id: string;
     title: string;
@@ -92,7 +97,7 @@ export async function getFocusTask(helperId: string): Promise<FocusTask | null> 
   const rows = (
     await getMyTodayRows<TicketWithSopRow>(
       helperId,
-      "id, title, notes, status, scheduled_start, is_after_hours, emergency, block_reason, house_sops(id, title, description, standard_image_url, steps, tools_required, safety_protocol)",
+      "id, title, notes, status, scheduled_start, is_after_hours, emergency, block_reason, created_by, created_by_profile:user_profiles(full_name), house_sops(id, title, description, standard_image_url, steps, tools_required, safety_protocol)",
     )
   ).filter((row) => row.status !== "done");
 
@@ -109,6 +114,8 @@ export async function getFocusTask(helperId: string): Promise<FocusTask | null> 
     scheduledStart: focus.scheduled_start,
     afterHours: focus.is_after_hours || focus.emergency,
     blockReason: focus.block_reason,
+    createdById: focus.created_by,
+    createdByName: focus.created_by_profile?.full_name ?? null,
     sop: focus.house_sops
       ? {
           id: focus.house_sops.id,

@@ -301,6 +301,7 @@ export default function TodayScreen() {
                       // over to the next one.
                       key={focusTask.id}
                       task={focusTask}
+                      myUserId={profileQuery.data.userId}
                       onStart={() => startMutation.mutate(focusTask.id)}
                       onComplete={(photoUri) =>
                         completeMutation.mutate({ ticketId: focusTask.id, photoUri })
