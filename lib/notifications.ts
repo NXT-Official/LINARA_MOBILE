@@ -60,6 +60,13 @@ export async function registerForPush(): Promise<void> {
       p_platform: Platform.OS === "ios" ? "ios" : "android",
     });
     if (error) throw new Error(error.message);
+
+    // Expo can hand this phone a new token (e.g. after its push credentials
+    // rotate); the old one would otherwise sit on her account unused.
+    const previous = await AsyncStorage.getItem(TOKEN_KEY);
+    if (previous && previous !== token) {
+      await supabase.rpc("unregister_push_token", { p_token: previous });
+    }
     await AsyncStorage.setItem(TOKEN_KEY, token);
   } catch (err) {
     console.warn("[push] Not registered for notifications:", err);
