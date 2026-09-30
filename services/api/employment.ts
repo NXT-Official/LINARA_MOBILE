@@ -31,7 +31,7 @@ export async function getMyEmployments(): Promise<Employment[]> {
 
   const { data, error } = await supabase
     .from("helper_profiles")
-    .select("id, household_id, name, station, status, created_at, ended_on")
+    .select("*")
     .eq("user_id", user.id)
     .in("status", ["ACTIVE", "INACTIVE"])
     .order("created_at", { ascending: false });
@@ -46,7 +46,8 @@ export async function getMyEmployments(): Promise<Employment[]> {
     station: string;
     status: "ACTIVE" | "INACTIVE";
     created_at: string;
-    ended_on: string | null;
+    started_on?: string | null;
+    ended_on?: string | null;
   }[];
 
   // households_own_history_read lets her read the names of households she
@@ -66,8 +67,8 @@ export async function getMyEmployments(): Promise<Employment[]> {
       name: r.name,
       station: r.station,
       status: r.status,
-      startedAt: r.created_at,
-      endedOn: r.ended_on,
+      startedAt: r.started_on ?? r.created_at,
+      endedOn: r.ended_on ?? null,
     }))
     .sort((a, b) => (a.status === b.status ? 0 : a.status === "ACTIVE" ? -1 : 1));
 }

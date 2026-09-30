@@ -9,14 +9,16 @@ import {
   View,
 } from "react-native";
 import { router } from "expo-router";
-import { useMutation, useQuery } from "@tanstack/react-query";
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 
 import { colors, fonts } from "@/lib/theme";
 import { formatHoursMinutes, formatPeso, formatShiftTime } from "@/lib/format";
 import { recordShareText, restTakenMinutes, summarizePay } from "@/lib/record";
 import { useSession } from "@/lib/session-context";
+import { toIsoDate } from "@/lib/datetime-fields";
 import { DAY_NAMES } from "@/lib/week";
 import { getMyEmployments, type Employment } from "@/services/api/employment";
+import { giveNotice, withdrawNotice } from "@/services/api/pay-periods";
 import { getMyPayslips } from "@/services/api/payslips";
 import { getMyRestOffRequests } from "@/services/api/rest-off";
 import {
@@ -26,6 +28,8 @@ import {
   type TermsFlagField,
 } from "@/services/api/record";
 import { loadRecordPdfInput, shareRecordPdf } from "@/services/record-export";
+import { PaymentConfirmations } from "@/components/features/pay/payment-confirmations";
+import { DateTimeField } from "@/components/ui/date-time-field";
 import { PrimaryButton } from "@/components/ui/primary-button";
 import { TextField } from "@/components/ui/text-field";
 
@@ -40,8 +44,6 @@ const FLAG_FIELDS: { value: TermsFlagField; label: string }[] = [
 
 const INVITE_CODE_LENGTH = 6;
 
-const longDate = (iso: string) =>
-  new Date(iso).toLocaleDateString("en-PH", { year: "numeric", month: "long", day: "numeric" });
 const shortDate = (d: Date) =>
   d.toLocaleDateString("en-PH", { year: "numeric", month: "short", day: "numeric" });
 /** A "YYYY-MM-DD" column as that calendar day on the phone. */
@@ -49,6 +51,10 @@ const calendarDate = (ymd: string) => {
   const [y, m, d] = ymd.split("-").map(Number);
   return new Date(y, m - 1, d);
 };
+/** A timestamp, or a "YYYY-MM-DD" date read as that calendar day on the phone. */
+const asDay = (value: string) => (value.length === 10 ? calendarDate(value) : new Date(value));
+const longDate = (value: string) =>
+  asDay(value).toLocaleDateString("en-PH", { year: "numeric", month: "long", day: "numeric" });
 
 /**
  * My Record (concept doc §6, "the line that flips the app"): the terms the
@@ -93,6 +99,7 @@ export default function RecordScreen() {
         <Text style={styles.errorText}>Hindi ma-load ang record mo. Subukan ulit mamaya.</Text>
       ) : (
         <>
+          <PaymentConfirmations />
           {current ? <CurrentRecord employment={current} /> : <JoinHouseholdCard />}
           {past.length > 0 ? <PastEmployments past={past} /> : null}
         </>
@@ -170,7 +177,7 @@ function PastEmployments({ past }: { past: Employment[] }) {
         <View key={e.helperId} style={styles.pastItem}>
           <Text style={styles.pastTitle}>{e.householdName ?? "Household"}</Text>
           <Text style={styles.pastMeta}>
-            {e.station} · {shortDate(new Date(e.startedAt))} –{" "}
+            {e.station} · {shortDate(asDay(e.startedAt))} –{" "}
             {e.endedOn ? shortDate(calendarDate(e.endedOn)) : "—"}
           </Text>
           <PrimaryButton
@@ -399,7 +406,112 @@ function CurrentRecord({ employment }: { employment: Employment }) {
         kahit umalis ka sa household na ito. Galing ang lahat ng ito sa record ng household sa
         Linara.
       </Text>
+      <NoticeCard
+        helperId={helperId}
+        noticeLastDay={terms.noticeLastDay}
+        noticeNote={terms.noticeNote}
+      />
     </>
+  );
+}
+
+/**
+ * Her side of leaving: she tells the household her last day from here. The
+ * manager then ends the employment on that day, which settles her final pay
+ * and her open tasks; until then she can take the notice back.
+ */
+function NoticeCard({
+  helperId,
+  noticeLastDay,
+  noticeNote,
+}: {
+  helperId: string;
+  noticeLastDay: string | null;
+  noticeNote: string | null;
+}) {
+  const queryClient = useQueryClient();
+  const [open, setOpen] = useState(false);
+  const [lastDay, setLastDay] = useState("");
+  const [note, setNote] = useState("");
+  const refresh = () => queryClient.invalidateQueries({ queryKey: ["terms-on-file", helperId] });
+
+  const give = useMutation({
+    mutationFn: () => giveNotice(helperId, lastDay, note),
+    onSuccess: async () => {
+      setOpen(false);
+      setNote("");
+      await refresh();
+    },
+  });
+  const withdraw = useMutation({
+    mutationFn: () => withdrawNotice(helperId),
+    onSuccess: refresh,
+  });
+
+  if (noticeLastDay) {
+    return (
+      <View style={styles.card}>
+        <Text style={styles.cardTitle}>Nagbigay ka ng abiso</Text>
+        <Text style={styles.cardSub}>
+          Huling araw mo: {longDate(noticeLastDay)}. Nakikita na ito ng manager mo. Sila ang
+          magtatapos ng employment, at doon aayusin ang huling sahod mo.
+        </Text>
+        {noticeNote ? <Text style={styles.cardSub}>“{noticeNote}”</Text> : null}
+        <PrimaryButton
+          label="Bawiin ang abiso"
+          variant="secondary"
+          loading={withdraw.isPending}
+          onPress={() => withdraw.mutate()}
+        />
+        {withdraw.isError ? <Text style={styles.error}>Hindi nabawi. Subukan ulit.</Text> : null}
+      </View>
+    );
+  }
+
+  if (!open) {
+    return (
+      <Pressable onPress={() => setOpen(true)} accessibilityRole="button" style={styles.link}>
+        <Text style={styles.linkText}>Aalis ka na ba? Magbigay ng abiso</Text>
+      </Pressable>
+    );
+  }
+
+  const today = toIsoDate(new Date());
+  return (
+    <View style={styles.card}>
+      <Text style={styles.cardTitle}>Magbigay ng abiso</Text>
+      <Text style={styles.cardSub}>
+        Sabihin sa household kung kailan ang huling araw mo. Mas mabuti kung may ilang araw pa
+        silang maghanda.
+      </Text>
+      <DateTimeField
+        label="Huling araw ng trabaho"
+        mode="date"
+        value={lastDay}
+        onChange={setLastDay}
+        minimumIsoDate={today}
+      />
+      <TextField
+        label="Mensahe (optional)"
+        value={note}
+        onChangeText={setNote}
+        placeholder="Hal. Uuwi na ako sa probinsya"
+        maxLength={300}
+        multiline
+      />
+      {give.isError ? (
+        <Text style={styles.error}>
+          {give.error instanceof Error ? give.error.message : "Hindi naipadala. Subukan ulit."}
+        </Text>
+      ) : null}
+      <PrimaryButton
+        label="Ipadala sa manager"
+        loading={give.isPending}
+        disabled={!lastDay}
+        onPress={() => give.mutate()}
+      />
+      <PrimaryButton label="Huwag na" variant="secondary" onPress={() => setOpen(false)} />
+    </View>
   );
 }
 

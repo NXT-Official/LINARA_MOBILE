@@ -14,6 +14,9 @@ export interface TermsOnFile {
   recordSince: string;
   /** Her last working day, once that household ended her employment. */
   endedOn: string | null;
+  /** The last day she gave notice for, while still employed. */
+  noticeLastDay: string | null;
+  noticeNote: string | null;
 }
 
 /**
@@ -26,9 +29,9 @@ export interface TermsOnFile {
 export async function getMyTermsOnFile(helperId: string): Promise<TermsOnFile> {
   const { data, error } = await supabase
     .from("helper_profiles")
-    .select(
-      "station, employment, shift_start, shift_end, break_start, break_end, weekly_rest_day, monthly_rate, payday_interval, created_at, ended_on",
-    )
+    // "*" so columns from later migrations (ended_on, started_on) are read
+    // when present without breaking before they are applied.
+    .select("*")
     .eq("id", helperId)
     .single();
 
@@ -46,8 +49,11 @@ export async function getMyTermsOnFile(helperId: string): Promise<TermsOnFile> {
     weeklyRestDay: data.weekly_rest_day,
     monthlyRate: Number(data.monthly_rate),
     paydayInterval: data.payday_interval,
-    recordSince: data.created_at,
+    // Her real first day when the household set one; the invite date before.
+    recordSince: data.started_on ?? data.created_at,
     endedOn: data.ended_on ?? null,
+    noticeLastDay: data.notice_last_day ?? null,
+    noticeNote: data.notice_note ?? null,
   };
 }
 

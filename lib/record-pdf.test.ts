@@ -149,3 +149,43 @@ describe("a household she has left", () => {
     expect(out).not.toContain("On record since");
   });
 });
+
+describe("payments made outside Linara and 13th-month pay", () => {
+  const manual = (helperAck: "pending" | "confirmed" | "disputed") => ({
+    ...base.payslips[0],
+    cutoffStart: "2026-08-16",
+    cutoffEnd: "2026-08-31",
+    payoutProvider: "manual",
+    payoutChannelCode: "CASH",
+    paidOn: "2026-09-02",
+    helperAck,
+  });
+
+  it("says how each was paid and whether she confirmed it", () => {
+    expect(recordPdfHtml({ ...base, payslips: [manual("pending")] })).toContain(
+      "Cash, not yet confirmed by her",
+    );
+    expect(recordPdfHtml({ ...base, payslips: [manual("confirmed")] })).toContain(
+      "Cash, confirmed by her",
+    );
+    expect(recordPdfHtml({ ...base, payslips: [manual("disputed")] })).toContain(
+      "Cash, she disputes this",
+    );
+    expect(recordPdfHtml({ ...base, payslips: [manual("confirmed")] })).toContain("Sep 2, 2026");
+  });
+
+  it("labels 13th-month pay by year", () => {
+    const out = recordPdfHtml({
+      ...base,
+      payslips: [
+        {
+          ...base.payslips[0],
+          kind: "thirteenth_month",
+          cutoffStart: "2026-07-01",
+          cutoffEnd: "2026-12-31",
+        },
+      ],
+    });
+    expect(out).toContain("13th-month pay 2026");
+  });
+});

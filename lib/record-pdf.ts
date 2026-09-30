@@ -22,6 +22,29 @@ export interface RecordPdfPayslip {
   netPay: number;
   payoutStatus: string;
   confirmedAt: string | null;
+  /** From add-pay-periods.sql; absent means a regular Xendit payout. */
+  kind?: "regular" | "thirteenth_month";
+  payoutProvider?: string;
+  payoutChannelCode?: string;
+  paidOn?: string | null;
+  helperAck?: "pending" | "confirmed" | "disputed" | null;
+}
+
+const METHOD: Record<string, string> = {
+  PH_GCASH: "GCash",
+  PH_PAYMAYA: "Maya",
+  CASH: "Cash",
+  BANK_TRANSFER: "Bank transfer",
+  OTHER: "Other",
+};
+
+/** "GCash", or for a payment made outside Linara whether she has confirmed it. */
+function howPaid(p: RecordPdfPayslip): string {
+  const method = METHOD[p.payoutChannelCode ?? ""] ?? "—";
+  if (p.payoutProvider !== "manual") return method;
+  if (p.helperAck === "confirmed") return `${method}, confirmed by her`;
+  if (p.helperAck === "disputed") return `${method}, she disputes this`;
+  return `${method}, not yet confirmed by her`;
 }
 
 export interface RecordPdfRest {
@@ -95,6 +118,9 @@ const localDay = (ymd: string) => {
   return new Date(y, m, d);
 };
 
+/** A timestamp, or a "YYYY-MM-DD" date read as that calendar day. */
+const asDay = (value: string) => (value.length === 10 ? localDay(value) : new Date(value));
+
 const longDate = (d: Date) => `${d.getDate()} ${MONTHS_LONG[d.getMonth()]} ${d.getFullYear()}`;
 const shortDate = (d: Date) => `${MONTHS[d.getMonth()]} ${d.getDate()}, ${d.getFullYear()}`;
 const shortDay = (ymd: string) => {
@@ -155,8 +181,8 @@ export function recordPdfHtml(r: RecordPdfInput): string {
           : "Not recorded",
     ),
     r.endedOn
-      ? row("Employed", `${longDate(new Date(r.recordSince))} – ${longDate(localDay(r.endedOn))}`)
-      : row("On record since", longDate(new Date(r.recordSince))),
+      ? row("Employed", `${longDate(asDay(r.recordSince))} – ${longDate(localDay(r.endedOn))}`)
+      : row("On record since", longDate(asDay(r.recordSince))),
     row("Working hours", `${clock(r.shiftStart)} – ${clock(r.shiftEnd)}`),
     ...(r.breakStart && r.breakEnd
       ? [row("Daily break", `${clock(r.breakStart)} – ${clock(r.breakEnd)}`)]
@@ -182,8 +208,19 @@ export function recordPdfHtml(r: RecordPdfInput): string {
     ? paid
         .map(
           (p) => `<tr>
-            <td class="nowrap">${escapeHtml(formatPeriod(p.cutoffStart, p.cutoffEnd))}</td>
-            <td class="nowrap">${p.confirmedAt ? escapeHtml(shortDate(new Date(p.confirmedAt))) : "—"}</td>
+            <td class="nowrap">${escapeHtml(
+              p.kind === "thirteenth_month"
+                ? `13th-month pay ${p.cutoffEnd.slice(0, 4)}`
+                : formatPeriod(p.cutoffStart, p.cutoffEnd),
+            )}</td>
+            <td class="nowrap">${
+              p.paidOn
+                ? escapeHtml(shortDay(p.paidOn))
+                : p.confirmedAt
+                  ? escapeHtml(shortDate(new Date(p.confirmedAt)))
+                  : "—"
+            }</td>
+            <td>${escapeHtml(howPaid(p))}</td>
             <td class="num">${pesos(p.basePay)}</td>
             <td class="num">${pesos(p.statutoryEmployeeShare)}</td>
             <td class="num">${pesos(p.valeDeductions)}</td>
@@ -191,7 +228,7 @@ export function recordPdfHtml(r: RecordPdfInput): string {
           </tr>`,
         )
         .join("")
-    : `<tr><td colspan="6" class="empty">No paid payslips recorded yet.</td></tr>`;
+    : `<tr><td colspan="7" class="empty">No paid payslips recorded yet.</td></tr>`;
 
   const restRows = rest.length
     ? rest
@@ -258,7 +295,7 @@ export function recordPdfHtml(r: RecordPdfInput): string {
   <h2>Pay received</h2>
   <table class="list">
     <thead><tr>
-      <th>Pay period</th><th>Paid on</th><th class="num">Basic pay</th>
+      <th>Pay period</th><th>Paid on</th><th>How</th><th class="num">Basic pay</th>
       <th class="num">SSS, PhilHealth, Pag&#8209;IBIG</th><th class="num">Vale (advance)</th><th class="num">Net pay</th>
     </tr></thead>
     <tbody>${payRows}</tbody>
@@ -271,7 +308,7 @@ export function recordPdfHtml(r: RecordPdfInput): string {
   </table>
 
   <footer>
-    <p>Pay figures are taken from payslips paid through Linara; payslips still processing or failed are not included. Government contributions are shown as deducted from her pay (employee share). This record does not show whether they were remitted to SSS, PhilHealth or Pag-IBIG.</p>
+    <p>Pay figures are taken from payslips paid through Linara (GCash, Maya) and payments the household recorded as made outside it (cash, bank transfer, other). A payment made outside Linara counts in the totals only once she has confirmed it. Payslips still processing or failed are not included. Government contributions are shown as deducted from her pay (employee share). This record does not show whether they were remitted to SSS, PhilHealth or Pag-IBIG.</p>
     <p>This is a summary of the household's records, not a certificate of employment.</p>
   </footer>
 </body>
