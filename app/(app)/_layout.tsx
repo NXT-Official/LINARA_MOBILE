@@ -22,8 +22,11 @@ export default function AppTabsLayout() {
     );
   }
 
+  // Losing the session in here means she already has an account (signed out,
+  // or the token lapsed), so send her to sign-in rather than the invite-code
+  // screen. First launch goes through app/index.tsx -> welcome instead.
   if (!session) {
-    return <Redirect href="/(auth)/welcome" />;
+    return <Redirect href="/(auth)/sign-in" />;
   }
 
   return (

@@ -1,5 +1,13 @@
 import { useState } from "react";
-import { KeyboardAvoidingView, Platform, ScrollView, StyleSheet, Text, View } from "react-native";
+import {
+  KeyboardAvoidingView,
+  Platform,
+  Pressable,
+  ScrollView,
+  StyleSheet,
+  Text,
+  View,
+} from "react-native";
 import { router } from "expo-router";
 
 import { colors } from "@/lib/theme";
@@ -60,6 +68,14 @@ export default function WelcomeScreen() {
         />
 
         <PrimaryButton label="Continue" onPress={submitCode} disabled={!code.trim()} />
+
+        <Pressable
+          onPress={() => router.push("/(auth)/sign-in")}
+          hitSlop={8}
+          accessibilityRole="button"
+        >
+          <Text style={styles.link}>May account ka na? Mag-sign in</Text>
+        </Pressable>
       </ScrollView>
     </KeyboardAvoidingView>
   );
@@ -89,6 +105,13 @@ const styles = StyleSheet.create({
     fontSize: 15,
     lineHeight: 22,
     color: colors.ink,
+  },
+  link: {
+    textAlign: "center",
+    fontSize: 14,
+    fontWeight: "600",
+    color: colors.pineTeal,
+    textDecorationLine: "underline",
   },
   codeInput: {
     textAlign: "center",

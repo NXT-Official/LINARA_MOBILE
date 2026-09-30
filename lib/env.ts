@@ -31,3 +31,11 @@ export const SUPABASE_URL = assertEnvVar(rawSupabaseUrl, "EXPO_PUBLIC_SUPABASE_U
 // eslint-disable-next-line no-restricted-syntax -- sole, validated process.env access point
 const rawSupabaseAnonKey = process.env.EXPO_PUBLIC_SUPABASE_ANON_KEY;
 export const SUPABASE_ANON_KEY = assertEnvVar(rawSupabaseAnonKey, "EXPO_PUBLIC_SUPABASE_ANON_KEY");
+
+// Optional: the LINARA web dashboard's origin. Password-reset emails link to
+// its /reset-password page, which serves helpers and managers alike. When
+// unset, Supabase falls back to the project's Site URL, and the web landing
+// page forwards recovery links from there.
+// eslint-disable-next-line no-restricted-syntax -- sole, validated process.env access point
+const rawWebAppUrl = process.env.EXPO_PUBLIC_WEB_APP_URL;
+export const WEB_APP_URL: string | null = rawWebAppUrl?.trim().replace(/\/+$/, "") || null;

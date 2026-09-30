@@ -18,6 +18,7 @@ import { DigitalPayslip } from "@/components/features/pay/digital-payslip";
 import { PayslipHistory } from "@/components/features/pay/payslip-history";
 import { RestOwedCounter } from "@/components/features/pay/rest-owed-counter";
 import { ValeRequestForm } from "@/components/features/pay/vale-request-form";
+import { SignOutButton } from "@/components/features/account/sign-out-button";
 
 /**
  * My Pay tab (roadmap Story 11). Digital payslip, vale request form, and
@@ -183,6 +184,8 @@ export default function PayScreen() {
           )}
         </>
       )}
+
+      <SignOutButton />
     </ScrollView>
   );
 }
