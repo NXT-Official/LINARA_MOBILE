@@ -69,3 +69,37 @@ export function summarizeToday(tickets: DayTicket[], now: Date) {
     onHold: todays.filter((t) => t.status === "blocked").length,
   };
 }
+
+/** "Magandang umaga / tanghali / hapon / gabi" by the hour, not always "umaga". */
+export function greetingFor(now: Date): string {
+  const h = now.getHours();
+  if (h >= 5 && h < 11) return "Magandang umaga";
+  if (h >= 11 && h < 13) return "Magandang tanghali";
+  if (h >= 13 && h < 18) return "Magandang hapon";
+  return "Magandang gabi";
+}
+
+export type DayPhase = "rest_day" | "night" | "before_shift" | "on_shift" | "after_shift";
+
+/**
+ * Where she is in her own day, for the close. Night is the overnight quiet
+ * window (22:00-06:00, lib/availability.ts), which wins over the shift so an
+ * early-morning hour reads as rest, not "before your shift". A break counts as
+ * on shift here: the day isn't over.
+ */
+export function dayPhase(
+  now: Date,
+  shift: { shiftStart: string; shiftEnd: string; weeklyRestDay: number },
+): DayPhase {
+  if (now.getDay() === shift.weeklyRestDay) return "rest_day";
+  const h = now.getHours();
+  if (h >= 22 || h < 6) return "night";
+  const toMin = (t: string) => {
+    const [hh, mm] = t.split(":").map(Number);
+    return hh * 60 + mm;
+  };
+  const minutes = h * 60 + now.getMinutes();
+  if (minutes < toMin(shift.shiftStart)) return "before_shift";
+  if (minutes >= toMin(shift.shiftEnd)) return "after_shift";
+  return "on_shift";
+}

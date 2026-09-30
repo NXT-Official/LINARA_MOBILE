@@ -26,3 +26,23 @@ export async function getHouseholdPettyCashBudget(householdId: string): Promise<
 
   return Number(data.petty_cash_budget);
 }
+
+/**
+ * Whether the manager has closed the board for the night
+ * (`households.board_closed`, set from the web Pass). Read-only here for the
+ * same reason as the budget above. While closed, new tasks are queued for
+ * tomorrow and the Station shows the close instead of a task.
+ */
+export async function getBoardClosed(householdId: string): Promise<boolean> {
+  const { data, error } = await supabase
+    .from("households")
+    .select("board_closed")
+    .eq("id", householdId)
+    .single();
+
+  if (error || !data) {
+    throw new Error(error?.message || "Household not found");
+  }
+
+  return Boolean(data.board_closed);
+}

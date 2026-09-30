@@ -1,6 +1,7 @@
 import { StyleSheet, Text, View } from "react-native";
 
 import { colors, fonts } from "@/lib/theme";
+import { greetingFor } from "@/lib/today";
 import { formatShiftTime, weekdayName } from "@/lib/format";
 import type { RosaAvailabilityStatus } from "@/lib/availability";
 import { RosaAvailControl } from "@/components/features/availability/rosa-avail-control";
@@ -27,7 +28,9 @@ export function DignityHeader({
   return (
     <View style={styles.card}>
       <Text style={styles.eyebrow}>{firstName}&apos;s Station</Text>
-      <Text style={styles.greeting}>Magandang umaga, {firstName}.</Text>
+      <Text style={styles.greeting}>
+        {greetingFor(new Date())}, {firstName}.
+      </Text>
 
       <View style={styles.statsRow}>
         <View style={styles.statTile}>

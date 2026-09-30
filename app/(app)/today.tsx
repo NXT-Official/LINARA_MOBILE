@@ -8,6 +8,9 @@ import { useRosaAvailability } from "@/hooks/use-rosa-availability";
 import { useRealtimeSubscription } from "@/hooks/use-realtime-subscription";
 import { DignityHeader } from "@/components/features/today/dignity-header";
 import { ActiveFocusCard } from "@/components/features/today/active-focus-card";
+import { DayCloseCard, type CloseReason } from "@/components/features/today/day-close-card";
+import { getBoardClosed } from "@/services/api/household";
+import { dayPhase } from "@/lib/today";
 import { FloatingQuickUtosFeed } from "@/components/features/utos/floating-quick-utos-feed";
 import { PrivateScratchpad } from "@/components/features/notes/PrivateScratchpad";
 import { getMyHelperProfile } from "@/services/api/helper-profile";
@@ -16,6 +19,7 @@ import {
   blockTicket,
   completeTicket,
   getFocusTask,
+  getTodayProgress,
   startTicket,
   type FocusTask,
 } from "@/services/api/tickets";
@@ -75,6 +79,27 @@ export default function TodayScreen() {
     enabled: Boolean(helperId),
   });
 
+  const progressQuery = useQuery({
+    queryKey: ["today-progress", helperId],
+    queryFn: () => getTodayProgress(helperId as string),
+    enabled: Boolean(helperId),
+  });
+
+  // The manager closes the board from the web Pass; there's no realtime
+  // channel on households, so check once a minute.
+  const householdId = profileQuery.data?.householdId ?? null;
+  const boardClosedQuery = useQuery({
+    queryKey: ["board-closed", householdId],
+    queryFn: () => getBoardClosed(householdId as string),
+    enabled: Boolean(householdId),
+    refetchInterval: 60_000,
+  });
+
+  const refreshToday = () => {
+    queryClient.invalidateQueries({ queryKey: ["focus-task", helperId] });
+    queryClient.invalidateQueries({ queryKey: ["today-progress", helperId] });
+  };
+
   const quickUtosQuery = useQuery({
     queryKey: ["quick-utos", helperId],
     queryFn: () => getPendingQuickUtos(helperId as string),
@@ -105,7 +130,7 @@ export default function TodayScreen() {
     },
     onSuccess: (result) => {
       if (!result.queued) {
-        queryClient.invalidateQueries({ queryKey: ["focus-task", helperId] });
+        refreshToday();
       }
     },
   });
@@ -154,7 +179,7 @@ export default function TodayScreen() {
     },
     onSuccess: (result) => {
       if (!result.queued) {
-        queryClient.invalidateQueries({ queryKey: ["focus-task", helperId] });
+        refreshToday();
       }
     },
   });
@@ -185,7 +210,7 @@ export default function TodayScreen() {
     },
     onSuccess: (result) => {
       if (!result.queued) {
-        queryClient.invalidateQueries({ queryKey: ["focus-task", helperId] });
+        refreshToday();
       }
     },
   });
@@ -202,9 +227,26 @@ export default function TodayScreen() {
   const focusTask = focusTaskQuery.data;
 
   useRealtimeSubscription(helperId, {
-    onTicketChange: () => queryClient.invalidateQueries({ queryKey: ["focus-task", helperId] }),
+    onTicketChange: refreshToday,
     onQuickUtoChange: () => queryClient.invalidateQueries({ queryKey: ["quick-utos", helperId] }),
   });
+
+  // The close replaces the next task once her day is over -- unless she has
+  // opted in as Available. A task she already started, or one the manager
+  // deliberately sent off-hours, still shows under it.
+  const phase = profileQuery.data ? dayPhase(new Date(), profileQuery.data) : "on_shift";
+  const closeReason: CloseReason | null = boardClosedQuery.data
+    ? "closed"
+    : availability.status === "available"
+      ? null
+      : phase === "rest_day" || phase === "night" || phase === "after_shift"
+        ? phase
+        : null;
+  const progress = progressQuery.data;
+  const allDone = Boolean(progress && progress.total > 0 && progress.done === progress.total);
+  const showTask =
+    Boolean(focusTask) &&
+    (!closeReason || focusTask?.status === "in_progress" || Boolean(focusTask?.afterHours));
 
   return (
     <View style={styles.flex}>
@@ -237,28 +279,47 @@ export default function TodayScreen() {
               <Text style={styles.errorText}>
                 Hindi ma-load ang task mo ngayon. Subukan ulit mamaya.
               </Text>
-            ) : focusTask ? (
-              <>
-                <ActiveFocusCard
-                  // Fresh per task: a photo or half-typed reason never carries
-                  // over to the next one.
-                  key={focusTask.id}
-                  task={focusTask}
-                  onStart={() => startMutation.mutate(focusTask.id)}
-                  onComplete={(photoUri) =>
-                    completeMutation.mutate({ ticketId: focusTask.id, photoUri })
-                  }
-                  onCantNow={(reason) => holdMutation.mutate({ ticketId: focusTask.id, reason })}
-                  isStarting={startMutation.isPending}
-                  isCompleting={completeMutation.isPending}
-                  isHolding={holdMutation.isPending}
-                />
-                {completeError ? <Text style={styles.errorText}>{completeError}</Text> : null}
-              </>
             ) : (
-              <View style={styles.emptyCard}>
-                <Text style={styles.emptyText}>Walang task ngayon. Magandang break, po!</Text>
-              </View>
+              <>
+                {closeReason ? (
+                  <DayCloseCard reason={closeReason} progress={progress} />
+                ) : !focusTask && allDone ? (
+                  <DayCloseCard reason="all_done" progress={progress} />
+                ) : null}
+
+                {focusTask && showTask ? (
+                  <>
+                    {closeReason ? (
+                      <Text style={styles.afterHoursNote}>
+                        {focusTask.status === "in_progress"
+                          ? "Tapusin mo lang itong sinimulan mo."
+                          : "Ipinadala ito kahit off-shift ka. Kapag tinapos mo, naka-log ito bilang rest owed."}
+                      </Text>
+                    ) : null}
+                    <ActiveFocusCard
+                      // Fresh per task: a photo or half-typed reason never carries
+                      // over to the next one.
+                      key={focusTask.id}
+                      task={focusTask}
+                      onStart={() => startMutation.mutate(focusTask.id)}
+                      onComplete={(photoUri) =>
+                        completeMutation.mutate({ ticketId: focusTask.id, photoUri })
+                      }
+                      onCantNow={(reason) =>
+                        holdMutation.mutate({ ticketId: focusTask.id, reason })
+                      }
+                      isStarting={startMutation.isPending}
+                      isCompleting={completeMutation.isPending}
+                      isHolding={holdMutation.isPending}
+                    />
+                    {completeError ? <Text style={styles.errorText}>{completeError}</Text> : null}
+                  </>
+                ) : !closeReason && !allDone ? (
+                  <View style={styles.emptyCard}>
+                    <Text style={styles.emptyText}>Walang task ngayon. Magandang break, po!</Text>
+                  </View>
+                ) : null}
+              </>
             )}
 
             <PrivateScratchpad
@@ -301,6 +362,12 @@ const styles = StyleSheet.create({
     color: colors.ink,
     textAlign: "center",
     paddingVertical: 24,
+  },
+  afterHoursNote: {
+    fontSize: 13,
+    lineHeight: 18,
+    color: colors.terracottaInk,
+    paddingHorizontal: 4,
   },
   emptyCard: {
     borderRadius: 24,

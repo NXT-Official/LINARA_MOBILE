@@ -1,6 +1,13 @@
 import { describe, expect, it } from "vitest";
 
-import { isLaterThanToday, pickFocus, summarizeToday, type DayTicket } from "./today";
+import {
+  dayPhase,
+  greetingFor,
+  isLaterThanToday,
+  pickFocus,
+  summarizeToday,
+  type DayTicket,
+} from "./today";
 
 // Built from local parts, so these hold in any time zone the suite runs under.
 const at = (d: number, h: number, m = 0) => new Date(2026, 8, d, h, m).toISOString();
@@ -56,5 +63,41 @@ describe("summarizeToday", () => {
       t("todo", at(31, 7)), // tomorrow: doesn't
     ];
     expect(summarizeToday(list, now)).toEqual({ total: 4, done: 2, onHold: 1 });
+  });
+});
+
+describe("greetingFor", () => {
+  const hour = (h: number) => new Date(2026, 8, 30, h, 0);
+  it("follows the time of day", () => {
+    expect(greetingFor(hour(5))).toBe("Magandang umaga");
+    expect(greetingFor(hour(11))).toBe("Magandang tanghali");
+    expect(greetingFor(hour(13))).toBe("Magandang hapon");
+    expect(greetingFor(hour(18))).toBe("Magandang gabi");
+    expect(greetingFor(hour(2))).toBe("Magandang gabi");
+  });
+});
+
+describe("dayPhase", () => {
+  // Wed 30 Sep 2026; rest day Sunday (0); shift 06:00-19:00, as Ate Marites.
+  const shift = { shiftStart: "06:00:00", shiftEnd: "19:00:00", weeklyRestDay: 0 };
+  const wed = (h: number, m = 0) => new Date(2026, 8, 30, h, m);
+
+  it("tracks the shift through the day", () => {
+    expect(dayPhase(wed(6), shift)).toBe("on_shift");
+    expect(dayPhase(wed(12, 30), shift)).toBe("on_shift");
+    expect(dayPhase(wed(19), shift)).toBe("after_shift");
+  });
+
+  it("treats the overnight window as night, not before the shift", () => {
+    expect(dayPhase(wed(22), shift)).toBe("night");
+    expect(dayPhase(wed(4), shift)).toBe("night");
+  });
+
+  it("knows a late start's morning is before the shift", () => {
+    expect(dayPhase(wed(7), { ...shift, shiftStart: "09:00:00" })).toBe("before_shift");
+  });
+
+  it("puts the rest day first", () => {
+    expect(dayPhase(new Date(2026, 9, 4, 10), shift)).toBe("rest_day"); // Sun 4 Oct
   });
 });
