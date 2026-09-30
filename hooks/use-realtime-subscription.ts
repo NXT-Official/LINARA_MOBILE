@@ -49,8 +49,13 @@ export function useRealtimeSubscription(
       return;
     }
 
+    // A topic of its own per subscriber: supabase.channel(name) hands back
+    // any live channel already using that name, so a second screen (Today and
+    // My Week are both mounted as tabs) would re-attach listeners to an
+    // already-joined channel and join it twice -- the same failure fixed on
+    // the web in ../LINARA's app-store-provider.
     const channel = supabase
-      .channel(`helper-station-${helperId}`)
+      .channel(`helper-station-${helperId}-${Math.random().toString(36).slice(2, 10)}`)
       .on<TicketRealtimeRow>(
         "postgres_changes",
         { event: "*", schema: "public", table: "tickets", filter: `helper_id=eq.${helperId}` },
