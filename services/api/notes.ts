@@ -16,15 +16,15 @@ interface HelperNoteRow {
 
 /**
  * Lists the signed-in helper's own private scratchpad notes, newest first.
- * `helper_notes_privacy` RLS (../LINARA/architecture.md Section 5.2) already
- * restricts this to the caller's own rows -- the `helper_id` filter here
- * just avoids an unnecessary round-trip through auth.uid() resolution twice.
+ * `helper_notes_privacy` RLS (../LINARA/architecture.md Section 5.2) restricts
+ * this to her own rows. Deliberately not filtered to the current employment:
+ * the notes are hers, not the household's, so they come with her when she
+ * moves to a new household (../LINARA/supabase/add-employment-end.sql).
  */
-export async function getMyNotes(helperId: string): Promise<HelperNote[]> {
+export async function getMyNotes(): Promise<HelperNote[]> {
   const { data, error } = await supabase
     .from("helper_notes")
     .select("id, text, done, created_at")
-    .eq("helper_id", helperId)
     .order("created_at", { ascending: false });
 
   if (error) {

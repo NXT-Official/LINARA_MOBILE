@@ -54,7 +54,7 @@ export function PrivateScratchpad({
 
   const notesQuery = useQuery({
     queryKey: ["helper-notes", helperId],
-    queryFn: () => getMyNotes(helperId),
+    queryFn: () => getMyNotes(),
     enabled: Boolean(helperId),
   });
 
