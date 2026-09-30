@@ -46,3 +46,18 @@ export async function getBoardClosed(householdId: string): Promise<boolean> {
 
   return Boolean(data.board_closed);
 }
+
+/**
+ * The household's name, for the header of her downloadable work record.
+ * Null when it can't be read; the record then says "her employer's household".
+ */
+export async function getHouseholdName(householdId: string): Promise<string | null> {
+  const { data, error } = await supabase
+    .from("households")
+    .select("name")
+    .eq("id", householdId)
+    .single();
+
+  if (error || !data) return null;
+  return data.name as string;
+}

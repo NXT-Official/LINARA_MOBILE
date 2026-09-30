@@ -15,6 +15,7 @@ import { formatHoursMinutes, formatPeso, formatShiftTime } from "@/lib/format";
 import { recordShareText, restTakenMinutes, summarizePay } from "@/lib/record";
 import { DAY_NAMES } from "@/lib/week";
 import { getMyHelperProfile } from "@/services/api/helper-profile";
+import { getHouseholdName } from "@/services/api/household";
 import { getMyPayslips } from "@/services/api/payslips";
 import { getMyRestOffRequests } from "@/services/api/rest-off";
 import {
@@ -23,6 +24,7 @@ import {
   getMyTermsOnFile,
   type TermsFlagField,
 } from "@/services/api/record";
+import { shareRecordPdf } from "@/services/record-export";
 import { PrimaryButton } from "@/components/ui/primary-button";
 import { TextField } from "@/components/ui/text-field";
 
@@ -43,7 +45,8 @@ const longDate = (iso: string) =>
  * household has on file, her work and pay in plain numbers, and a way to share
  * it. The test the concept sets: would she open this on her day off? It
  * describes this household's record only -- it doesn't claim the record moves
- * with her to another household (../LINARA/KNOWN_GAPS.md O4).
+ * with her to another household (../LINARA/KNOWN_GAPS.md O4). What she can
+ * keep is the PDF: made on her phone, saved wherever she chooses.
  */
 export default function RecordScreen() {
   const profileQuery = useQuery({ queryKey: ["my-helper-profile"], queryFn: getMyHelperProfile });
@@ -65,6 +68,11 @@ export default function RecordScreen() {
     queryKey: ["rest-off-requests", helperId],
     queryFn: () => getMyRestOffRequests(helperId as string),
     enabled,
+  });
+  const householdQuery = useQuery({
+    queryKey: ["household-name", profile?.householdId],
+    queryFn: () => getHouseholdName(profile?.householdId as string),
+    enabled: Boolean(profile?.householdId),
   });
   const doneQuery = useQuery({
     queryKey: ["tasks-done", helperId],
@@ -91,6 +99,23 @@ export default function RecordScreen() {
     doneQuery.isLoading;
   const pay = summarizePay(payslipsQuery.data ?? []);
   const restTaken = restTakenMinutes(restQuery.data ?? []);
+
+  const pdfMutation = useMutation({
+    mutationFn: async () => {
+      if (!profile || !terms) return;
+      await shareRecordPdf({
+        name: profile.name,
+        householdName: householdQuery.data ?? null,
+        ...terms,
+        tasksDone: doneQuery.data ?? 0,
+        pay,
+        restTaken,
+        payslips: payslipsQuery.data ?? [],
+        restOff: restQuery.data ?? [],
+        generatedAt: new Date(),
+      });
+    },
+  });
 
   const share = () => {
     if (!profile || !terms) return;
@@ -234,10 +259,19 @@ export default function RecordScreen() {
             <Row label="Rest na nakuha" value={formatHoursMinutes(restTaken)} />
           </View>
 
-          <PrimaryButton label="Ibahagi ang record ko" onPress={share} />
+          <PrimaryButton
+            label="I-download ang record ko (PDF)"
+            loading={pdfMutation.isPending}
+            onPress={() => pdfMutation.mutate()}
+          />
+          {pdfMutation.isError ? (
+            <Text style={styles.error}>Hindi nagawa ang PDF. Subukan ulit.</Text>
+          ) : null}
+          <PrimaryButton label="Ibahagi bilang text" variant="secondary" onPress={share} />
           <Text style={styles.footnote}>
-            Para sa loan, visa, o susunod na trabaho. Galing ang lahat ng ito sa record ng household
-            na ito sa Linara.
+            Para sa loan, visa, o susunod na trabaho. Nasa phone mo ang PDF at kung saan mo ito
+            i-save, kahit umalis ka sa household na ito. Galing ang lahat ng ito sa record ng
+            household sa Linara.
           </Text>
         </>
       )}
