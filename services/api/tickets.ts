@@ -1,3 +1,10 @@
+import {
+  isLaterThanToday,
+  pickFocus,
+  startOfToday,
+  startOfTomorrow,
+  summarizeToday,
+} from "@/lib/today";
 import { supabase } from "@/services/supabase";
 
 export interface FocusTaskSop {
@@ -16,6 +23,8 @@ export interface FocusTask {
   notes: string | null;
   status: "todo" | "in_progress" | "done" | "blocked";
   scheduledStart: string;
+  /** Sent off-hours through the manager's override or emergency path. */
+  afterHours: boolean;
   sop: FocusTaskSop | null;
 }
 
@@ -25,6 +34,8 @@ interface TicketWithSopRow {
   notes: string | null;
   status: FocusTask["status"];
   scheduled_start: string;
+  is_after_hours: boolean;
+  emergency: boolean;
   house_sops: {
     id: string;
     title: string;
@@ -37,34 +48,55 @@ interface TicketWithSopRow {
 }
 
 /**
- * Fetches the single highest-priority uncompleted ticket for the Active
- * Focus Card (roadmap Story 7, step 1). A ticket already `in_progress`
- * outranks anything still `todo` or `blocked`; ties break on the earliest
- * `scheduled_start`. `helper_profiles_isolation`-adjacent RLS on tickets
- * only scopes by household_id, so the `helper_id` filter here is what
- * actually keeps this to the signed-in helper's own queue.
+ * Tickets that are hers to see today. Leaves out a remote admin's suggestion
+ * still waiting for on-site approval (`suggested`), anything held off the board
+ * until the manager reopens it (`queued`), and -- via `isLaterThanToday` --
+ * anything scheduled for a later day. The web Pass hides the same three.
+ * RLS on tickets only scopes by household, so the `helper_id` filter is what
+ * keeps this to her own queue.
  */
-export async function getFocusTask(helperId: string): Promise<FocusTask | null> {
+async function getMyTodayRows<T>(helperId: string, columns: string): Promise<T[]> {
+  const now = new Date();
   const { data, error } = await supabase
     .from("tickets")
-    .select(
-      "id, title, notes, status, scheduled_start, house_sops(id, title, description, standard_image_url, steps, tools_required, safety_protocol)",
-    )
+    .select(columns)
     .eq("helper_id", helperId)
-    .neq("status", "done")
+    .eq("suggested", false)
+    .eq("queued", false)
+    // Two .or() groups are ANDed: not a later day's ticket (unless started),
+    // and either unfinished or from today -- so her finished history isn't
+    // re-read every time.
+    .or(`status.eq.in_progress,scheduled_start.lt.${startOfTomorrow(now).toISOString()}`)
+    .or(`status.neq.done,scheduled_start.gte.${startOfToday(now).toISOString()}`)
     .order("scheduled_start", { ascending: true });
 
   if (error) {
     throw new Error(error.message);
   }
+  return (
+    (data ?? []) as unknown as (T & { status: FocusTask["status"]; scheduled_start: string })[]
+  ).filter(
+    (row) => !isLaterThanToday({ status: row.status, scheduledStart: row.scheduled_start }, now),
+  );
+}
 
-  const rows = (data ?? []) as unknown as TicketWithSopRow[];
-  if (rows.length === 0) {
+/**
+ * The one ticket for the Active Focus Card (roadmap Story 7, step 1): what
+ * she's already doing, else the earliest not-yet-started, else one on hold
+ * (see `pickFocus`). Done tickets never show.
+ */
+export async function getFocusTask(helperId: string): Promise<FocusTask | null> {
+  const rows = (
+    await getMyTodayRows<TicketWithSopRow>(
+      helperId,
+      "id, title, notes, status, scheduled_start, is_after_hours, emergency, house_sops(id, title, description, standard_image_url, steps, tools_required, safety_protocol)",
+    )
+  ).filter((row) => row.status !== "done");
+
+  const focus = pickFocus(rows.map((row) => ({ ...row, scheduledStart: row.scheduled_start })));
+  if (!focus) {
     return null;
   }
-
-  const inProgress = rows.find((row) => row.status === "in_progress");
-  const focus = inProgress ?? rows[0];
 
   return {
     id: focus.id,
@@ -72,6 +104,7 @@ export async function getFocusTask(helperId: string): Promise<FocusTask | null> 
     notes: focus.notes,
     status: focus.status,
     scheduledStart: focus.scheduled_start,
+    afterHours: focus.is_after_hours || focus.emergency,
     sop: focus.house_sops
       ? {
           id: focus.house_sops.id,
@@ -84,6 +117,28 @@ export async function getFocusTask(helperId: string): Promise<FocusTask | null> 
         }
       : null,
   };
+}
+
+export interface TodayProgress {
+  total: number;
+  done: number;
+  onHold: number;
+}
+
+/**
+ * Today's tally for the close ("8 of 8, tapos"): today's tickets plus unfinished
+ * ones carried over, and how many are done. Same visibility rules as the focus
+ * card; a ticket finished on an earlier day isn't part of today.
+ */
+export async function getTodayProgress(helperId: string): Promise<TodayProgress> {
+  const rows = await getMyTodayRows<{ status: FocusTask["status"]; scheduled_start: string }>(
+    helperId,
+    "status, scheduled_start",
+  );
+  return summarizeToday(
+    rows.map((row) => ({ status: row.status, scheduledStart: row.scheduled_start })),
+    new Date(),
+  );
 }
 
 /**
