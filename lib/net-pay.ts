@@ -47,3 +47,32 @@ export function netPayForCutoff(
 ): number {
   return Math.max(0, basePay - statutoryEmployeeShare - approvedValeTotal);
 }
+
+/** Whole calendar days in [start, end], from "YYYY-MM-DD" strings. */
+function daysInclusive(start: string, end: string): number {
+  return (
+    Math.round((Date.parse(`${end}T00:00:00Z`) - Date.parse(`${start}T00:00:00Z`)) / 86_400_000) + 1
+  );
+}
+
+/**
+ * How much of a cutoff she worked: 1 for an ordinary one, less for her first
+ * (started partway through) or final (left partway through). Same rule as
+ * ../LINARA/src/features/pay/net-pay.ts's workedShareOfCutoff, by calendar
+ * days, from helper_pay_periods' worked and full bounds.
+ */
+export function workedShareOfPeriod(
+  workedStart: string,
+  workedEnd: string,
+  fullStart: string,
+  fullEnd: string,
+): number {
+  const full = daysInclusive(fullStart, fullEnd);
+  if (full <= 0) return 1;
+  return Math.min(1, Math.max(0, daysInclusive(workedStart, workedEnd) / full));
+}
+
+/** A cutoff figure for the days worked, rounded to centavos as the payout snapshots it. */
+export function forWorkedShare(amount: number, share: number): number {
+  return share >= 1 ? amount : Math.round(amount * Math.max(0, share) * 100) / 100;
+}

@@ -6,16 +6,31 @@ export interface RecordPayslip {
   statutoryEmployeeShare: number;
   payoutStatus: "pending_send" | "processing" | "succeeded" | "failed" | "needs_review";
   confirmedAt: string | null;
+  /** "manual" for a payment made outside Linara; absent means Xendit. */
+  payoutProvider?: string;
+  /** Her answer to a manual payment. */
+  helperAck?: "pending" | "confirmed" | "disputed" | null;
 }
 
 /**
- * Pay she has actually received: only payouts that succeeded count. The
+ * Whether a payment counts as received on her record: a Xendit payout that
+ * succeeded, or a payment made outside Linara that she confirmed. One she
+ * hasn't answered, or disputes, is listed but not counted.
+ */
+export function countsAsReceived(p: RecordPayslip): boolean {
+  if (p.payoutStatus !== "succeeded") return false;
+  return p.payoutProvider !== "manual" || p.helperAck === "confirmed";
+}
+
+/**
+ * Pay she has actually received: payouts that succeeded, and payments made
+ * outside Linara that she confirmed (countsAsReceived). The
  * statutory figure is her employee share of SSS, PhilHealth and Pag-IBIG as
  * deducted on those payslips -- deducted, not "paid in": remittance to the
  * agencies isn't tracked yet (../LINARA/KNOWN_GAPS.md C46).
  */
 export function summarizePay(payslips: RecordPayslip[]) {
-  const paid = payslips.filter((p) => p.payoutStatus === "succeeded");
+  const paid = payslips.filter(countsAsReceived);
   const lastPaidAt = paid
     .map((p) => p.confirmedAt)
     .filter((d): d is string => Boolean(d))

@@ -3,7 +3,7 @@ import { StyleSheet, Text, View } from "react-native";
 import { colors, fonts } from "@/lib/theme";
 import { formatPeso } from "@/lib/format";
 import { formatCutoffRange } from "@/lib/cutoff";
-import { netPayForCutoff, perCutoff } from "@/lib/net-pay";
+import { forWorkedShare, netPayForCutoff, perCutoff } from "@/lib/net-pay";
 import { computeStatutorySplit, LegalContributionSplit } from "./legal-contribution-split";
 
 /**
@@ -23,6 +23,7 @@ export function DigitalPayslip({
   approvedValeTotal,
   cutoffStart,
   cutoffEnd,
+  workedShare = 1,
 }: {
   monthlyRate: number;
   paydayInterval: "semi_monthly" | "monthly";
@@ -35,14 +36,20 @@ export function DigitalPayslip({
    */
   cutoffStart?: string;
   cutoffEnd?: string;
+  /** Share of the cutoff worked -- less than 1 for her first one if she started
+   * partway through, the same pro-rating the payout uses. */
+  workedShare?: number;
 }) {
   // The arithmetic lives in lib/net-pay.ts so it can be unit-tested without
   // rendering React Native, and so the rule this app displays is stated in one
   // place -- see that file, and ../LINARA/KNOWN_GAPS.md C41 for why "the three
   // surfaces happen to match" was not good enough.
-  const basePay = perCutoff(monthlyRate, paydayInterval);
+  const basePay = forWorkedShare(perCutoff(monthlyRate, paydayInterval), workedShare);
   const split = computeStatutorySplit(monthlyRate);
-  const employeeShareThisCutoff = perCutoff(split.totalEmployee, paydayInterval);
+  const employeeShareThisCutoff = forWorkedShare(
+    perCutoff(split.totalEmployee, paydayInterval),
+    workedShare,
+  );
   const netEstimate = netPayForCutoff(basePay, employeeShareThisCutoff, approvedValeTotal);
 
   const intervalLabel =

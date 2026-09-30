@@ -5,6 +5,8 @@ import { colors, fonts } from "@/lib/theme";
 import { getHouseholdCutoff } from "@/services/api/cutoff";
 import { getMyHelperProfile } from "@/services/api/helper-profile";
 import { getMyLedgerEntries, restOwedMinutes } from "@/services/api/ledger";
+import { workedShareOfPeriod } from "@/lib/net-pay";
+import { getMyPayPeriods } from "@/services/api/pay-periods";
 import { getMyPayslips } from "@/services/api/payslips";
 import {
   cancelRestOffRequest,
@@ -15,6 +17,8 @@ import {
 import { getMyVales, requestVale } from "@/services/api/vales";
 import { RestOffRequestForm } from "@/components/features/pay/rest-off-request-form";
 import { DigitalPayslip } from "@/components/features/pay/digital-payslip";
+import { PaymentConfirmations } from "@/components/features/pay/payment-confirmations";
+import { UnpaidPeriods } from "@/components/features/pay/unpaid-periods";
 import { PayslipHistory } from "@/components/features/pay/payslip-history";
 import { RestOwedCounter } from "@/components/features/pay/rest-owed-counter";
 import { ValeRequestForm } from "@/components/features/pay/vale-request-form";
@@ -51,6 +55,23 @@ export default function PayScreen() {
     queryFn: () => getMyPayslips(helperId as string),
     enabled: Boolean(helperId),
   });
+
+  // The same pay periods the manager sees (helper_pay_periods): which cutoffs
+  // closed unpaid, and how much of the current one she has worked.
+  const periodsQuery = useQuery({
+    queryKey: ["pay-periods", helperId],
+    queryFn: () => getMyPayPeriods(helperId as string),
+    enabled: Boolean(helperId),
+  });
+  const currentPeriod = periodsQuery.data?.find((p) => p.isCurrent);
+  const workedShare = currentPeriod
+    ? workedShareOfPeriod(
+        currentPeriod.workedStart,
+        currentPeriod.workedEnd,
+        currentPeriod.fullStart,
+        currentPeriod.fullEnd,
+      )
+    : 1;
 
   // Server-derived cutoff boundaries -- keyed on the interval because that is
   // what the RPC takes. See services/api/cutoff.ts for why this isn't computed
@@ -131,13 +152,16 @@ export default function PayScreen() {
         <Text style={styles.errorText}>Hindi ma-load ang iyong sahod. Subukan ulit mamaya.</Text>
       ) : (
         <>
+          <PaymentConfirmations />
           <DigitalPayslip
             monthlyRate={profileQuery.data.monthlyRate}
             paydayInterval={profileQuery.data.paydayInterval}
             approvedValeTotal={approvedValeTotal}
-            cutoffStart={cutoffQuery.data?.cutoffStart}
+            cutoffStart={currentPeriod?.workedStart ?? cutoffQuery.data?.cutoffStart}
             cutoffEnd={cutoffQuery.data?.cutoffEnd}
+            workedShare={workedShare}
           />
+          <UnpaidPeriods periods={periodsQuery.data ?? []} />
 
           {!payslipsQuery.isLoading && <PayslipHistory payslips={payslipsQuery.data ?? []} />}
 

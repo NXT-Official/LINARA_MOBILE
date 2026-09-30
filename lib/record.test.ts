@@ -74,3 +74,18 @@ describe("recordShareText", () => {
     expect(recordShareText({ ...base, restTaken: 90 })).toContain("Rest taken as time off: 1h 30m");
   });
 });
+
+describe("payments made outside Linara", () => {
+  it("count only once she confirms them", () => {
+    const manual = (helperAck: "pending" | "confirmed" | "disputed") =>
+      slip({ payoutProvider: "manual", helperAck, netPay: 1000 });
+    const pay = summarizePay([
+      slip({}),
+      manual("pending"),
+      manual("confirmed"),
+      manual("disputed"),
+    ]);
+    expect(pay.paidCount).toBe(2);
+    expect(pay.paidTotal).toBe(5000);
+  });
+});

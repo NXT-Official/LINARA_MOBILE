@@ -3,7 +3,14 @@ import { StyleSheet, Text, View } from "react-native";
 import { colors, fonts } from "@/lib/theme";
 import { formatPeso } from "@/lib/format";
 import { formatCutoffRange } from "@/lib/cutoff";
-import type { Payslip, PayoutStatus } from "@/services/api/payslips";
+import { METHOD_LABEL, type Payslip, type PayoutStatus } from "@/services/api/payslips";
+
+/** Where a payment made outside Linara stands with her. */
+const ACK_LABEL = {
+  pending: "Hinihintay ang sagot mo",
+  confirmed: "Kinumpirma mo",
+  disputed: "Sinabi mong hindi natanggap",
+} as const;
 
 const STATUS_LABEL: Record<PayoutStatus, string> = {
   pending_send: "Sinesend...",
@@ -38,13 +45,26 @@ export function PayslipHistory({ payslips }: { payslips: Payslip[] }) {
           <View style={styles.rowLeft}>
             <Text style={styles.amount}>{formatPeso(p.netPay)}</Text>
             <Text style={styles.meta}>
-              {formatCutoffRange(p.cutoffStart, p.cutoffEnd)} ·{" "}
-              {p.payoutChannelCode === "PH_GCASH" ? "GCash" : "Maya"}
+              {p.kind === "thirteenth_month"
+                ? `13th-month pay ${p.cutoffEnd.slice(0, 4)}`
+                : formatCutoffRange(p.cutoffStart, p.cutoffEnd)}{" "}
+              · {METHOD_LABEL[p.payoutChannelCode] ?? "Iba pa"}
             </Text>
           </View>
-          <Text style={[styles.status, { color: STATUS_COLOR[p.payoutStatus] }]}>
-            {STATUS_LABEL[p.payoutStatus]}
-          </Text>
+          {p.payoutProvider === "manual" && p.helperAck ? (
+            <Text
+              style={[
+                styles.status,
+                { color: p.helperAck === "confirmed" ? colors.pineTeal : colors.terracottaInk },
+              ]}
+            >
+              {ACK_LABEL[p.helperAck]}
+            </Text>
+          ) : (
+            <Text style={[styles.status, { color: STATUS_COLOR[p.payoutStatus] }]}>
+              {STATUS_LABEL[p.payoutStatus]}
+            </Text>
+          )}
         </View>
       ))}
     </View>

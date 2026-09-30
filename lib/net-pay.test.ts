@@ -1,6 +1,12 @@
 import { describe, expect, it } from "vitest";
 
-import { cutoffsPerMonth, netPayForCutoff, perCutoff } from "./net-pay";
+import {
+  cutoffsPerMonth,
+  forWorkedShare,
+  netPayForCutoff,
+  perCutoff,
+  workedShareOfPeriod,
+} from "./net-pay";
 
 /**
  * The helper-side half of ../LINARA's Session E / E4 invariant
@@ -71,3 +77,18 @@ describe("cutoff division", () => {
  * convenience. That guard lives in ../LINARA/src/features/pay/net-pay.test.ts,
  * which already runs in a Node context and reads both repos.
  */
+
+describe("a first or final cutoff", () => {
+  it("counts the share worked by calendar days", () => {
+    expect(workedShareOfPeriod("2026-10-01", "2026-10-15", "2026-10-01", "2026-10-15")).toBe(1);
+    expect(workedShareOfPeriod("2026-08-10", "2026-08-15", "2026-08-01", "2026-08-15")).toBeCloseTo(
+      6 / 15,
+    );
+  });
+
+  it("scales a figure to it, rounded to centavos", () => {
+    expect(forWorkedShare(4000, 1)).toBe(4000);
+    expect(forWorkedShare(4000, 6 / 15)).toBe(1600);
+    expect(forWorkedShare(4000, 1 / 3)).toBe(1333.33);
+  });
+});
