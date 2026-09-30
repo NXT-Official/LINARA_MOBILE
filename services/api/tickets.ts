@@ -219,6 +219,51 @@ export async function getMyWeek(helperId: string): Promise<WeekTask[]> {
   }));
 }
 
+export interface MovedTask {
+  id: string;
+  title: string;
+  scheduledStart: string;
+  appointmentTitle: string;
+}
+
+/**
+ * Her upcoming tickets whose time moved because the manager moved their
+ * appointment (tickets.reschedule_notice, set by the web's
+ * rescheduleAppointmentFn). Concept doc §7: flag the affected worker rather
+ * than silently shift her board. Only the new time is shown: the notice's
+ * stored oldTime is rendered in the web server's time zone, not hers
+ * (../LINARA/KNOWN_GAPS.md O14).
+ */
+export async function getMovedTasks(helperId: string): Promise<MovedTask[]> {
+  const { data, error } = await supabase
+    .from("tickets")
+    .select("id, title, scheduled_start, reschedule_notice")
+    .eq("helper_id", helperId)
+    .eq("suggested", false)
+    .neq("status", "done")
+    .not("reschedule_notice", "is", null)
+    .gte("scheduled_start", startOfToday(new Date()).toISOString())
+    .order("scheduled_start", { ascending: true });
+
+  if (error) {
+    throw new Error(error.message);
+  }
+
+  return (
+    (data ?? []) as {
+      id: string;
+      title: string;
+      scheduled_start: string;
+      reschedule_notice: { appointmentTitle?: string } | null;
+    }[]
+  ).map((row) => ({
+    id: row.id,
+    title: row.title,
+    scheduledStart: row.scheduled_start,
+    appointmentTitle: row.reschedule_notice?.appointmentTitle ?? "isang appointment",
+  }));
+}
+
 /**
  * Inserts a new ticket -- the first write path into `public.tickets` anywhere
  * in either app (see ../LINARA/KNOWN_GAPS.md gap #4). Used by the "Promote to
