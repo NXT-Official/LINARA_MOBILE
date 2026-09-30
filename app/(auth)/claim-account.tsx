@@ -71,8 +71,8 @@ export default function ClaimAccountScreen() {
         <Text style={styles.title}>This account is yours.</Text>
         <View style={styles.introCard}>
           <Text style={styles.introText}>
-            Ito ay <Text style={styles.introBold}>iyong-iyo</Text>. Mananatili ang record mo kahit
-            magpalit ka ng household.
+            Ito ay <Text style={styles.introBold}>iyong-iyo</Text>. Makikita mo rito ang record ng
+            trabaho at sahod mo, at mada-download mo ito bilang PDF anumang oras.
           </Text>
         </View>
 
