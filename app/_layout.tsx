@@ -10,12 +10,14 @@ import { NunitoSans_400Regular, NunitoSans_700Bold } from "@expo-google-fonts/nu
 import { queryClient } from "@/lib/query-client";
 import { SessionProvider } from "@/lib/session-context";
 import { useOfflineSync } from "@/hooks/use-offline-sync";
+import { usePushNotifications } from "@/hooks/use-push-notifications";
 
 SplashScreen.preventAutoHideAsync();
 
 /** Needs a QueryClientProvider ancestor for useOfflineSync's cache invalidation, so it can't live in RootLayout itself. */
 function AppShell() {
   useOfflineSync();
+  usePushNotifications();
 
   return (
     <>

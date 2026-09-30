@@ -1,4 +1,5 @@
 import { WEB_APP_URL } from "@/lib/env";
+import { unregisterForPush } from "@/lib/notifications";
 import { queryClient } from "@/lib/query-client";
 import { getMyHelperProfile } from "@/services/api/helper-profile";
 import { getQueuedActions } from "@/services/sqlite-queue";
@@ -69,6 +70,8 @@ export async function signOutHelper(): Promise<void> {
       `May ${unsynced} pang hindi na-sync. Kumonekta muna sa internet bago mag-sign out.`,
     );
   }
+  // While still signed in: the token row is hers, and only she can remove it.
+  await unregisterForPush();
   const { error } = await supabase.auth.signOut();
   if (error) {
     throw new Error(error.message);
