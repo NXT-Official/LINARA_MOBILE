@@ -1,6 +1,18 @@
 import { Stack } from "expo-router";
+import { useSafeAreaInsets } from "react-native-safe-area-context";
 
-/** Unauthenticated onboarding stack (invite lookup → review → flag/claim). */
+import { colors } from "@/lib/theme";
+
+/** Unauthenticated onboarding stack (sign-in, create account, invite lookup → review → flag/claim). */
 export default function AuthLayout() {
-  return <Stack screenOptions={{ headerShown: false }} />;
+  // Edge to edge on Android: keep every screen's top clear of the status bar.
+  const insets = useSafeAreaInsets();
+  return (
+    <Stack
+      screenOptions={{
+        headerShown: false,
+        contentStyle: { paddingTop: insets.top, backgroundColor: colors.sand },
+      }}
+    />
+  );
 }

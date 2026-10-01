@@ -4,6 +4,8 @@ import { Ionicons } from "@expo/vector-icons";
 import { Redirect, Tabs, usePathname } from "expo-router";
 import { useQuery } from "@tanstack/react-query";
 
+import { useSafeAreaInsets } from "react-native-safe-area-context";
+
 import { colors } from "@/lib/theme";
 import { useSession } from "@/lib/session-context";
 import { getMyEmployments } from "@/services/api/employment";
@@ -50,6 +52,9 @@ function LockedTab({
  * dashboard instead.
  */
 export default function AppTabsLayout() {
+  // Android draws apps edge to edge, under the status bar; with the header
+  // hidden, nothing else keeps the screens' tops clear of it.
+  const insets = useSafeAreaInsets();
   const { session, isLoading } = useSession();
   const pathname = usePathname();
   const kindQuery = useAccountKind();
@@ -103,6 +108,7 @@ export default function AppTabsLayout() {
     <Tabs
       screenOptions={{
         headerShown: false,
+        sceneStyle: { paddingTop: insets.top, backgroundColor: colors.sand },
         tabBarActiveTintColor: colors.pineTeal,
         tabBarInactiveTintColor: colors.mutedInk,
         tabBarStyle: {
