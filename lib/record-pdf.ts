@@ -1,5 +1,5 @@
 import { formatHoursMinutes } from "./format";
-import type { summarizePay } from "./record";
+import { leaveDaysLabel, summarizeLeave, type RecordLeave, type summarizePay } from "./record";
 
 /**
  * The HTML for her downloadable work record (../LINARA/KNOWN_GAPS.md O4).
@@ -19,6 +19,8 @@ export interface RecordPdfPayslip {
   basePay: number;
   statutoryEmployeeShare: number;
   valeDeductions: number;
+  /** Unpaid leave it deducted (../LINARA/supabase/add-unpaid-leave-pay.sql); absent before. */
+  unpaidLeaveDeduction?: number;
   netPay: number;
   payoutStatus: string;
   confirmedAt: string | null;
@@ -55,6 +57,40 @@ export interface RecordPdfRest {
   status: string;
 }
 
+export interface RecordPdfLeave extends RecordLeave {
+  endDate: string;
+  reason: "vacation" | "sick" | "family" | "other";
+  /** Set when the household recorded it: her answer. */
+  helperAck: "pending" | "confirmed" | "disputed" | null;
+}
+
+const LEAVE_KIND: Record<RecordLeave["kind"], string> = {
+  sil: "Service incentive leave",
+  extra_paid: "Extra paid leave",
+  in_kind: "Day off in kind",
+  unpaid: "Unpaid leave",
+};
+const LEAVE_KIND_SHORT: Record<RecordLeave["kind"], string> = {
+  sil: "service incentive leave",
+  extra_paid: "extra paid leave",
+  in_kind: "off in kind",
+  unpaid: "unpaid",
+};
+const LEAVE_REASON: Record<RecordPdfLeave["reason"], string> = {
+  vacation: "Vacation",
+  sick: "Sick",
+  family: "Family",
+  other: "Other",
+};
+
+/** Who put it on the record, and what she said about it. */
+function leaveSource(l: RecordPdfLeave): string {
+  if (l.helperAck === null) return "She asked; approved";
+  if (l.helperAck === "confirmed") return "Recorded by the household; confirmed by her";
+  if (l.helperAck === "disputed") return "Recorded by the household; she disputes this";
+  return "Recorded by the household; not yet confirmed by her";
+}
+
 export interface RecordPdfInput {
   name: string;
   householdName: string | null;
@@ -75,6 +111,8 @@ export interface RecordPdfInput {
   restTaken: number;
   payslips: RecordPdfPayslip[];
   restOff: RecordPdfRest[];
+  /** Her leave, any status; only approved leave is listed. */
+  leave: RecordPdfLeave[];
   generatedAt: Date;
 }
 
@@ -165,6 +203,10 @@ export function recordPdfHtml(r: RecordPdfInput): string {
   const rest = r.restOff
     .filter((x) => x.status === "approved")
     .sort((a, b) => b.restDate.localeCompare(a.restDate));
+  const leave = r.leave
+    .filter((l) => l.status === "approved")
+    .sort((a, b) => b.startDate.localeCompare(a.startDate));
+  const days = (n: number) => `${n} ${n === 1 ? "day" : "days"}`;
   const household =
     r.householdName && r.householdName !== "My Household"
       ? r.householdName
@@ -202,6 +244,9 @@ export function recordPdfHtml(r: RecordPdfInput): string {
       "Rest taken as time off",
       r.restTaken > 0 ? formatHoursMinutes(r.restTaken) : "None recorded",
     ),
+    ...summarizeLeave(r.leave).map((y) =>
+      row(`Leave taken in ${y.year}`, leaveDaysLabel(y.days, LEAVE_KIND_SHORT, days)),
+    ),
   ].join("");
 
   const payRows = paid.length
@@ -224,11 +269,12 @@ export function recordPdfHtml(r: RecordPdfInput): string {
             <td class="num">${pesos(p.basePay)}</td>
             <td class="num">${pesos(p.statutoryEmployeeShare)}</td>
             <td class="num">${pesos(p.valeDeductions)}</td>
+            <td class="num">${p.unpaidLeaveDeduction ? pesos(p.unpaidLeaveDeduction) : "—"}</td>
             <td class="num strong">${pesos(p.netPay)}</td>
           </tr>`,
         )
         .join("")
-    : `<tr><td colspan="7" class="empty">No paid payslips recorded yet.</td></tr>`;
+    : `<tr><td colspan="8" class="empty">No paid payslips recorded yet.</td></tr>`;
 
   const restRows = rest.length
     ? rest
@@ -241,6 +287,24 @@ export function recordPdfHtml(r: RecordPdfInput): string {
         )
         .join("")
     : `<tr><td colspan="3" class="empty">No time off recorded.</td></tr>`;
+
+  const leaveRows = leave.length
+    ? leave
+        .map(
+          (l) => `<tr>
+            <td class="nowrap">${escapeHtml(
+              l.startDate === l.endDate
+                ? shortDay(l.startDate)
+                : `${shortDay(l.startDate)} – ${shortDay(l.endDate)}`,
+            )}</td>
+            <td>${escapeHtml(LEAVE_KIND[l.kind])}</td>
+            <td>${escapeHtml(LEAVE_REASON[l.reason])}</td>
+            <td>${escapeHtml(leaveSource(l))}</td>
+            <td class="num">${escapeHtml(days(l.days))}</td>
+          </tr>`,
+        )
+        .join("")
+    : `<tr><td colspan="5" class="empty">No leave recorded.</td></tr>`;
 
   return `<!DOCTYPE html>
 <html lang="en">
@@ -296,7 +360,7 @@ export function recordPdfHtml(r: RecordPdfInput): string {
   <table class="list">
     <thead><tr>
       <th>Pay period</th><th>Paid on</th><th>How</th><th class="num">Basic pay</th>
-      <th class="num">SSS, PhilHealth, Pag&#8209;IBIG</th><th class="num">Vale (advance)</th><th class="num">Net pay</th>
+      <th class="num">SSS, PhilHealth, Pag&#8209;IBIG</th><th class="num">Vale (advance)</th><th class="num">Unpaid leave</th><th class="num">Net pay</th>
     </tr></thead>
     <tbody>${payRows}</tbody>
   </table>
@@ -307,8 +371,15 @@ export function recordPdfHtml(r: RecordPdfInput): string {
     <tbody>${restRows}</tbody>
   </table>
 
+  <h2>Leave taken</h2>
+  <table class="list">
+    <thead><tr><th>Dates</th><th>Kind</th><th>Reason</th><th>On record</th><th class="num">Working days</th></tr></thead>
+    <tbody>${leaveRows}</tbody>
+  </table>
+
   <footer>
     <p>Pay figures are taken from payslips paid through Linara (GCash, Maya) and payments the household recorded as made outside it (cash, bank transfer, other). A payment made outside Linara counts in the totals only once she has confirmed it. Payslips still processing or failed are not included. Government contributions are shown as deducted from her pay (employee share). This record does not show whether they were remitted to SSS, PhilHealth or Pag-IBIG.</p>
+    <p>Leave is whole working days (her weekly rest day isn't counted), approved leave only. Service incentive leave is the five paid days a year RA 10361 gives after a year of service; a day off in kind is paid from rest she earned working after hours; unpaid leave is deducted from the pay for the period it ends in, shown above.</p>
     <p>This is a summary of the household's records, not a certificate of employment.</p>
   </footer>
 </body>

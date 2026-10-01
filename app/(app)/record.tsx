@@ -13,11 +13,18 @@ import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 
 import { colors, fonts } from "@/lib/theme";
 import { formatHoursMinutes, formatPeso, formatShiftTime } from "@/lib/format";
-import { recordShareText, restTakenMinutes, summarizePay } from "@/lib/record";
+import {
+  leaveDaysLabel,
+  recordShareText,
+  restTakenMinutes,
+  summarizeLeave,
+  summarizePay,
+} from "@/lib/record";
 import { useSession } from "@/lib/session-context";
 import { toIsoDate } from "@/lib/datetime-fields";
 import { DAY_NAMES } from "@/lib/week";
 import { getMyEmployments, type Employment } from "@/services/api/employment";
+import { getMyLeave } from "@/services/api/leave";
 import { giveNotice, withdrawNotice } from "@/services/api/pay-periods";
 import { getMyPayslips } from "@/services/api/payslips";
 import { getMyRestOffRequests } from "@/services/api/rest-off";
@@ -202,6 +209,13 @@ function PastEmployments({ past }: { past: Employment[] }) {
   );
 }
 
+const LEAVE_NAMES = {
+  sil: "SIL",
+  extra_paid: "dagdag na may bayad",
+  in_kind: "day off in kind",
+  unpaid: "walang bayad",
+} as const;
+
 /** Her current household: terms on file (with the flag), work and pay, and sharing. */
 function CurrentRecord({ employment }: { employment: Employment }) {
   const helperId = employment.helperId;
@@ -222,6 +236,11 @@ function CurrentRecord({ employment }: { employment: Employment }) {
     queryKey: ["tasks-done", helperId],
     queryFn: () => getMyTasksDone(helperId),
   });
+  // Same key as My Pay's, so asking for leave there updates this.
+  const leaveQuery = useQuery({
+    queryKey: ["leave", helperId],
+    queryFn: () => getMyLeave(helperId),
+  });
 
   const [flagging, setFlagging] = useState(false);
   const [field, setField] = useState<TermsFlagField>("wage");
@@ -238,6 +257,8 @@ function CurrentRecord({ employment }: { employment: Employment }) {
   const loading = termsQuery.isLoading || payslipsQuery.isLoading || doneQuery.isLoading;
   const pay = summarizePay(payslipsQuery.data ?? []);
   const restTaken = restTakenMinutes(restQuery.data ?? []);
+  const leave = leaveQuery.data ?? [];
+  const leaveByYear = summarizeLeave(leave);
 
   const pdfMutation = useMutation({
     mutationFn: async () => {
@@ -251,6 +272,7 @@ function CurrentRecord({ employment }: { employment: Employment }) {
         restTaken,
         payslips: payslipsQuery.data ?? [],
         restOff: restQuery.data ?? [],
+        leave,
         generatedAt: new Date(),
       });
     },
@@ -267,6 +289,7 @@ function CurrentRecord({ employment }: { employment: Employment }) {
         tasksDone: doneQuery.data ?? 0,
         pay,
         restTaken,
+        leave,
       }),
     });
   };
@@ -396,6 +419,17 @@ function CurrentRecord({ employment }: { employment: Employment }) {
           value={formatPeso(pay.deductedStatutory)}
         />
         <Row label="Rest na nakuha" value={formatHoursMinutes(restTaken)} />
+        {leaveByYear.length === 0 ? (
+          <Row label="Leave na nakuha" value="Wala pa" />
+        ) : (
+          leaveByYear.map((y) => (
+            <Row
+              key={y.year}
+              label={`Leave na nakuha (${y.year})`}
+              value={leaveDaysLabel(y.days, LEAVE_NAMES, (n) => `${n} araw`)}
+            />
+          ))
+        )}
       </View>
 
       <PrimaryButton

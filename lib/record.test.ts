@@ -1,6 +1,13 @@
 import { describe, expect, it } from "vitest";
 
-import { recordShareText, restTakenMinutes, summarizePay, type RecordPayslip } from "./record";
+import {
+  leaveDaysLabel,
+  recordShareText,
+  restTakenMinutes,
+  summarizeLeave,
+  summarizePay,
+  type RecordPayslip,
+} from "./record";
 
 const slip = (over: Partial<RecordPayslip>): RecordPayslip => ({
   netPay: 4000,
@@ -87,5 +94,44 @@ describe("payments made outside Linara", () => {
     ]);
     expect(pay.paidCount).toBe(2);
     expect(pay.paidTotal).toBe(5000);
+  });
+});
+
+describe("summarizeLeave", () => {
+  const leave = [
+    { kind: "sil" as const, status: "approved", startDate: "2026-03-02", days: 2 },
+    { kind: "sil" as const, status: "approved", startDate: "2026-08-03", days: 3 },
+    { kind: "unpaid" as const, status: "approved", startDate: "2026-09-10", days: 1 },
+    { kind: "unpaid" as const, status: "declined", startDate: "2026-09-20", days: 4 },
+    { kind: "in_kind" as const, status: "approved", startDate: "2025-12-29", days: 1 },
+  ];
+
+  it("totals approved leave by year and kind, newest year first", () => {
+    expect(summarizeLeave(leave)).toEqual([
+      { year: 2026, days: { sil: 5, unpaid: 1 } },
+      { year: 2025, days: { in_kind: 1 } },
+    ]);
+  });
+
+  it("labels the kinds in a fixed order", () => {
+    const names = { sil: "SIL", extra_paid: "extra", in_kind: "in kind", unpaid: "unpaid" };
+    expect(leaveDaysLabel({ unpaid: 1, sil: 5 }, names, (n) => `${n}d`)).toBe("5d SIL, 1d unpaid");
+  });
+
+  it("puts it in the shared text", () => {
+    const text = recordShareText({
+      name: "Marites",
+      station: "Yaya",
+      employment: null,
+      recordSince: "2026-01-01T00:00:00Z",
+      tasksDone: 0,
+      pay: summarizePay([]),
+      restTaken: 0,
+      leave,
+    });
+    expect(text).toContain(
+      "Leave taken in 2026: 5 days service incentive leave, 1 day unpaid leave",
+    );
+    expect(text).toContain("Leave taken in 2025: 1 day off in kind");
   });
 });

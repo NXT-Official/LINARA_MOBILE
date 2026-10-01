@@ -6,6 +6,7 @@ import { File, Paths } from "expo-file-system";
 import { restTakenMinutes, summarizePay } from "@/lib/record";
 import { recordFileName, recordPdfHtml, type RecordPdfInput } from "@/lib/record-pdf";
 import type { Employment } from "@/services/api/employment";
+import { getMyLeave } from "@/services/api/leave";
 import { getMyPayslips } from "@/services/api/payslips";
 import { getMyTasksDone, getMyTermsOnFile } from "@/services/api/record";
 import { getMyRestOffRequests } from "@/services/api/rest-off";
@@ -14,14 +15,16 @@ import { getMyRestOffRequests } from "@/services/api/rest-off";
  * Everything one employment's PDF needs, read fresh. Works for a household
  * she has left as well as her current one: the *_own_read policies in
  * ../LINARA/supabase/add-employment-end.sql let her read her own terms,
- * payslips, time off and tasks there.
+ * payslips, time off and tasks there, and leave_requests_read
+ * (add-leave.sql) her leave.
  */
 export async function loadRecordPdfInput(employment: Employment): Promise<RecordPdfInput> {
-  const [terms, payslips, restOff, tasksDone] = await Promise.all([
+  const [terms, payslips, restOff, tasksDone, leave] = await Promise.all([
     getMyTermsOnFile(employment.helperId),
     getMyPayslips(employment.helperId),
     getMyRestOffRequests(employment.helperId),
     getMyTasksDone(employment.helperId),
+    getMyLeave(employment.helperId),
   ]);
   return {
     name: employment.name,
@@ -32,6 +35,7 @@ export async function loadRecordPdfInput(employment: Employment): Promise<Record
     restTaken: restTakenMinutes(restOff),
     payslips,
     restOff,
+    leave,
     generatedAt: new Date(),
   };
 }

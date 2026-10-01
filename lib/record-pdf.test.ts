@@ -71,6 +71,35 @@ const base: RecordPdfInput = {
       status: "pending",
     },
   ],
+  leave: [
+    {
+      kind: "sil",
+      reason: "vacation",
+      startDate: "2026-08-03",
+      endDate: "2026-08-05",
+      days: 3,
+      status: "approved",
+      helperAck: null,
+    },
+    {
+      kind: "unpaid",
+      reason: "sick",
+      startDate: "2026-09-10",
+      endDate: "2026-09-10",
+      days: 1,
+      status: "approved",
+      helperAck: "disputed",
+    },
+    {
+      kind: "unpaid",
+      reason: "family",
+      startDate: "2026-10-20",
+      endDate: "2026-10-21",
+      days: 2,
+      status: "pending",
+      helperAck: null,
+    },
+  ],
   generatedAt: new Date(2026, 9, 1),
 };
 
@@ -105,16 +134,37 @@ describe("recordPdfHtml", () => {
     expect(out).not.toContain("<b>Ate</b>");
   });
 
+  it("lists approved leave with who put it on the record, and totals it by year", () => {
+    expect(html).toContain("Leave taken in 2026");
+    expect(html).toContain("3 days service incentive leave, 1 day unpaid");
+    expect(html).toContain("Aug 3, 2026 – Aug 5, 2026");
+    expect(html).toContain("She asked; approved");
+    expect(html).toContain("Recorded by the household; she disputes this");
+    // Pending leave isn't leave taken.
+    expect(html).not.toContain("Oct 20, 2026");
+  });
+
+  it("shows what unpaid leave took from a payslip", () => {
+    const out = recordPdfHtml({
+      ...base,
+      payslips: [{ ...base.payslips[0], unpaidLeaveDeduction: 263.01 }],
+    });
+    expect(out).toContain("Unpaid leave</th>");
+    expect(out).toContain("₱263.01");
+  });
+
   it("falls back when the household kept the default name, and shows empty states", () => {
     const out = recordPdfHtml({
       ...base,
       householdName: "My Household",
       payslips: [],
       restOff: [],
+      leave: [],
     });
     expect(out).toContain("the records her employer&#39;s household keeps");
     expect(out).toContain("No paid payslips recorded yet.");
     expect(out).toContain("No time off recorded.");
+    expect(out).toContain("No leave recorded.");
   });
 });
 

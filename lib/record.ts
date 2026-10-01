@@ -49,6 +49,54 @@ export function restTakenMinutes(requests: { status: string; minutes: number }[]
   return requests.filter((r) => r.status === "approved").reduce((sum, r) => sum + r.minutes, 0);
 }
 
+/** The slice of a leave row her record needs (services/api/leave.ts `Leave`). */
+export interface RecordLeave {
+  kind: "sil" | "in_kind" | "unpaid" | "extra_paid";
+  status: string;
+  startDate: string;
+  days: number;
+}
+
+const LEAVE_ORDER: RecordLeave["kind"][] = ["sil", "extra_paid", "in_kind", "unpaid"];
+
+/**
+ * Leave she has taken, per year (by the year it started) and kind: approved
+ * leave only, in working days. Newest year first. Part of the RA 10361 record
+ * she keeps (../LINARA/LEAVE_PLAN.md step 6).
+ */
+export function summarizeLeave(
+  leave: RecordLeave[],
+): { year: number; days: Partial<Record<RecordLeave["kind"], number>> }[] {
+  const byYear = new Map<number, Partial<Record<RecordLeave["kind"], number>>>();
+  for (const l of leave) {
+    if (l.status !== "approved") continue;
+    const year = Number(l.startDate.slice(0, 4));
+    const days = byYear.get(year) ?? {};
+    days[l.kind] = (days[l.kind] ?? 0) + l.days;
+    byYear.set(year, days);
+  }
+  return [...byYear.entries()].sort((a, b) => b[0] - a[0]).map(([year, days]) => ({ year, days }));
+}
+
+/** "3 days SIL, 2 days unpaid", with the kinds' names given, in a fixed order. */
+export function leaveDaysLabel(
+  days: Partial<Record<RecordLeave["kind"], number>>,
+  names: Record<RecordLeave["kind"], string>,
+  unit: (n: number) => string,
+): string {
+  return LEAVE_ORDER.filter((k) => (days[k] ?? 0) > 0)
+    .map((k) => `${unit(days[k] ?? 0)} ${names[k]}`)
+    .join(", ");
+}
+
+const LEAVE_SHARE_NAMES: Record<RecordLeave["kind"], string> = {
+  sil: "service incentive leave",
+  extra_paid: "extra paid leave",
+  in_kind: "off in kind",
+  unpaid: "unpaid leave",
+};
+const englishDays = (n: number) => `${n} ${n === 1 ? "day" : "days"}`;
+
 export interface RecordSummary {
   name: string;
   station: string;
@@ -57,6 +105,8 @@ export interface RecordSummary {
   tasksDone: number;
   pay: ReturnType<typeof summarizePay>;
   restTaken: number;
+  /** Her leave, any status; only approved leave is counted. */
+  leave?: RecordLeave[];
 }
 
 const DATE = (iso: string) =>
@@ -77,6 +127,9 @@ export function recordShareText(r: RecordSummary): string {
     r.pay.lastPaidAt ? `Last paid: ${DATE(r.pay.lastPaidAt)}` : null,
     `SSS / PhilHealth / Pag-IBIG deducted (employee share): ${formatPeso(r.pay.deductedStatutory)}`,
     r.restTaken > 0 ? `Rest taken as time off: ${formatHoursMinutes(r.restTaken)}` : null,
+    ...summarizeLeave(r.leave ?? []).map(
+      (y) => `Leave taken in ${y.year}: ${leaveDaysLabel(y.days, LEAVE_SHARE_NAMES, englishDays)}`,
+    ),
   ]
     .filter(Boolean)
     .join("\n");
