@@ -19,5 +19,5 @@ workspace. Before implementing, reviewing, or modifying anything here, read:
 
 - Both apps point at the **same** Supabase project (`EXPO_PUBLIC_SUPABASE_URL` here == `SUPABASE_URL` in `../LINARA/.env`). Never add, rename, or drop a database column or storage bucket policy from this workspace without checking `../LINARA/architecture.md` Section 8 for the canonical schema first — this app must stay backward-compatible with it.
 - `public.helper_notes` is RLS-isolated per helper (the "Privacy Wall") — no code path in either app may let a manager read it.
-- The mobile client is helper-facing only; the manager-facing Pass/Board/Money views live exclusively in `../LINARA`.
+- The mobile client is helper-facing, with one exception: a manager who signs in gets the `../LINARA` web dashboard (Pass/Board/Money/People/Schedule) inside a WebView (`app/manager.tsx`). That's an interim demo solution until those screens are rebuilt natively (`../LINARA/KNOWN_GAPS.md` O18). The manager UI itself still lives only in `../LINARA`, so a change there reaches the app without an app release.
 - If something here seems to contradict `../LINARA/architecture.md` or `../LINARA/plan.md`, the web repo's docs win for anything schema-related — flag the discrepancy rather than silently picking one.
