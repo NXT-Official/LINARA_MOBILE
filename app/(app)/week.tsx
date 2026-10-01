@@ -1,22 +1,43 @@
-import { ActivityIndicator, ScrollView, StyleSheet, Text, View } from "react-native";
+import { useState } from "react";
+import { ActivityIndicator, Pressable, ScrollView, StyleSheet, Text, View } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 
 import { colors, fonts } from "@/lib/theme";
 import { formatClockTime, formatShiftTime } from "@/lib/format";
-import { buildWeek } from "@/lib/week";
+import { startOfToday } from "@/lib/today";
+import {
+  MONTH_NAMES,
+  addDays,
+  buildDays,
+  monthRange,
+  rangeLabel,
+  type WeekDay,
+  type WeekTimeOff,
+} from "@/lib/week";
 import { useRealtimeSubscription } from "@/hooks/use-realtime-subscription";
+import { MonthGrid } from "@/components/features/week/month-grid";
 import { getMyHelperProfile } from "@/services/api/helper-profile";
-import { getMyWeek, type WeekTask } from "@/services/api/tickets";
+import { getMyRestOffRequests } from "@/services/api/rest-off";
+import { getMyTasksBetween, type WeekTask } from "@/services/api/tickets";
+
+type Mode = "week" | "month";
 
 /**
- * My Week (concept doc §7, "the dignity win"): her shift, break and rest day,
- * and what's scheduled for her over the next seven days, so she can see her
- * rest day coming and plan her own life around a predictable week. Only her
- * own tickets -- never the household's whole calendar.
+ * My Week (concept doc section 7, "the dignity win"): her shift, break and
+ * rest day, her days off, and what's scheduled for her, so she can see her
+ * rest coming and plan her own life around a predictable week. Seven days
+ * from today by default; she can page through weeks or look at a whole month.
+ * Only her own tickets -- never the household's whole calendar.
  */
 export default function WeekScreen() {
   const queryClient = useQueryClient();
+  const [mode, setMode] = useState<Mode>("week");
+  const [weekStart, setWeekStart] = useState(() => startOfToday(new Date()));
+  const [month, setMonth] = useState(() => {
+    const now = new Date();
+    return { year: now.getFullYear(), month: now.getMonth() };
+  });
 
   const profileQuery = useQuery({
     queryKey: ["my-helper-profile"],
@@ -25,9 +46,20 @@ export default function WeekScreen() {
   const profile = profileQuery.data;
   const helperId = profile?.id ?? null;
 
+  const range =
+    mode === "week" ? { start: weekStart, count: 7 } : monthRange(month.year, month.month);
+  const from = range.start;
+  const to = addDays(range.start, range.count);
+
   const weekQuery = useQuery({
-    queryKey: ["my-week", helperId],
-    queryFn: () => getMyWeek(helperId as string),
+    queryKey: ["my-week", helperId, from.toISOString(), to.toISOString()],
+    queryFn: () => getMyTasksBetween(helperId as string, from, to),
+    enabled: Boolean(helperId),
+  });
+  // Same key as My Pay and Today, so one fetch serves all three.
+  const restOffQuery = useQuery({
+    queryKey: ["rest-off-requests", helperId],
+    queryFn: () => getMyRestOffRequests(helperId as string),
     enabled: Boolean(helperId),
   });
 
@@ -42,13 +74,88 @@ export default function WeekScreen() {
         : "")
     : "";
 
+  const today = startOfToday(new Date());
+  const showingNow =
+    mode === "week"
+      ? weekStart.getTime() === today.getTime()
+      : month.year === today.getFullYear() && month.month === today.getMonth();
+  const step = (dir: -1 | 1) =>
+    mode === "week"
+      ? setWeekStart((d) => addDays(d, 7 * dir))
+      : setMonth(({ year, month: m }) => {
+          const d = new Date(year, m + dir, 1);
+          return { year: d.getFullYear(), month: d.getMonth() };
+        });
+  const goToday = () => {
+    setWeekStart(today);
+    setMonth({ year: today.getFullYear(), month: today.getMonth() });
+  };
+
+  const timeOff: WeekTimeOff[] = restOffQuery.data ?? [];
+  const days: WeekDay<WeekTask>[] = profile
+    ? buildDays(
+        range.start,
+        range.count,
+        new Date(),
+        profile.weeklyRestDay,
+        weekQuery.data ?? [],
+        timeOff,
+      )
+    : [];
+
   return (
     <ScrollView style={styles.screen} contentContainerStyle={styles.content}>
       <Text style={styles.header}>Linggo ko</Text>
       <Text style={styles.sub}>
-        Ang shift mo, ang rest day mo, at ang mga naka-schedule para sa iyo sa susunod na pitong
-        araw.
+        Ang shift mo, ang rest day at mga day off mo, at ang mga naka-schedule para sa iyo.
       </Text>
+
+      <View style={styles.toggle} accessibilityRole="tablist">
+        {(["week", "month"] as const).map((m) => (
+          <Pressable
+            key={m}
+            onPress={() => setMode(m)}
+            accessibilityRole="tab"
+            accessibilityState={{ selected: mode === m }}
+            style={[styles.toggleItem, mode === m && styles.toggleActive]}
+          >
+            <Text style={[styles.toggleText, mode === m && styles.toggleTextActive]}>
+              {m === "week" ? "Linggo" : "Buwan"}
+            </Text>
+          </Pressable>
+        ))}
+      </View>
+
+      <View style={styles.nav}>
+        <Pressable
+          onPress={() => step(-1)}
+          accessibilityRole="button"
+          accessibilityLabel={mode === "week" ? "Nakaraang linggo" : "Nakaraang buwan"}
+          style={styles.navButton}
+        >
+          <Ionicons name="chevron-back" size={22} color={colors.pineTeal} />
+        </Pressable>
+        <View style={styles.navCenter}>
+          <Text style={styles.navLabel}>
+            {mode === "week"
+              ? rangeLabel(weekStart, 7)
+              : `${MONTH_NAMES[month.month]} ${month.year}`}
+          </Text>
+          {!showingNow ? (
+            <Pressable onPress={goToday} accessibilityRole="button">
+              <Text style={styles.navToday}>Bumalik sa ngayon</Text>
+            </Pressable>
+          ) : null}
+        </View>
+        <Pressable
+          onPress={() => step(1)}
+          accessibilityRole="button"
+          accessibilityLabel={mode === "week" ? "Susunod na linggo" : "Susunod na buwan"}
+          style={styles.navButton}
+        >
+          <Ionicons name="chevron-forward" size={22} color={colors.pineTeal} />
+        </Pressable>
+      </View>
 
       {profileQuery.isLoading || weekQuery.isLoading ? (
         <View style={styles.loading}>
@@ -56,8 +163,17 @@ export default function WeekScreen() {
         </View>
       ) : !profile || weekQuery.isError ? (
         <Text style={styles.errorText}>Hindi ma-load ang linggo mo. Subukan ulit mamaya.</Text>
+      ) : mode === "month" ? (
+        <MonthGrid
+          days={days}
+          month={month.month}
+          onOpenDay={(date) => {
+            setWeekStart(date);
+            setMode("week");
+          }}
+        />
       ) : (
-        buildWeek(new Date(), profile.weeklyRestDay, weekQuery.data ?? []).map((day) => (
+        days.map((day) => (
           <View
             key={day.date.toISOString()}
             style={[styles.day, day.isRestDay && styles.restDay]}
@@ -70,9 +186,18 @@ export default function WeekScreen() {
             <Text style={day.isRestDay ? styles.restLine : styles.shiftLine}>
               {day.isRestDay ? "Rest day mo. Pahinga." : shiftLine}
             </Text>
+            {day.timeOff.map((o) => (
+              <Text key={o.id} style={o.status === "approved" ? styles.offLine : styles.offPending}>
+                {o.status === "approved" ? "Day off" : "Hiniling na day off"} ·{" "}
+                {formatShiftTime(o.startTime)} – {formatShiftTime(o.endTime)}
+                {o.status === "pending" ? " · naghihintay pa" : ""}
+              </Text>
+            ))}
             {day.tickets.length === 0 ? (
               day.isRestDay ? null : (
-                <Text style={styles.none}>Wala pang naka-schedule.</Text>
+                <Text style={styles.none}>
+                  {day.isPast ? "Walang naka-schedule." : "Wala pang naka-schedule."}
+                </Text>
               )
             ) : (
               day.tickets.map((task) => (
@@ -182,6 +307,68 @@ const styles = StyleSheet.create({
   shiftLine: {
     fontSize: 13,
     color: colors.mutedInk,
+  },
+  offLine: {
+    fontSize: 14,
+    fontWeight: "700",
+    color: colors.terracottaInk,
+  },
+  offPending: {
+    fontSize: 13,
+    color: colors.mutedInk,
+  },
+  toggle: {
+    flexDirection: "row",
+    alignSelf: "flex-start",
+    padding: 4,
+    borderRadius: 14,
+    backgroundColor: colors.cardCream,
+    borderWidth: 1,
+    borderColor: colors.border,
+  },
+  toggleItem: {
+    minHeight: 40,
+    paddingHorizontal: 18,
+    borderRadius: 10,
+    justifyContent: "center",
+  },
+  toggleActive: {
+    backgroundColor: colors.pineTeal,
+  },
+  toggleText: {
+    fontSize: 14,
+    fontWeight: "700",
+    color: colors.mutedInk,
+  },
+  toggleTextActive: {
+    color: colors.cardCream,
+  },
+  nav: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "space-between",
+  },
+  navButton: {
+    width: 48,
+    height: 48,
+    alignItems: "center",
+    justifyContent: "center",
+  },
+  navCenter: {
+    flex: 1,
+    alignItems: "center",
+    gap: 2,
+  },
+  navLabel: {
+    fontFamily: fonts.display,
+    fontSize: 17,
+    color: colors.ink,
+  },
+  navToday: {
+    fontSize: 13,
+    fontWeight: "700",
+    color: colors.pineTeal,
+    paddingVertical: 4,
   },
   restLine: {
     fontSize: 14,

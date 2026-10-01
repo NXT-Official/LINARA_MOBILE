@@ -210,17 +210,17 @@ interface WeekTaskRow {
 }
 
 /**
- * Her own tickets for the next seven days, for My Week. Includes ones queued
- * for when the board reopens (already approved), but never a remote admin's
- * suggestion still awaiting approval. Appointments appear only through the
- * prep tasks assigned to her, as the concept doc asks: her filtered day, not
- * the household's private schedule.
+ * Her own tickets scheduled in [from, to), for My Week's week pages and month
+ * grid. Includes ones queued for when the board reopens (already approved),
+ * but never a remote admin's suggestion still awaiting approval. Appointments
+ * appear only through the prep tasks assigned to her, as the concept doc
+ * asks: her filtered day, not the household's private schedule.
  */
-export async function getMyWeek(helperId: string): Promise<WeekTask[]> {
-  const first = startOfToday(new Date());
-  const end = new Date(first);
-  end.setDate(first.getDate() + 7);
-
+export async function getMyTasksBetween(
+  helperId: string,
+  from: Date,
+  to: Date,
+): Promise<WeekTask[]> {
   const { data, error } = await supabase
     .from("tickets")
     .select(
@@ -228,8 +228,8 @@ export async function getMyWeek(helperId: string): Promise<WeekTask[]> {
     )
     .eq("helper_id", helperId)
     .eq("suggested", false)
-    .gte("scheduled_start", first.toISOString())
-    .lt("scheduled_start", end.toISOString())
+    .gte("scheduled_start", from.toISOString())
+    .lt("scheduled_start", to.toISOString())
     .order("scheduled_start", { ascending: true });
 
   if (error) {
