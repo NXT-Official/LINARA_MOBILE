@@ -28,6 +28,7 @@ import {
   type TermsFlagField,
 } from "@/services/api/record";
 import { loadRecordPdfInput, shareRecordPdf } from "@/services/record-export";
+import { PrivacyAccountCard } from "@/components/features/account/privacy-account-card";
 import { PaymentConfirmations } from "@/components/features/pay/payment-confirmations";
 import { DateTimeField } from "@/components/ui/date-time-field";
 import { PrimaryButton } from "@/components/ui/primary-button";
@@ -102,6 +103,7 @@ export default function RecordScreen() {
           <PaymentConfirmations />
           {current ? <CurrentRecord employment={current} /> : <JoinHouseholdCard />}
           {past.length > 0 ? <PastEmployments past={past} /> : null}
+          <PrivacyAccountCard />
         </>
       )}
     </ScrollView>

@@ -1,8 +1,9 @@
-import { ActivityIndicator, ScrollView, StyleSheet, Text, View } from "react-native";
+import { ActivityIndicator, Linking, ScrollView, StyleSheet, Text, View } from "react-native";
 import { router, useLocalSearchParams } from "expo-router";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 
 import { colors } from "@/lib/theme";
+import { PRIVACY_URL, TERMS_URL } from "@/lib/legal";
 import { formatShiftTime, weekdayName } from "@/lib/format";
 import { useSession } from "@/lib/session-context";
 import { joinHousehold } from "@/services/api/employment";
@@ -126,6 +127,17 @@ export default function ReviewTermsScreen() {
                 : "Hindi nakasali. Subukan ulit."}
             </Text>
           ) : null}
+          <Text style={styles.legal}>
+            Sa pagsali, sumasang-ayon ka sa{" "}
+            <Text style={styles.legalLink} onPress={() => void Linking.openURL(TERMS_URL)}>
+              terms
+            </Text>{" "}
+            at{" "}
+            <Text style={styles.legalLink} onPress={() => void Linking.openURL(PRIVACY_URL)}>
+              privacy policy
+            </Text>{" "}
+            ng Linara.
+          </Text>
         </>
       )}
     </ScrollView>
@@ -133,6 +145,8 @@ export default function ReviewTermsScreen() {
 }
 
 const styles = StyleSheet.create({
+  legal: { fontSize: 13, lineHeight: 18, color: colors.mutedInk, textAlign: "center" },
+  legalLink: { color: colors.pineTeal, fontWeight: "700", textDecorationLine: "underline" },
   screen: {
     flex: 1,
     backgroundColor: colors.sand,
