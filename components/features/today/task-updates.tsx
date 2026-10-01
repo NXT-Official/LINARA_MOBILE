@@ -20,11 +20,16 @@ const stamp = (iso: string) =>
  * A task's updates, shared with the household's managers
  * (../LINARA/supabase/add-ticket-comments.sql). Unlike her private notes,
  * these are meant to be seen: "Naubos na ang sabon", "Use the blue one".
+ * Checks for the manager's replies every 15 seconds while it's on screen.
  */
 export function TaskUpdates({ ticketId, myUserId }: { ticketId: string; myUserId: string }) {
   const queryClient = useQueryClient();
   const key = ["task-comments", ticketId];
-  const commentsQuery = useQuery({ queryKey: key, queryFn: () => getTaskComments(ticketId) });
+  const commentsQuery = useQuery({
+    queryKey: key,
+    queryFn: () => getTaskComments(ticketId),
+    refetchInterval: 15_000,
+  });
   const [draft, setDraft] = useState("");
 
   const refresh = () => queryClient.invalidateQueries({ queryKey: key });
