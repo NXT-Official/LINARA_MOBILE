@@ -65,6 +65,16 @@ function bootScript(session: Session | null) {
   var USER = ${JSON.stringify(USER_ID_KEY)}, HOUSEHOLD = ${JSON.stringify(HOUSEHOLD_ID_KEY)};
   var ls = window.localStorage;
   var set = Storage.prototype.setItem, remove = Storage.prototype.removeItem;
+  // Signed out of the app: drop whatever session this WebView kept from the
+  // last manager, once (sessionStorage outlives reloads, not the WebView), so
+  // the sign-up page never quietly resumes someone else's dashboard.
+  if (!t && !window.sessionStorage.getItem("linara_app_cleared")) {
+    remove.call(ls, TOKEN);
+    remove.call(ls, REFRESH);
+    remove.call(ls, USER);
+    remove.call(ls, HOUSEHOLD);
+    window.sessionStorage.setItem("linara_app_cleared", "1");
+  }
   function post(m) { if (window.ReactNativeWebView) window.ReactNativeWebView.postMessage(JSON.stringify(m)); }
   function exp(jwt) {
     try {
@@ -131,7 +141,8 @@ export default function ManagerDashboardScreen() {
 
 function startFor(session: Session | null) {
   return {
-    url: `${MANAGER_DASHBOARD_URL}${session ? "/manager/pass" : "/login"}`,
+    // No session only comes from "New manager? Set up your household".
+    url: `${MANAGER_DASHBOARD_URL}${session ? "/manager/pass" : "/login?mode=signup"}`,
     script: bootScript(session),
   };
 }
