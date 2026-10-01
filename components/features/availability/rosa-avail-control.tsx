@@ -54,6 +54,9 @@ export function RosaAvailControl({
       {status.status === "available" && status.until ? (
         <Text style={styles.detail}>Until {formatTimeOfDay(status.until)}</Text>
       ) : null}
+      {status.timeOff ? (
+        <Text style={styles.detail}>Day off mo ngayon. Aprobado ng manager.</Text>
+      ) : null}
 
       {!onShift && (
         <View style={styles.actions}>

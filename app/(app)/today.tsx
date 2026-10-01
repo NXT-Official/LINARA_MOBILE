@@ -16,6 +16,7 @@ import { dayPhase } from "@/lib/today";
 import { FloatingQuickUtosFeed } from "@/components/features/utos/floating-quick-utos-feed";
 import { PrivateScratchpad } from "@/components/features/notes/PrivateScratchpad";
 import { getMyHelperProfile } from "@/services/api/helper-profile";
+import { getMyRestOffRequests } from "@/services/api/rest-off";
 import { setHelperAvailability, setHelperOff } from "@/services/api/availability";
 import {
   blockTicket,
@@ -51,6 +52,14 @@ export default function TodayScreen() {
       ? { manual: "available", availableUntil: profileQuery.data.manualAvailableUntil }
       : OFF_AVAILABILITY;
 
+  // Same key as My Pay and My Week, so one fetch serves all three.
+  const restOffQuery = useQuery({
+    queryKey: ["rest-off-requests", helperId],
+    queryFn: () => getMyRestOffRequests(helperId as string),
+    enabled: Boolean(helperId),
+  });
+  const approvedTimeOff = (restOffQuery.data ?? []).filter((r) => r.status === "approved");
+
   const availability = useRosaAvailability(
     profileQuery.data
       ? {
@@ -62,6 +71,7 @@ export default function TodayScreen() {
         }
       : null,
     manual,
+    approvedTimeOff,
   );
 
   const invalidateProfile = () =>

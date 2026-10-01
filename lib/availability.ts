@@ -1,3 +1,5 @@
+import { toIsoDate } from "./datetime-fields";
+
 /**
  * Rosa's live reachability, mirroring the web dashboard's model (see
  * ../LINARA/src/features/availability/hooks/use-availability.ts) but scoped
@@ -10,7 +12,22 @@ export type RosaAvailabilityStatus = {
   until: number | null;
   quiet: boolean;
   restDay: boolean;
+  /** Inside a day off a manager approved (rest_off_requests). */
+  timeOff?: boolean;
 };
+
+/**
+ * An approved day off: one date and a window. Mirrors the web's TimeOff
+ * (../LINARA/src/features/shifts/time-off.ts) so both sides agree she's off
+ * (../LINARA/KNOWN_GAPS.md O19).
+ */
+export interface TimeOffWindow {
+  /** YYYY-MM-DD. */
+  restDate: string;
+  /** "HH:MM:SS" as returned by Postgres TIME columns. */
+  startTime: string;
+  endTime: string;
+}
 
 export interface ShiftWindow {
   /** "HH:MM:SS" as returned by Postgres TIME columns. */
@@ -54,10 +71,15 @@ function parseTimeToMinutes(time: string): number {
   return hours * 60 + minutes;
 }
 
+/**
+ * Approved time off is off even mid-shift. Her own Available opt-in still
+ * wins, because she set it, but she's not on shift then: it's her time.
+ */
 export function deriveRosaStatus(
   nowTs: number,
   shift: ShiftWindow,
   manual: ManualAvailability,
+  timeOff: TimeOffWindow[] = [],
 ): RosaAvailabilityStatus {
   const now = new Date(nowTs);
   const hour = now.getHours();
@@ -73,7 +95,20 @@ export function deriveRosaStatus(
     Boolean(shift.breakStart && shift.breakEnd) &&
     minutes >= parseTimeToMinutes(shift.breakStart as string) &&
     minutes < parseTimeToMinutes(shift.breakEnd as string);
+  const today = toIsoDate(now);
+  const inTimeOff = timeOff.some(
+    (o) =>
+      o.restDate === today &&
+      minutes >= parseTimeToMinutes(o.startTime) &&
+      minutes < parseTimeToMinutes(o.endTime),
+  );
+  const optedIn =
+    manual.manual === "available" && !!manual.availableUntil && manual.availableUntil > nowTs;
+  if (inTimeOff && !optedIn) {
+    return { status: "off", until: null, quiet: false, restDay: isRestDay, timeOff: true };
+  }
   const onShift =
+    !inTimeOff &&
     !isRestDay &&
     !onBreak &&
     minutes >= parseTimeToMinutes(shift.shiftStart) &&
@@ -82,7 +117,7 @@ export function deriveRosaStatus(
   if (onShift) {
     return { status: "on_shift", until: null, quiet: false, restDay: false };
   }
-  if (manual.manual === "available" && manual.availableUntil && manual.availableUntil > nowTs) {
+  if (optedIn) {
     return { status: "available", until: manual.availableUntil, quiet: false, restDay: isRestDay };
   }
   return { status: "off", until: null, quiet: false, restDay: isRestDay };

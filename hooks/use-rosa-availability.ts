@@ -5,6 +5,7 @@ import {
   type ManualAvailability,
   type RosaAvailabilityStatus,
   type ShiftWindow,
+  type TimeOffWindow,
 } from "@/lib/availability";
 
 const REFRESH_INTERVAL_MS = 60_000;
@@ -23,6 +24,8 @@ const REFRESH_INTERVAL_MS = 60_000;
 export function useRosaAvailability(
   shift: ShiftWindow | null,
   manual: ManualAvailability,
+  /** Her approved days off; only today's matter. */
+  timeOff: TimeOffWindow[] = [],
 ): RosaAvailabilityStatus {
   const [nowTs, setNowTs] = useState(() => Date.now());
 
@@ -32,6 +35,6 @@ export function useRosaAvailability(
   }, []);
 
   return shift
-    ? deriveRosaStatus(nowTs, shift, manual)
+    ? deriveRosaStatus(nowTs, shift, manual, timeOff)
     : { status: "off", until: null, quiet: false, restDay: false };
 }
