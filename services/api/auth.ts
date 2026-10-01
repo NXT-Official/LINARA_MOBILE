@@ -76,6 +76,14 @@ export async function requestPasswordReset(email: string): Promise<void> {
     redirectTo: `${MANAGER_DASHBOARD_URL}/reset-password`,
   });
   if (error) {
+    if (
+      error.code === "over_email_send_rate_limit" ||
+      /rate limit|security purposes/i.test(error.message)
+    ) {
+      throw new Error(
+        "Kakapadala lang namin ng link. Maghintay ng isang minuto bago humingi ulit.",
+      );
+    }
     throw new Error(error.message);
   }
 }

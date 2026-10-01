@@ -14,7 +14,7 @@ import { colors } from "@/lib/theme";
 import { queryClient } from "@/lib/query-client";
 import { accountKindKey } from "@/hooks/use-account-kind";
 import { supabase } from "@/services/supabase";
-import { requestPasswordReset, signIn } from "@/services/api/auth";
+import { signIn } from "@/services/api/auth";
 import { TextField } from "@/components/ui/text-field";
 import { PrimaryButton } from "@/components/ui/primary-button";
 
@@ -34,7 +34,6 @@ export default function SignInScreen() {
   const [password, setPassword] = useState("");
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const [resetSentTo, setResetSentTo] = useState<string | null>(null);
 
   const submit = async () => {
     if (!email.trim() || !password) return;
@@ -52,19 +51,8 @@ export default function SignInScreen() {
     }
   };
 
-  const sendReset = async () => {
-    if (!email.trim()) {
-      setError("Ilagay muna ang email mo sa itaas, tapos pindutin ulit.");
-      return;
-    }
-    setError(null);
-    try {
-      await requestPasswordReset(email);
-      setResetSentTo(email.trim());
-    } catch (err) {
-      setError(err instanceof Error ? err.message : "Hindi naipadala ang reset link.");
-    }
-  };
+  const forgotPassword = () =>
+    router.push({ pathname: "/(auth)/forgot-password", params: { email: email.trim() } });
 
   return (
     <KeyboardAvoidingView
@@ -105,12 +93,6 @@ export default function SignInScreen() {
         />
 
         {error ? <Text style={styles.errorText}>{error}</Text> : null}
-        {resetSentTo ? (
-          <Text style={styles.noteText}>
-            Kung may account ang {resetSentTo}, may reset link na papunta roon. Pagkatapos mong
-            mag-set ng bagong password, bumalik dito para mag-sign in.
-          </Text>
-        ) : null}
 
         <PrimaryButton
           label="Sign in"
@@ -119,7 +101,7 @@ export default function SignInScreen() {
           onPress={submit}
         />
 
-        <Pressable onPress={sendReset} hitSlop={8} accessibilityRole="button">
+        <Pressable onPress={forgotPassword} hitSlop={8} accessibilityRole="button">
           <Text style={styles.link}>Nakalimutan ang password?</Text>
         </Pressable>
         <Pressable
@@ -162,11 +144,6 @@ const styles = StyleSheet.create({
   errorText: {
     fontSize: 13,
     color: colors.terracottaGold,
-  },
-  noteText: {
-    fontSize: 13,
-    lineHeight: 19,
-    color: colors.ink,
   },
   link: {
     textAlign: "center",
