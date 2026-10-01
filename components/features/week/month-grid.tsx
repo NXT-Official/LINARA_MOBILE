@@ -32,7 +32,9 @@ export function MonthGrid<T extends WeekTicket>({
       <View style={styles.grid}>
         {days.map((day) => {
           const inMonth = day.date.getMonth() === month;
-          const open = day.tickets.filter((t) => t.status !== "done").length;
+          const open = day.tickets.filter(
+            (t) => t.status !== "done" && t.status !== "cancelled",
+          ).length;
           const approvedOff =
             day.timeOff.some((o) => o.status === "approved") ||
             day.leave.some((l) => l.status === "approved");
@@ -73,7 +75,13 @@ export function MonthGrid<T extends WeekTicket>({
               </View>
               <View style={styles.dots}>
                 {day.tickets.slice(0, DOTS).map((t) => (
-                  <View key={t.id} style={[styles.dot, t.status === "done" && styles.dotDone]} />
+                  <View
+                    key={t.id}
+                    style={[
+                      styles.dot,
+                      (t.status === "done" || t.status === "cancelled") && styles.dotDone,
+                    ]}
+                  />
                 ))}
               </View>
               {day.tickets.length > DOTS ? (

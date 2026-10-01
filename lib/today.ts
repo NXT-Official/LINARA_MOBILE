@@ -8,7 +8,8 @@
  * a helper in the home. Both apps render ticket times the same way.
  */
 
-export type TicketStatus = "todo" | "in_progress" | "done" | "blocked";
+/** "cancelled": the manager called it off (../LINARA/supabase/add-cancelled-tasks.sql). */
+export type TicketStatus = "todo" | "in_progress" | "done" | "blocked" | "cancelled";
 
 export interface DayTicket {
   status: TicketStatus;
@@ -60,6 +61,7 @@ export function summarizeToday(tickets: DayTicket[], now: Date) {
   const todayStart = startOfToday(now).getTime();
   const todays = tickets.filter(
     (t) =>
+      t.status !== "cancelled" &&
       !isLaterThanToday(t, now) &&
       (t.status !== "done" || Date.parse(t.scheduledStart) >= todayStart),
   );

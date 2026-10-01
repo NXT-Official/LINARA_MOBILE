@@ -21,7 +21,7 @@ export interface FocusTask {
   id: string;
   title: string;
   notes: string | null;
-  status: "todo" | "in_progress" | "done" | "blocked";
+  status: "todo" | "in_progress" | "done" | "blocked" | "cancelled";
   scheduledStart: string;
   /** Sent off-hours through the manager's override or emergency path. */
   afterHours: boolean;
@@ -76,6 +76,8 @@ async function getMyTodayRows<T>(helperId: string, columns: string): Promise<T[]
     // re-read every time.
     .or(`status.eq.in_progress,scheduled_start.lt.${startOfTomorrow(now).toISOString()}`)
     .or(`status.neq.done,scheduled_start.gte.${startOfToday(now).toISOString()}`)
+    // A task the manager cancelled isn't hers to do; My Week still shows it.
+    .neq("status", "cancelled")
     .order("scheduled_start", { ascending: true });
 
   if (error) {
@@ -277,7 +279,7 @@ export async function getMovedTasks(helperId: string): Promise<MovedTask[]> {
     .select("id, title, scheduled_start, reschedule_notice")
     .eq("helper_id", helperId)
     .eq("suggested", false)
-    .neq("status", "done")
+    .not("status", "in", "(done,cancelled)")
     .not("reschedule_notice", "is", null)
     .gte("scheduled_start", startOfToday(new Date()).toISOString())
     .order("scheduled_start", { ascending: true });
@@ -410,7 +412,7 @@ export async function getActivePalengkeTicket(helperId: string): Promise<Palengk
     .from("tickets")
     .select("id, title, status")
     .eq("helper_id", helperId)
-    .neq("status", "done")
+    .not("status", "in", "(done,cancelled)")
     .or("title.ilike.%palengke%,title.ilike.%marketing run%")
     .order("scheduled_start", { ascending: true })
     .limit(1)

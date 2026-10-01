@@ -237,7 +237,9 @@ export default function WeekScreen() {
 }
 
 function WeekRow({ task, myUserId }: { task: WeekTask; myUserId: string }) {
-  const done = task.status === "done";
+  const cancelled = task.status === "cancelled";
+  // Done and cancelled both read as settled: muted and struck through.
+  const done = task.status === "done" || cancelled;
   const from =
     task.createdById === myUserId
       ? "Ikaw"
@@ -249,7 +251,7 @@ function WeekRow({ task, myUserId }: { task: WeekTask; myUserId: string }) {
       <Text style={styles.rowTime}>{formatClockTime(task.scheduledStart)}</Text>
       <View style={styles.rowBody}>
         <View style={styles.titleLine}>
-          {done ? (
+          {task.status === "done" ? (
             <Ionicons
               name="checkmark-circle"
               size={16}
@@ -267,6 +269,7 @@ function WeekRow({ task, myUserId }: { task: WeekTask; myUserId: string }) {
           {task.moved ? <Text style={styles.tagMoved}>Inilipat</Text> : null}
           {task.waiting ? <Text style={styles.tagWaiting}>Pag-bukas ng board</Text> : null}
           {task.status === "blocked" ? <Text style={styles.tagWaiting}>Naka-hold</Text> : null}
+          {cancelled ? <Text style={styles.tagWaiting}>Kinansela ng manager</Text> : null}
         </View>
       </View>
     </View>

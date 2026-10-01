@@ -8,7 +8,7 @@ export interface TicketRealtimeRow {
   id: string;
   household_id: string;
   helper_id: string;
-  status: "todo" | "in_progress" | "done" | "blocked";
+  status: "todo" | "in_progress" | "done" | "blocked" | "cancelled";
 }
 
 /** The columns this hook reacts to from public.quick_utos (../LINARA/ARCHITECTURE.md Section 8). */

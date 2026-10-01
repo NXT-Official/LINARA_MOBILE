@@ -14,6 +14,7 @@ const STATUS: Record<TodayTask["status"], { label: string; color: string }> = {
   in_progress: { label: "Ginagawa", color: colors.terracottaGold },
   blocked: { label: "Naka-hold", color: colors.terracottaInk },
   todo: { label: "Gagawin", color: colors.mutedInk },
+  cancelled: { label: "Kinansela", color: colors.mutedInk },
 };
 
 /**

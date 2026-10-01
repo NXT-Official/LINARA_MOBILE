@@ -61,6 +61,7 @@ describe("summarizeToday", () => {
       t("todo", at(28, 19)), // carried over: counts
       t("done", at(28, 9)), // finished on an earlier day: doesn't
       t("todo", at(31, 7)), // tomorrow: doesn't
+      t("cancelled", at(30, 10)), // called off: doesn't
     ];
     expect(summarizeToday(list, now)).toEqual({ total: 4, done: 2, onHold: 1 });
   });

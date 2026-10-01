@@ -32,7 +32,7 @@ export const MONTH_NAMES = [
 export interface WeekTicket {
   id: string;
   title: string;
-  status: "todo" | "in_progress" | "done" | "blocked";
+  status: "todo" | "in_progress" | "done" | "blocked" | "cancelled";
   scheduledStart: string;
 }
 

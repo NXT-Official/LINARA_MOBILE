@@ -13,6 +13,7 @@ const STATUS_LABEL: Record<FocusTask["status"], string> = {
   in_progress: "Ginagawa ngayon",
   blocked: "Naka-hold",
   done: "Tapos na",
+  cancelled: "Kinansela",
 };
 
 /** One tap for the usual reasons; anything else she can type. */
