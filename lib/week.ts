@@ -47,6 +47,16 @@ export interface WeekTimeOff {
   status: "pending" | "approved" | "declined" | "cancelled";
 }
 
+/** Whole-day leave (leave_requests), as My Week shows it. */
+export interface WeekLeave {
+  id: string;
+  kind: "sil" | "in_kind" | "unpaid" | "extra_paid";
+  /** YYYY-MM-DD, inclusive. */
+  startDate: string;
+  endDate: string;
+  status: "pending" | "approved" | "declined" | "cancelled";
+}
+
 export interface WeekDay<T extends WeekTicket = WeekTicket> {
   /** Local midnight of this day. */
   date: Date;
@@ -58,6 +68,8 @@ export interface WeekDay<T extends WeekTicket = WeekTicket> {
   tickets: T[];
   /** Approved and still-waiting days off; declined and cancelled ones aren't shown. */
   timeOff: WeekTimeOff[];
+  /** Approved and still-waiting leave covering this day. */
+  leave: WeekLeave[];
 }
 
 export const addDays = (d: Date, n: number) =>
@@ -76,6 +88,7 @@ export function buildDays<T extends WeekTicket>(
   weeklyRestDay: number,
   tickets: T[],
   timeOff: WeekTimeOff[] = [],
+  leave: WeekLeave[] = [],
 ): WeekDay<T>[] {
   const today = startOfToday(now).getTime();
   return Array.from({ length: count }, (_, i) => {
@@ -98,6 +111,12 @@ export function buildDays<T extends WeekTicket>(
       timeOff: timeOff
         .filter((o) => o.restDate === iso && (o.status === "approved" || o.status === "pending"))
         .sort((a, b) => a.startTime.localeCompare(b.startTime)),
+      leave: leave.filter(
+        (l) =>
+          l.startDate <= iso &&
+          iso <= l.endDate &&
+          (l.status === "approved" || l.status === "pending"),
+      ),
     };
   });
 }
@@ -108,8 +127,9 @@ export function buildWeek<T extends WeekTicket>(
   weeklyRestDay: number,
   tickets: T[],
   timeOff: WeekTimeOff[] = [],
+  leave: WeekLeave[] = [],
 ): WeekDay<T>[] {
-  return buildDays(startOfToday(now), 7, now, weeklyRestDay, tickets, timeOff);
+  return buildDays(startOfToday(now), 7, now, weeklyRestDay, tickets, timeOff, leave);
 }
 
 /** The Sunday on or before the 1st, through the Saturday on or after the last day. */

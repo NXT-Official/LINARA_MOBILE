@@ -15,6 +15,16 @@ import {
   requestRestOff,
 } from "@/services/api/rest-off";
 import { getMyVales, requestVale } from "@/services/api/vales";
+import {
+  ackLeave,
+  cancelLeave,
+  getMyLeave,
+  getSilBalance,
+  requestLeave,
+  type LeaveKind,
+  type LeaveReason,
+} from "@/services/api/leave";
+import { LeaveRequestForm } from "@/components/features/pay/leave-request-form";
 import { RestOffRequestForm } from "@/components/features/pay/rest-off-request-form";
 import { DigitalPayslip } from "@/components/features/pay/digital-payslip";
 import { PaymentConfirmations } from "@/components/features/pay/payment-confirmations";
@@ -128,6 +138,48 @@ export default function PayScreen() {
     },
   });
 
+  // Leave: whole days off (../LINARA/LEAVE_PLAN.md). Balances come from the
+  // same Postgres functions the approval checks use.
+  const householdToday = cutoffQuery.data?.today;
+  const leaveQuery = useQuery({
+    queryKey: ["leave", helperId],
+    queryFn: () => getMyLeave(helperId as string),
+    enabled: Boolean(helperId),
+  });
+  const silQuery = useQuery({
+    queryKey: ["sil-balance", helperId, householdToday],
+    queryFn: () => getSilBalance(helperId as string, householdToday as string),
+    enabled: Boolean(helperId && householdToday),
+  });
+  const refreshLeave = () => {
+    queryClient.invalidateQueries({ queryKey: ["leave", helperId] });
+    queryClient.invalidateQueries({ queryKey: ["sil-balance", helperId] });
+    queryClient.invalidateQueries({ queryKey: ["rest-owed-balance", helperId] });
+  };
+  const leaveMutation = useMutation({
+    mutationFn: (v: {
+      kind: LeaveKind;
+      reason: LeaveReason;
+      startDate: string;
+      endDate: string;
+      note?: string;
+    }) => requestLeave(helperId as string, v.kind, v.reason, v.startDate, v.endDate, v.note),
+    onSuccess: refreshLeave,
+  });
+  const leaveCancelMutation = useMutation({
+    mutationFn: (id: string) => cancelLeave(id),
+    onSuccess: refreshLeave,
+  });
+  const leaveAckMutation = useMutation({
+    mutationFn: (v: { id: string; ack: "confirmed" | "disputed" }) => ackLeave(v.id, v.ack),
+    onSuccess: refreshLeave,
+  });
+  const leaveBusyId = leaveCancelMutation.isPending
+    ? (leaveCancelMutation.variables ?? null)
+    : leaveAckMutation.isPending
+      ? (leaveAckMutation.variables?.id ?? null)
+      : null;
+
   const valeMutation = useMutation({
     mutationFn: ({ amount, reason }: { amount: number; reason: string }) =>
       requestVale(helperId as string, amount, reason),
@@ -192,6 +244,27 @@ export default function PayScreen() {
               // The household's civil date from Postgres, never the device's --
               // a phone with a wrong date must not decide what "past" means.
               householdToday={cutoffQuery.data?.today}
+            />
+          )}
+
+          {!leaveQuery.isLoading && (
+            <LeaveRequestForm
+              sil={silQuery.data}
+              restOwedMinutes={restBalanceQuery.data ?? 0}
+              weeklyRestDay={profileQuery.data.weeklyRestDay}
+              leave={leaveQuery.data ?? []}
+              householdToday={householdToday}
+              submitting={leaveMutation.isPending}
+              error={
+                (leaveMutation.error ?? leaveCancelMutation.error ?? leaveAckMutation.error)
+                  ?.message ?? null
+              }
+              onSubmit={(kind, reason, startDate, endDate, note) =>
+                leaveMutation.mutate({ kind, reason, startDate, endDate, note })
+              }
+              onCancel={(id) => leaveCancelMutation.mutate(id)}
+              onAck={(id, ack) => leaveAckMutation.mutate({ id, ack })}
+              busyId={leaveBusyId}
             />
           )}
 

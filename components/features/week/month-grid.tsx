@@ -33,7 +33,9 @@ export function MonthGrid<T extends WeekTicket>({
         {days.map((day) => {
           const inMonth = day.date.getMonth() === month;
           const open = day.tickets.filter((t) => t.status !== "done").length;
-          const approvedOff = day.timeOff.some((o) => o.status === "approved");
+          const approvedOff =
+            day.timeOff.some((o) => o.status === "approved") ||
+            day.leave.some((l) => l.status === "approved");
           const summary = [
             day.label,
             day.isRestDay ? "rest day" : null,

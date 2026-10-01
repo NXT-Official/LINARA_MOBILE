@@ -18,10 +18,18 @@ import {
 import { useRealtimeSubscription } from "@/hooks/use-realtime-subscription";
 import { MonthGrid } from "@/components/features/week/month-grid";
 import { getMyHelperProfile } from "@/services/api/helper-profile";
+import { getMyLeave, type LeaveKind } from "@/services/api/leave";
 import { getMyRestOffRequests } from "@/services/api/rest-off";
 import { getMyTasksBetween, type WeekTask } from "@/services/api/tickets";
 
 type Mode = "week" | "month";
+
+const LEAVE_LABEL: Record<LeaveKind, string> = {
+  sil: "SIL",
+  in_kind: "day off in kind",
+  unpaid: "walang bayad",
+  extra_paid: "bayad na day off",
+};
 
 /**
  * My Week (concept doc section 7, "the dignity win"): her shift, break and
@@ -60,6 +68,13 @@ export default function WeekScreen() {
   const restOffQuery = useQuery({
     queryKey: ["rest-off-requests", helperId],
     queryFn: () => getMyRestOffRequests(helperId as string),
+    enabled: Boolean(helperId),
+  });
+
+  // Same key as My Pay, so one fetch serves both.
+  const leaveQuery = useQuery({
+    queryKey: ["leave", helperId],
+    queryFn: () => getMyLeave(helperId as string),
     enabled: Boolean(helperId),
   });
 
@@ -102,6 +117,7 @@ export default function WeekScreen() {
         profile.weeklyRestDay,
         weekQuery.data ?? [],
         timeOff,
+        leaveQuery.data ?? [],
       )
     : [];
 
@@ -188,6 +204,13 @@ export default function WeekScreen() {
             <Text style={day.isRestDay ? styles.restLine : styles.shiftLine}>
               {day.isRestDay ? "Rest day mo. Pahinga." : shiftLine}
             </Text>
+            {day.leave.map((l) => (
+              <Text key={l.id} style={l.status === "approved" ? styles.offLine : styles.offPending}>
+                {l.status === "approved" ? "Naka-leave" : "Hiniling na leave"} ·{" "}
+                {LEAVE_LABEL[l.kind]}
+                {l.status === "pending" ? " · naghihintay pa" : ""}
+              </Text>
+            ))}
             {day.timeOff.map((o) => (
               <Text key={o.id} style={o.status === "approved" ? styles.offLine : styles.offPending}>
                 {o.status === "approved" ? "Day off" : "Hiniling na day off"} ·{" "}

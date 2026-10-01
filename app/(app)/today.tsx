@@ -17,6 +17,9 @@ import { FloatingQuickUtosFeed } from "@/components/features/utos/floating-quick
 import { PrivateScratchpad } from "@/components/features/notes/PrivateScratchpad";
 import { getMyHelperProfile } from "@/services/api/helper-profile";
 import { getMyRestOffRequests } from "@/services/api/rest-off";
+import { getMyLeave } from "@/services/api/leave";
+import { leaveCovers } from "@/lib/leave";
+import { toIsoDate } from "@/lib/datetime-fields";
 import { setHelperAvailability, setHelperOff } from "@/services/api/availability";
 import {
   blockTicket,
@@ -58,7 +61,19 @@ export default function TodayScreen() {
     queryFn: () => getMyRestOffRequests(helperId as string),
     enabled: Boolean(helperId),
   });
-  const approvedTimeOff = (restOffQuery.data ?? []).filter((r) => r.status === "approved");
+  const leaveQuery = useQuery({
+    queryKey: ["leave", helperId],
+    queryFn: () => getMyLeave(helperId as string),
+    enabled: Boolean(helperId),
+  });
+  // Approved leave today counts as off all day, like an approved day off.
+  const todayIso = toIsoDate(new Date());
+  const approvedTimeOff = [
+    ...(restOffQuery.data ?? []).filter((r) => r.status === "approved"),
+    ...(leaveQuery.data ?? [])
+      .filter((l) => l.status === "approved" && leaveCovers(l, todayIso))
+      .map(() => ({ restDate: todayIso, startTime: "00:00", endTime: "24:00" })),
+  ];
 
   const availability = useRosaAvailability(
     profileQuery.data

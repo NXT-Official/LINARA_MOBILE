@@ -78,3 +78,29 @@ describe("monthRange", () => {
     expect(count).toBe(35);
   });
 });
+
+describe("leave on the week", () => {
+  it("shows live leave on every day it covers", () => {
+    const leave = [
+      {
+        id: "sil",
+        kind: "sil" as const,
+        startDate: "2026-10-01",
+        endDate: "2026-10-02",
+        status: "approved" as const,
+      },
+      {
+        id: "no",
+        kind: "unpaid" as const,
+        startDate: "2026-10-01",
+        endDate: "2026-10-01",
+        status: "declined" as const,
+      },
+    ];
+    const week = buildWeek(now, 0, [], [], leave);
+    expect(week[0].leave).toEqual([]);
+    expect(week[1].leave.map((l) => l.id)).toEqual(["sil"]);
+    expect(week[2].leave.map((l) => l.id)).toEqual(["sil"]);
+    expect(week[3].leave).toEqual([]);
+  });
+});
