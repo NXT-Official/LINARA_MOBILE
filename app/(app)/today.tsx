@@ -240,10 +240,14 @@ export default function TodayScreen() {
 
   const focusTask = focusTaskQuery.data;
 
-  useRealtimeSubscription(helperId, {
-    onTicketChange: refreshToday,
-    onQuickUtoChange: () => queryClient.invalidateQueries({ queryKey: ["quick-utos", helperId] }),
-  });
+  useRealtimeSubscription(
+    helperId,
+    {
+      onTicketChange: refreshToday,
+      onQuickUtoChange: () => queryClient.invalidateQueries({ queryKey: ["quick-utos", helperId] }),
+    },
+    profileQuery.data?.householdId,
+  );
 
   // The close replaces the next task once her day is over -- unless she has
   // opted in as Available. A task she already started, or one the manager

@@ -65,8 +65,12 @@ export function MovedTasksBanner({ helperId }: { helperId: string }) {
       {unseen.map((t) => (
         <Text key={moveKey(t)} style={styles.line}>
           <Text style={styles.task}>{t.title}</Text> — {dayAndTime(t.scheduledStart)} na ngayon
-          {t.previousStart ? ` (dati ${dayAndTime(t.previousStart)})` : ""}, dahil binago ang{" "}
-          {t.appointmentTitle}.
+          {t.previousStart ? ` (dati ${dayAndTime(t.previousStart)})` : ""}
+          {t.appointmentTitle
+            ? `, dahil binago ang ${t.appointmentTitle}.`
+            : t.movedBy
+              ? `. Inilipat ni ${t.movedBy}.`
+              : ". Inilipat ng manager."}
         </Text>
       ))}
       <PrimaryButton label="Nakita ko" variant="secondary" onPress={() => void markSeen()} />

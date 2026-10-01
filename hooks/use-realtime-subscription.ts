@@ -28,7 +28,14 @@ export interface RealtimeSubscriptionCallbacks {
  * assigned to one helper, so screens can react to manager-side edits without
  * polling. Callbacks are read from a ref on every event so callers can pass
  * inline functions without tearing the subscription down on every render;
- * only a change in `helperId` re-subscribes.
+ * only a change in `helperId` or `householdId` re-subscribes.
+ *
+ * With `householdId`, ticket changes are heard household-wide. Realtime
+ * matches a filter against the row as it is after the change, so with a
+ * helper_id filter a task handed to someone else never reached the phone it
+ * left, and stayed there until a refetch (../LINARA/KNOWN_GAPS.md O20).
+ * tickets_isolation already lets her read the household's tickets, so this
+ * shows her nothing she couldn't query; callers just refetch their own.
  *
  * Deliberately callback-based rather than wired to TanStack Query directly —
  * this story only establishes backend connectivity (see Story_3 roadmap
@@ -38,6 +45,7 @@ export interface RealtimeSubscriptionCallbacks {
 export function useRealtimeSubscription(
   helperId: string | null,
   callbacks: RealtimeSubscriptionCallbacks,
+  householdId?: string | null,
 ): void {
   const callbacksRef = useRef(callbacks);
   useEffect(() => {
@@ -58,7 +66,12 @@ export function useRealtimeSubscription(
       .channel(`helper-station-${helperId}-${Math.random().toString(36).slice(2, 10)}`)
       .on<TicketRealtimeRow>(
         "postgres_changes",
-        { event: "*", schema: "public", table: "tickets", filter: `helper_id=eq.${helperId}` },
+        {
+          event: "*",
+          schema: "public",
+          table: "tickets",
+          filter: householdId ? `household_id=eq.${householdId}` : `helper_id=eq.${helperId}`,
+        },
         (payload) => callbacksRef.current.onTicketChange?.(payload),
       )
       .on<QuickUtoRealtimeRow>(
@@ -76,5 +89,5 @@ export function useRealtimeSubscription(
     return () => {
       void supabase.removeChannel(channel);
     };
-  }, [helperId]);
+  }, [helperId, householdId]);
 }

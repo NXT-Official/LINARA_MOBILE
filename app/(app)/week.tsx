@@ -63,9 +63,11 @@ export default function WeekScreen() {
     enabled: Boolean(helperId),
   });
 
-  useRealtimeSubscription(helperId, {
-    onTicketChange: () => queryClient.invalidateQueries({ queryKey: ["my-week", helperId] }),
-  });
+  useRealtimeSubscription(
+    helperId,
+    { onTicketChange: () => queryClient.invalidateQueries({ queryKey: ["my-week", helperId] }) },
+    profile?.householdId,
+  );
 
   const shiftLine = profile
     ? `${formatShiftTime(profile.shiftStart)} – ${formatShiftTime(profile.shiftEnd)}` +

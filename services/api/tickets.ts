@@ -255,13 +255,17 @@ export interface MovedTask {
   scheduledStart: string;
   /** Where it was before the move; null on notices written before O14 was fixed. */
   previousStart: string | null;
-  appointmentTitle: string;
+  /** The appointment whose move shifted it; null when a manager moved it by hand. */
+  appointmentTitle: string | null;
+  /** Who moved it by hand (../LINARA/KNOWN_GAPS.md O20), when that's how it moved. */
+  movedBy: string | null;
 }
 
 /**
- * Her upcoming tickets whose time moved because the manager moved their
- * appointment (tickets.reschedule_notice, set by the web's
- * rescheduleAppointmentFn). Concept doc §7: flag the affected worker rather
+ * Her upcoming tickets whose time moved: because the manager moved their
+ * appointment (rescheduleAppointmentFn), or moved the task itself on the
+ * planner or in Edit task (updateTicketFn, ../LINARA/KNOWN_GAPS.md O20).
+ * Both write tickets.reschedule_notice. Concept doc §7: flag the affected worker rather
  * than silently shift her board. The old time comes from the notice's
  * oldStartIso instant, formatted on her phone. Older notices only carry a
  * string the web server formatted in its own time zone (../LINARA/
@@ -287,14 +291,19 @@ export async function getMovedTasks(helperId: string): Promise<MovedTask[]> {
       id: string;
       title: string;
       scheduled_start: string;
-      reschedule_notice: { oldStartIso?: string; appointmentTitle?: string } | null;
+      reschedule_notice: {
+        oldStartIso?: string;
+        appointmentTitle?: string;
+        movedBy?: string;
+      } | null;
     }[]
   ).map((row) => ({
     id: row.id,
     title: row.title,
     scheduledStart: row.scheduled_start,
     previousStart: row.reschedule_notice?.oldStartIso ?? null,
-    appointmentTitle: row.reschedule_notice?.appointmentTitle ?? "isang appointment",
+    appointmentTitle: row.reschedule_notice?.appointmentTitle ?? null,
+    movedBy: row.reschedule_notice?.movedBy ?? null,
   }));
 }
 
