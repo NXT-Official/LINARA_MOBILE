@@ -29,6 +29,7 @@ import {
 } from "@/services/api/record";
 import { loadRecordPdfInput, shareRecordPdf } from "@/services/record-export";
 import { PrivacyAccountCard } from "@/components/features/account/privacy-account-card";
+import { SignOutButton } from "@/components/features/account/sign-out-button";
 import { PaymentConfirmations } from "@/components/features/pay/payment-confirmations";
 import { DateTimeField } from "@/components/ui/date-time-field";
 import { PrimaryButton } from "@/components/ui/primary-button";
@@ -106,6 +107,9 @@ export default function RecordScreen() {
           <PrivacyAccountCard />
         </>
       )}
+      {/* Here as well as My Pay: My Record is the one tab that always opens,
+          even with no household, so she can always sign out. */}
+      {employmentsQuery.isLoading ? null : <SignOutButton />}
     </ScrollView>
   );
 }

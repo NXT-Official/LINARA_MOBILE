@@ -1,3 +1,4 @@
+import { MANAGER_DASHBOARD_URL } from "@/lib/env";
 import { joinHousehold } from "@/services/api/employment";
 import { supabase } from "@/services/supabase";
 
@@ -115,9 +116,13 @@ export async function claimProfile(
     throw new Error("Invitation code not found or already claimed");
   }
 
+  // The confirmation link opens the web app's /email-confirmed page, which
+  // sends her straight back here (linaramobile://sign-in). Without it, the
+  // link used Supabase's Site URL, a retired deployment.
   const { data: authData, error: authError } = await supabase.auth.signUp({
     email,
     password: pass,
+    options: { emailRedirectTo: `${MANAGER_DASHBOARD_URL}/email-confirmed?for=helper` },
   });
 
   // She already has an account from a previous household (O4): sign in with
@@ -137,6 +142,11 @@ export async function claimProfile(
       password: pass,
     });
 
+    if (signInError?.code === "email_not_confirmed") {
+      throw new Error(
+        `Nagpadala kami ng confirmation link sa ${email}. Buksan ito, tapos bumalik dito at pindutin ulit ang button para matapos.`,
+      );
+    }
     if (signInError || !signInData.session) {
       throw new Error(signInError?.message || "Auth signin failed after registration");
     }
