@@ -27,7 +27,12 @@ export async function getPantryItems(): Promise<PantryItemRow[]> {
     throw new Error(error.message);
   }
 
-  return (data ?? []) as PantryItemRow[];
+  // NUMERIC columns: coerce, as the web's toPantryItem does, so − / + add numbers.
+  return (data ?? []).map((row) => ({
+    ...(row as PantryItemRow),
+    qty: Number(row.qty),
+    par: Number(row.par),
+  }));
 }
 
 export const PANTRY_CATEGORIES: PantryCategory[] = [

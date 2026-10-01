@@ -29,7 +29,7 @@ export async function getGroceryItems(): Promise<GroceryItemRow[]> {
   return (data ?? []).map((row) => ({
     id: row.id,
     name: row.name,
-    qty: row.qty,
+    qty: Number(row.qty),
     unit: row.unit,
     pantryItemId: row.pantry_item_id,
     bought: row.bought,
