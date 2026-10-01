@@ -33,7 +33,8 @@
     "react-native": "0.86.2",
     "react-native-css-interop": "^0.2.6",
     "react-native-safe-area-context": "^5.8.1",
-    "react-native-screens": "^4.27.0"
+    "react-native-screens": "^4.27.0",
+    "react-native-webview": "13.16.1"
   },
   "devDependencies": {
     "@types/react": "~19.2.2",
