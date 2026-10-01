@@ -5,6 +5,7 @@ import { router } from "expo-router";
 import { queryClient } from "@/lib/query-client";
 import { registerForPush } from "@/lib/notifications";
 import { useSession } from "@/lib/session-context";
+import { useAccountKind } from "@/hooks/use-account-kind";
 
 const ROUTES = ["/today", "/week"] as const;
 type PushRoute = (typeof ROUTES)[number];
@@ -21,10 +22,13 @@ function openFrom(response: Notifications.NotificationResponse | null) {
 /**
  * Registers this phone for pushes once she is signed in, and opens the screen
  * a tapped notification points at -- including the tap that launched the app.
+ * Managers aren't registered: every push goes to a helper, and its links open
+ * helper tabs.
  */
 export function usePushNotifications() {
   const { session } = useSession();
-  const userId = session?.user.id;
+  const kindQuery = useAccountKind();
+  const userId = kindQuery.isLoading || kindQuery.data === "manager" ? undefined : session?.user.id;
 
   useEffect(() => {
     if (userId) void registerForPush();

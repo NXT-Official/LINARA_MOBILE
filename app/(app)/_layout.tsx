@@ -7,6 +7,7 @@ import { useQuery } from "@tanstack/react-query";
 import { colors } from "@/lib/theme";
 import { useSession } from "@/lib/session-context";
 import { getMyEmployments } from "@/services/api/employment";
+import { useAccountKind } from "@/hooks/use-account-kind";
 
 /**
  * A tab she can see but not open: no household means no board, pantry, week
@@ -44,10 +45,14 @@ function LockedTab({
  * ../LINARA/KNOWN_GAPS.md O4) only My Record opens: she can read and download
  * her history and join a new household with an invite code from there. The
  * other tabs stay visible, greyed out.
+ *
+ * A manager who lands here (a deep link, a stale route) goes to their
+ * dashboard instead.
  */
 export default function AppTabsLayout() {
   const { session, isLoading } = useSession();
   const pathname = usePathname();
+  const kindQuery = useAccountKind();
   const employmentsQuery = useQuery({
     queryKey: ["my-employments", session?.user.id],
     queryFn: getMyEmployments,
@@ -56,7 +61,7 @@ export default function AppTabsLayout() {
     refetchInterval: 5 * 60_000,
   });
 
-  if (isLoading || (session && employmentsQuery.isLoading)) {
+  if (isLoading || (session && (employmentsQuery.isLoading || kindQuery.isLoading))) {
     return (
       <View style={styles.loading}>
         <ActivityIndicator color={colors.pineTeal} />
@@ -69,6 +74,10 @@ export default function AppTabsLayout() {
   // screen. First launch goes through app/index.tsx -> welcome instead.
   if (!session) {
     return <Redirect href="/(auth)/sign-in" />;
+  }
+
+  if (kindQuery.data === "manager") {
+    return <Redirect href="/manager" />;
   }
 
   // Couldn't check (offline, say): don't lock her out of what she had.

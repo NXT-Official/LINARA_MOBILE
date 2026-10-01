@@ -4,19 +4,44 @@ import { queryClient } from "@/lib/query-client";
 import { getQueuedActions } from "@/services/sqlite-queue";
 import { supabase } from "@/services/supabase";
 
+/** Which half of the app an account opens: the helper tabs, or the manager dashboard. */
+export type AccountKind = "helper" | "manager";
+
+const MANAGER_USER_TYPES = ["primary_manager", "co_manager", "remote_admin"];
+
 /**
- * Signs a helper who already claimed her account back in -- after a
- * reinstall, a new phone, or signing out. The claim flow
- * (services/api/handshake.ts) is only for the first time; its invite code is
- * single-use, so this is the only way back in afterwards.
+ * The signed-in account's kind, from `user_profiles.user_type`. Null when it
+ * has no profile row yet: a claim that failed after sign-up, or a manager who
+ * hasn't set up a household. Both keep the helper tabs' behavior; a manager
+ * finishes setup from the dashboard's own sign-in (app/manager.tsx?signup=1).
+ */
+export async function getAccountKind(): Promise<AccountKind | null> {
+  const { data: auth } = await supabase.auth.getUser();
+  if (!auth.user) return null;
+  const { data, error } = await supabase
+    .from("user_profiles")
+    .select("user_type")
+    .eq("id", auth.user.id)
+    .maybeSingle();
+  if (error) throw new Error(error.message);
+  const userType = (data as { user_type?: string } | null)?.user_type;
+  if (userType === "helper") return "helper";
+  if (userType && MANAGER_USER_TYPES.includes(userType)) return "manager";
+  return null;
+}
+
+/**
+ * Signs back in an account that already exists -- a helper after a
+ * reinstall, a new phone, or signing out (the claim flow in
+ * services/api/handshake.ts is only for the first time; its invite code is
+ * single-use), or a manager, who then gets the dashboard (app/manager.tsx).
  *
- * A manager account authenticates fine against the same Supabase project,
- * so it's signed straight back out rather than landing on an empty Today tab.
  * The check is the account's type, not a current employment: a helper whose
  * household ended her employment can still sign in to read and download her
- * record, and join a new household (../LINARA/KNOWN_GAPS.md O4).
+ * record, and join a new household (../LINARA/KNOWN_GAPS.md O4). An account
+ * with no profile at all is signed straight back out.
  */
-export async function signInHelper(email: string, password: string): Promise<void> {
+export async function signIn(email: string, password: string): Promise<AccountKind> {
   const { error } = await supabase.auth.signInWithPassword({ email: email.trim(), password });
   if (error) {
     if (error.code === "invalid_credentials") {
@@ -28,16 +53,14 @@ export async function signInHelper(email: string, password: string): Promise<voi
     throw new Error(error.message);
   }
 
-  const { data: auth } = await supabase.auth.getUser();
-  const { data: profile } = auth.user
-    ? await supabase.from("user_profiles").select("user_type").eq("id", auth.user.id).maybeSingle()
-    : { data: null };
-  if ((profile as { user_type?: string } | null)?.user_type !== "helper") {
+  const kind = await getAccountKind().catch(() => null);
+  if (!kind) {
     await supabase.auth.signOut();
     throw new Error(
-      "Walang helper account na naka-link sa email na ito. Managers: gamitin ang Linara web dashboard.",
+      'Walang account na naka-link sa email na ito. Managers: piliin ang "New manager? Set up your household" sa ibaba.',
     );
   }
+  return kind;
 }
 
 /**

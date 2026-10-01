@@ -11,7 +11,10 @@ import {
 import { router } from "expo-router";
 
 import { colors } from "@/lib/theme";
-import { requestPasswordReset, signInHelper } from "@/services/api/auth";
+import { queryClient } from "@/lib/query-client";
+import { accountKindKey } from "@/hooks/use-account-kind";
+import { supabase } from "@/services/supabase";
+import { requestPasswordReset, signIn } from "@/services/api/auth";
 import { TextField } from "@/components/ui/text-field";
 import { PrimaryButton } from "@/components/ui/primary-button";
 
@@ -21,6 +24,9 @@ import { PrimaryButton } from "@/components/ui/primary-button";
  * left only the invite-code screen, whose code is single-use and already
  * spent. Also the entry point for a forgotten password: the reset link opens
  * the web dashboard's /reset-password page, then she comes back here.
+ *
+ * Managers sign in here too and land on their dashboard (app/manager.tsx).
+ * A new manager sets up their household from the dashboard's own sign-up.
  */
 export default function SignInScreen() {
   const [email, setEmail] = useState("");
@@ -34,8 +40,10 @@ export default function SignInScreen() {
     setLoading(true);
     setError(null);
     try {
-      await signInHelper(email, password);
-      router.replace("/(app)/today");
+      const kind = await signIn(email, password);
+      const { data } = await supabase.auth.getSession();
+      queryClient.setQueryData(accountKindKey(data.session?.user.id), kind);
+      router.replace(kind === "manager" ? "/manager" : "/(app)/today");
     } catch (err) {
       setError(err instanceof Error ? err.message : "Hindi nakapag-sign in.");
     } finally {
@@ -119,6 +127,13 @@ export default function SignInScreen() {
           accessibilityRole="button"
         >
           <Text style={styles.link}>Wala pang account? I-enter ang invite code</Text>
+        </Pressable>
+        <Pressable
+          onPress={() => router.push({ pathname: "/manager", params: { signup: "1" } })}
+          hitSlop={8}
+          accessibilityRole="button"
+        >
+          <Text style={styles.link}>New manager? Set up your household</Text>
         </Pressable>
       </ScrollView>
     </KeyboardAvoidingView>

@@ -76,6 +76,13 @@ export default function WelcomeScreen() {
         >
           <Text style={styles.link}>May account ka na? Mag-sign in</Text>
         </Pressable>
+        <Pressable
+          onPress={() => router.push({ pathname: "/manager", params: { signup: "1" } })}
+          hitSlop={8}
+          accessibilityRole="button"
+        >
+          <Text style={styles.link}>New manager? Set up your household</Text>
+        </Pressable>
       </ScrollView>
     </KeyboardAvoidingView>
   );
