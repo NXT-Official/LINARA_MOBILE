@@ -61,3 +61,51 @@ export async function setGroceryItemCost(id: string, cost: number | null): Promi
     throw new Error(error.message);
   }
 }
+
+export interface GroceryItemInput {
+  name: string;
+  qty: number;
+  unit: string;
+  /** Set when it comes from a low pantry item, so buying it can restock that item. */
+  pantryItemId?: string | null;
+}
+
+/** Puts something on the palengke list. Anyone in the household can. */
+export async function addGroceryItem(householdId: string, input: GroceryItemInput): Promise<void> {
+  const { error } = await supabase.from("grocery_items").insert({
+    household_id: householdId,
+    name: input.name,
+    qty: input.qty,
+    unit: input.unit,
+    pantry_item_id: input.pantryItemId ?? null,
+    bought: false,
+  });
+
+  if (error) {
+    throw new Error(error.message);
+  }
+}
+
+/** Fixes an item's name or amount. */
+export async function updateGroceryItem(
+  id: string,
+  patch: Pick<GroceryItemInput, "name" | "qty" | "unit">,
+): Promise<void> {
+  const { error } = await supabase.from("grocery_items").update(patch).eq("id", id);
+
+  if (error) {
+    throw new Error(error.message);
+  }
+}
+
+/**
+ * Takes an item off the list. The screen only offers it before the item is
+ * bought, so a purchase and its cost stay on record.
+ */
+export async function deleteGroceryItem(id: string): Promise<void> {
+  const { error } = await supabase.from("grocery_items").delete().eq("id", id);
+
+  if (error) {
+    throw new Error(error.message);
+  }
+}

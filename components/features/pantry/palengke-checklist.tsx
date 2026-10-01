@@ -1,9 +1,11 @@
 import { useState } from "react";
-import { Pressable, StyleSheet, Text, TextInput, View } from "react-native";
+import { Alert, Pressable, StyleSheet, Text, TextInput, View } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
 
 import { colors } from "@/lib/theme";
 import type { GroceryItemRow } from "@/services/api/grocery";
+
+import { ItemForm, type ItemFormValues } from "./item-form";
 
 /**
  * Keyed by `item.actualCost` from the parent map (see PalengkeChecklist
@@ -50,52 +52,102 @@ function CostField({
 /**
  * The active Palengke shopping checklist (roadmap Story 8, step 2).
  * Checking an item off marks it bought and reveals a cost field, which
- * feeds the BudgetBar's spent total.
+ * feeds the BudgetBar's spent total. Before it's bought, an item can be
+ * fixed (tap its name) or taken off the list.
  */
 export function PalengkeChecklist({
   items,
+  emptyText = "Walang laman ang palengke list ngayon.",
+  savingId,
   onToggle,
   onCost,
+  onEdit,
+  onRemove,
 }: {
   items: GroceryItemRow[];
+  /** Shown when nothing matches, e.g. while searching. */
+  emptyText?: string;
+  /** The item whose edit is saving, so its form can say so. */
+  savingId: string | null;
   onToggle: (item: GroceryItemRow) => void;
   onCost: (item: GroceryItemRow, cost: number | null) => void;
+  onEdit: (item: GroceryItemRow, values: ItemFormValues, done: () => void) => void;
+  onRemove: (item: GroceryItemRow) => void;
 }) {
+  const [editingId, setEditingId] = useState<string | null>(null);
+
   if (items.length === 0) {
     return (
       <View style={styles.emptyCard}>
-        <Text style={styles.emptyText}>Walang laman ang palengke list ngayon.</Text>
+        <Text style={styles.emptyText}>{emptyText}</Text>
       </View>
     );
   }
 
+  const confirmRemove = (item: GroceryItemRow) =>
+    Alert.alert(`Tanggalin ang ${item.name}?`, "Mawawala ito sa palengke list.", [
+      { text: "Kanselahin", style: "cancel" },
+      { text: "Tanggalin", style: "destructive", onPress: () => onRemove(item) },
+    ]);
+
   return (
     <View style={styles.list}>
-      {items.map((item) => (
-        <View key={item.id} style={styles.row}>
-          <Pressable
-            onPress={() => onToggle(item)}
-            style={[styles.checkbox, item.bought && styles.checkboxChecked]}
-          >
-            {item.bought && <Ionicons name="checkmark" size={14} color={colors.cardCream} />}
-          </Pressable>
+      {items.map((item) =>
+        editingId === item.id ? (
+          <ItemForm
+            key={item.id}
+            kind="grocery"
+            initial={{ name: item.name, qty: item.qty, unit: item.unit }}
+            submitLabel="I-save"
+            saving={savingId === item.id}
+            onSubmit={(values) => onEdit(item, values, () => setEditingId(null))}
+            onCancel={() => setEditingId(null)}
+          />
+        ) : (
+          <View key={item.id} style={styles.row}>
+            <Pressable
+              onPress={() => onToggle(item)}
+              accessibilityRole="checkbox"
+              accessibilityState={{ checked: item.bought }}
+              accessibilityLabel={item.name}
+              style={[styles.checkbox, item.bought && styles.checkboxChecked]}
+            >
+              {item.bought && <Ionicons name="checkmark" size={14} color={colors.cardCream} />}
+            </Pressable>
 
-          <View style={styles.itemInfo}>
-            <Text style={[styles.itemName, item.bought && styles.itemNameBought]}>{item.name}</Text>
-            <Text style={styles.itemQty}>
-              {item.qty} {item.unit}
-            </Text>
+            <Pressable
+              style={styles.itemInfo}
+              disabled={item.bought}
+              onPress={() => setEditingId(item.id)}
+              accessibilityHint={item.bought ? undefined : "Ayusin ang item"}
+            >
+              <Text style={[styles.itemName, item.bought && styles.itemNameBought]}>
+                {item.name}
+              </Text>
+              <Text style={styles.itemQty}>
+                {item.qty} {item.unit}
+              </Text>
+            </Pressable>
+
+            {item.bought ? (
+              <CostField
+                key={item.actualCost ?? "none"}
+                item={item}
+                onCost={(cost) => onCost(item, cost)}
+              />
+            ) : (
+              <Pressable
+                onPress={() => confirmRemove(item)}
+                hitSlop={8}
+                accessibilityLabel={`Tanggalin ang ${item.name}`}
+                style={styles.iconButton}
+              >
+                <Ionicons name="trash-outline" size={18} color={colors.mutedInk} />
+              </Pressable>
+            )}
           </View>
-
-          {item.bought && (
-            <CostField
-              key={item.actualCost ?? "none"}
-              item={item}
-              onCost={(cost) => onCost(item, cost)}
-            />
-          )}
-        </View>
-      ))}
+        ),
+      )}
     </View>
   );
 }
@@ -156,6 +208,12 @@ const styles = StyleSheet.create({
     marginTop: 1,
     fontSize: 11,
     color: colors.mutedInk,
+  },
+  iconButton: {
+    width: 36,
+    height: 36,
+    alignItems: "center",
+    justifyContent: "center",
   },
   costField: {
     flexDirection: "row",
