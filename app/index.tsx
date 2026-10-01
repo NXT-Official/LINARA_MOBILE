@@ -25,7 +25,8 @@ export default function Index() {
   }
 
   if (!session) {
-    return <Redirect href="/(auth)/welcome" />;
+    // One sign-in for everyone; a new person picks a kind from there.
+    return <Redirect href="/(auth)/sign-in" />;
   }
   return <Redirect href={kindQuery.data === "manager" ? "/manager" : "/(app)/today"} />;
 }

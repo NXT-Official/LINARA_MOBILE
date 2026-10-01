@@ -42,7 +42,7 @@ export default function ReviewTermsScreen() {
       router.replace("/(app)/today");
     },
   });
-  const goBack = () => (session ? router.back() : router.replace("/(auth)/welcome"));
+  const goBack = () => (session ? router.back() : router.replace("/(auth)/create-account"));
 
   const termsQuery = useQuery({
     queryKey: ["invite-terms", code],

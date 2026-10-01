@@ -25,8 +25,9 @@ import { PrimaryButton } from "@/components/ui/primary-button";
  * spent. Also the entry point for a forgotten password: the reset link opens
  * the web dashboard's /reset-password page, then she comes back here.
  *
- * Managers sign in here too and land on their dashboard (app/manager.tsx).
- * A new manager sets up their household from the dashboard's own sign-up.
+ * Everyone signs in here, employer or kasambahay; the account's type decides
+ * where it lands (helper tabs, or the dashboard in app/manager.tsx). New
+ * people pick which kind they are on create-account.tsx.
  */
 export default function SignInScreen() {
   const [email, setEmail] = useState("");
@@ -74,7 +75,7 @@ export default function SignInScreen() {
         <View style={styles.hero}>
           <Text style={styles.title}>Welcome back</Text>
           <Text style={styles.subtitle}>
-            Mag-sign in gamit ang email at password na ginawa mo noong ni-claim mo ang account mo.
+            Para sa employer at kasambahay. Mag-sign in gamit ang email at password mo.
           </Text>
         </View>
 
@@ -122,18 +123,11 @@ export default function SignInScreen() {
           <Text style={styles.link}>Nakalimutan ang password?</Text>
         </Pressable>
         <Pressable
-          onPress={() => router.replace("/(auth)/welcome")}
+          onPress={() => router.push("/(auth)/create-account")}
           hitSlop={8}
           accessibilityRole="button"
         >
-          <Text style={styles.link}>Wala pang account? I-enter ang invite code</Text>
-        </Pressable>
-        <Pressable
-          onPress={() => router.push({ pathname: "/manager", params: { signup: "1" } })}
-          hitSlop={8}
-          accessibilityRole="button"
-        >
-          <Text style={styles.link}>New manager? Set up your household</Text>
+          <Text style={styles.link}>Wala pang account? Gumawa ng account</Text>
         </Pressable>
       </ScrollView>
     </KeyboardAvoidingView>
