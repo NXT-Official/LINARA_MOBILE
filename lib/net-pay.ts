@@ -3,9 +3,12 @@
  *
  * Counterpart to ../LINARA/src/features/pay/net-pay.ts. The rule, identically:
  *
- *     net = max(0, base - statutory employee share - unsettled approved vales)
+ *     net = max(0, base - statutory employee share - unsettled approved vales
+ *                  - unpaid leave)
  *
- * and nothing else -- in particular NO term from `ledger_entries`. After-hours
+ * and nothing else. Unpaid leave is days x monthly rate x 12 / pay days per
+ * year (../LINARA/supabase/add-unpaid-leave-pay.sql); which leave a cutoff
+ * takes is Postgres's to say (`unpaid_leave_due`), so it arrives here as pesos -- in particular NO term from `ledger_entries`. After-hours
  * work is time, not money (../LINARA/KNOWN_GAPS.md C39): rest owed accrues in
  * minutes and is redeemed through `rest_off_requests`, and rest-day premium is
  * not paid in cash either.
@@ -37,6 +40,8 @@ export function perCutoff(monthlyAmount: number, paydayInterval: PaydayInterval)
  * a payslip -- one already deducted from a previous cutoff would otherwise keep
  * shrinking this estimate forever.
  *
+ * `unpaidLeaveDeduction` is what `unpaid_leave_due` returns for the cutoff.
+ *
  * There is no parameter for ledger minutes, and that is the point: the
  * invariant is enforced by the signature rather than by a comment.
  */
@@ -44,8 +49,9 @@ export function netPayForCutoff(
   basePay: number,
   statutoryEmployeeShare: number,
   approvedValeTotal: number,
+  unpaidLeaveDeduction = 0,
 ): number {
-  return Math.max(0, basePay - statutoryEmployeeShare - approvedValeTotal);
+  return Math.max(0, basePay - statutoryEmployeeShare - approvedValeTotal - unpaidLeaveDeduction);
 }
 
 /** Whole calendar days in [start, end], from "YYYY-MM-DD" strings. */

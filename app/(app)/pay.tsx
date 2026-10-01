@@ -20,6 +20,7 @@ import {
   cancelLeave,
   getMyLeave,
   getSilBalance,
+  getUnpaidLeaveDue,
   requestLeave,
   type LeaveKind,
   type LeaveReason,
@@ -141,6 +142,14 @@ export default function PayScreen() {
   // Leave: whole days off (../LINARA/LEAVE_PLAN.md). Balances come from the
   // same Postgres functions the approval checks use.
   const householdToday = cutoffQuery.data?.today;
+  // What this cutoff's payout will take for unpaid leave, asked of the same
+  // function the payout uses. Refetched with her leave.
+  const currentCutoffEnd = currentPeriod?.workedEnd ?? cutoffQuery.data?.cutoffEnd;
+  const unpaidLeaveQuery = useQuery({
+    queryKey: ["leave", helperId, "unpaid-due", currentCutoffEnd],
+    queryFn: () => getUnpaidLeaveDue(helperId as string, currentCutoffEnd as string),
+    enabled: Boolean(helperId && currentCutoffEnd),
+  });
   const leaveQuery = useQuery({
     queryKey: ["leave", helperId],
     queryFn: () => getMyLeave(helperId as string),
@@ -212,6 +221,7 @@ export default function PayScreen() {
             cutoffStart={currentPeriod?.workedStart ?? cutoffQuery.data?.cutoffStart}
             cutoffEnd={cutoffQuery.data?.cutoffEnd}
             workedShare={workedShare}
+            unpaidLeave={unpaidLeaveQuery.data}
           />
           <UnpaidPeriods periods={periodsQuery.data ?? []} />
 

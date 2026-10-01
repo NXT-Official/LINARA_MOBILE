@@ -29,6 +29,9 @@ export interface Payslip {
   basePay: number;
   statutoryEmployeeShare: number;
   valeDeductions: number;
+  /** Unpaid leave it took (../LINARA/supabase/add-unpaid-leave-pay.sql); 0 before that. */
+  unpaidLeaveDays: number;
+  unpaidLeaveDeduction: number;
   netPay: number;
   /** A regular cutoff, or 13th-month pay. */
   kind: "regular" | "thirteenth_month";
@@ -54,6 +57,8 @@ interface PayslipRow {
   base_pay: number;
   statutory_employee_share: number;
   vale_deductions: number;
+  unpaid_leave_days?: number;
+  unpaid_leave_deduction?: number;
   net_pay: number;
   kind?: "regular" | "thirteenth_month";
   payout_provider?: string;
@@ -76,6 +81,8 @@ const toPayslip = (row: PayslipRow): Payslip => ({
   basePay: Number(row.base_pay),
   statutoryEmployeeShare: Number(row.statutory_employee_share),
   valeDeductions: Number(row.vale_deductions),
+  unpaidLeaveDays: Number(row.unpaid_leave_days ?? 0),
+  unpaidLeaveDeduction: Number(row.unpaid_leave_deduction ?? 0),
   netPay: Number(row.net_pay),
   kind: row.kind ?? "regular",
   payoutProvider: row.payout_provider ?? "xendit",

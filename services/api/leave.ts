@@ -144,3 +144,30 @@ export async function ackLeave(
   });
   if (error) throw new Error(error.message);
 }
+
+export interface UnpaidLeaveDue {
+  days: number;
+  deduction: number;
+}
+
+/**
+ * What the payslip for the cutoff ending `cutoffEnd` will take for her unpaid
+ * leave: the same function the payout uses, so her estimate matches it.
+ * Before ../LINARA/supabase/add-unpaid-leave-pay.sql is applied there is no
+ * such function and nothing is taken.
+ */
+export async function getUnpaidLeaveDue(
+  helperId: string,
+  cutoffEnd: string,
+): Promise<UnpaidLeaveDue> {
+  const { data, error } = await supabase.rpc("unpaid_leave_due", {
+    p_helper_id: helperId,
+    p_cutoff_end: cutoffEnd,
+  });
+  if (error) {
+    if (error.code === "PGRST202" || error.code === "42883") return { days: 0, deduction: 0 };
+    throw new Error(error.message);
+  }
+  const row = (data as { leave_days: number; deduction: number }[] | null)?.[0];
+  return { days: Number(row?.leave_days ?? 0), deduction: Number(row?.deduction ?? 0) };
+}

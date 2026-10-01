@@ -24,6 +24,7 @@ export function DigitalPayslip({
   cutoffStart,
   cutoffEnd,
   workedShare = 1,
+  unpaidLeave,
 }: {
   monthlyRate: number;
   paydayInterval: "semi_monthly" | "monthly";
@@ -39,6 +40,8 @@ export function DigitalPayslip({
   /** Share of the cutoff worked -- less than 1 for her first one if she started
    * partway through, the same pro-rating the payout uses. */
   workedShare?: number;
+  /** What the payout will take for unpaid leave this cutoff (getUnpaidLeaveDue). */
+  unpaidLeave?: { days: number; deduction: number };
 }) {
   // The arithmetic lives in lib/net-pay.ts so it can be unit-tested without
   // rendering React Native, and so the rule this app displays is stated in one
@@ -50,7 +53,13 @@ export function DigitalPayslip({
     perCutoff(split.totalEmployee, paydayInterval),
     workedShare,
   );
-  const netEstimate = netPayForCutoff(basePay, employeeShareThisCutoff, approvedValeTotal);
+  const leaveDeduction = unpaidLeave?.deduction ?? 0;
+  const netEstimate = netPayForCutoff(
+    basePay,
+    employeeShareThisCutoff,
+    approvedValeTotal,
+    leaveDeduction,
+  );
 
   const intervalLabel =
     paydayInterval === "semi_monthly" ? "This cutoff (half-month)" : "This cutoff (monthly)";
@@ -81,6 +90,12 @@ export function DigitalPayslip({
           <Text style={[styles.lineValue, styles.deduction]}>
             − {formatPeso(approvedValeTotal)}
           </Text>
+        </View>
+      ) : null}
+      {leaveDeduction > 0 ? (
+        <View style={styles.lineRow}>
+          <Text style={styles.lineLabel}>Leave na walang bayad ({unpaidLeave?.days} araw)</Text>
+          <Text style={[styles.lineValue, styles.deduction]}>− {formatPeso(leaveDeduction)}</Text>
         </View>
       ) : null}
 

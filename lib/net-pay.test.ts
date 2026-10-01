@@ -44,6 +44,13 @@ describe("netPayForCutoff", () => {
     // A vale bigger than the cutoff. Showing a negative would tell the helper
     // she owes money, which no payout would ever collect.
     expect(netPayForCutoff(4500, 187.5, 99999)).toBe(0);
+    expect(netPayForCutoff(4000, 187.5, 0, 99999)).toBe(0);
+  });
+
+  it("takes unpaid leave as Postgres prices it", () => {
+    // 2 days at 8000 x 12 / 365 = 526.03, the figure
+    // ../LINARA/supabase/tests/unpaid-leave-pay.test.mjs gets for the same helper.
+    expect(netPayForCutoff(4000, 187.5, 500, 526.03)).toBeCloseTo(2786.47, 2);
   });
 
   it("takes no ledger/rest-owed input at all", () => {

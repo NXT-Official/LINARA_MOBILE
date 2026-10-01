@@ -50,6 +50,12 @@ export function PayslipHistory({ payslips }: { payslips: Payslip[] }) {
                 : formatCutoffRange(p.cutoffStart, p.cutoffEnd)}{" "}
               · {METHOD_LABEL[p.payoutChannelCode] ?? "Iba pa"}
             </Text>
+            {p.unpaidLeaveDeduction > 0 ? (
+              <Text style={styles.meta}>
+                Bawas na leave na walang bayad: {formatPeso(p.unpaidLeaveDeduction)} (
+                {p.unpaidLeaveDays} araw)
+              </Text>
+            ) : null}
           </View>
           {p.payoutProvider === "manual" && p.helperAck ? (
             <Text
