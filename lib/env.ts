@@ -39,3 +39,9 @@ export const SUPABASE_ANON_KEY = assertEnvVar(rawSupabaseAnonKey, "EXPO_PUBLIC_S
 // eslint-disable-next-line no-restricted-syntax -- sole, validated process.env access point
 const rawWebAppUrl = process.env.EXPO_PUBLIC_WEB_APP_URL;
 export const WEB_APP_URL: string | null = rawWebAppUrl?.trim().replace(/\/+$/, "") || null;
+
+// Where a manager's dashboard loads from. Managers use the same web dashboard
+// inside the app (app/manager.tsx) until it is rebuilt natively. Falls back to
+// the deployed dashboard so a build without EXPO_PUBLIC_WEB_APP_URL still
+// opens it.
+export const MANAGER_DASHBOARD_URL = WEB_APP_URL ?? "https://linara-delta.vercel.app";
