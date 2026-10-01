@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { ActivityIndicator, Pressable, StyleSheet, Text, View } from "react-native";
+import { ActivityIndicator, Alert, Pressable, StyleSheet, Text, View } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 
@@ -10,8 +10,10 @@ import { useAudioRecorder } from "@/hooks/use-audio-recorder";
 import {
   createTextNote,
   createVoiceNote,
+  deleteNote,
   getMyNotes,
   markNotePromoted,
+  updateNote,
   type HelperNote,
 } from "@/services/api/notes";
 import { createTicket } from "@/services/api/tickets";
@@ -50,6 +52,8 @@ export function PrivateScratchpad({
   const queryClient = useQueryClient();
   const [draft, setDraft] = useState("");
   const [promotingId, setPromotingId] = useState<string | null>(null);
+  const [editingId, setEditingId] = useState<string | null>(null);
+  const [editText, setEditText] = useState("");
   const { isRecording, startRecording, stopRecording } = useAudioRecorder();
 
   const notesQuery = useQuery({
@@ -121,6 +125,25 @@ export function PrivateScratchpad({
     },
   });
 
+  const saveEditMutation = useMutation({
+    mutationFn: ({ id, text }: { id: string; text: string }) => updateNote(id, text),
+    onSuccess: () => {
+      setEditingId(null);
+      invalidateNotes();
+    },
+  });
+
+  const deleteMutation = useMutation({
+    mutationFn: (id: string) => deleteNote(id),
+    onSuccess: invalidateNotes,
+  });
+
+  const confirmDelete = (note: HelperNote) =>
+    Alert.alert("Burahin ang tala?", "Hindi na ito maibabalik.", [
+      { text: "Huwag", style: "cancel" },
+      { text: "Burahin", style: "destructive", onPress: () => deleteMutation.mutate(note.id) },
+    ]);
+
   const handleReleaseRecord = async () => {
     const uri = await stopRecording();
     if (uri) {
@@ -141,21 +164,88 @@ export function PrivateScratchpad({
         <View style={styles.notesList}>
           {activeNotes.map((note) => (
             <View key={note.id} style={styles.noteRow}>
-              <Text style={styles.noteText}>{note.text}</Text>
-              <Pressable
-                onPress={() => promoteMutation.mutate(note)}
-                disabled={promotingId === note.id}
-                style={styles.promoteButton}
-              >
-                {promotingId === note.id ? (
-                  <ActivityIndicator size="small" color={colors.pineTeal} />
-                ) : (
-                  <>
-                    <Ionicons name="arrow-up-circle-outline" size={16} color={colors.pineTeal} />
-                    <Text style={styles.promoteText}>Promote to Board</Text>
-                  </>
-                )}
-              </Pressable>
+              {editingId === note.id ? (
+                <>
+                  <TextField
+                    label="Ayusin ang tala"
+                    value={editText}
+                    onChangeText={setEditText}
+                    multiline
+                    autoFocus
+                  />
+                  <View style={styles.noteActions}>
+                    <PrimaryButton
+                      label="I-save"
+                      style={styles.actionButton}
+                      loading={saveEditMutation.isPending}
+                      disabled={editText.trim().length === 0}
+                      onPress={() =>
+                        saveEditMutation.mutate({ id: note.id, text: editText.trim() })
+                      }
+                    />
+                    <PrimaryButton
+                      label="Huwag na"
+                      variant="secondary"
+                      style={styles.actionButton}
+                      onPress={() => setEditingId(null)}
+                    />
+                  </View>
+                </>
+              ) : (
+                <>
+                  <Text style={styles.noteText}>{note.text}</Text>
+                  <View style={styles.noteActions}>
+                    <Pressable
+                      onPress={() => promoteMutation.mutate(note)}
+                      disabled={promotingId === note.id}
+                      style={styles.promoteButton}
+                    >
+                      {promotingId === note.id ? (
+                        <ActivityIndicator size="small" color={colors.pineTeal} />
+                      ) : (
+                        <>
+                          <Ionicons
+                            name="arrow-up-circle-outline"
+                            size={16}
+                            color={colors.pineTeal}
+                          />
+                          <Text style={styles.promoteText}>Promote to Board</Text>
+                        </>
+                      )}
+                    </Pressable>
+                    {/* A note still waiting to sync has no row to change yet. */}
+                    {note.id.startsWith("pending-") ? null : (
+                      <View style={styles.iconActions}>
+                        <Pressable
+                          onPress={() => {
+                            setEditText(note.text);
+                            setEditingId(note.id);
+                          }}
+                          accessibilityRole="button"
+                          accessibilityLabel="Ayusin ang tala"
+                          hitSlop={8}
+                          style={styles.iconButton}
+                        >
+                          <Ionicons name="create-outline" size={20} color={colors.mutedInk} />
+                        </Pressable>
+                        <Pressable
+                          onPress={() => confirmDelete(note)}
+                          accessibilityRole="button"
+                          accessibilityLabel="Burahin ang tala"
+                          hitSlop={8}
+                          style={styles.iconButton}
+                        >
+                          {deleteMutation.isPending && deleteMutation.variables === note.id ? (
+                            <ActivityIndicator size="small" color={colors.terracottaInk} />
+                          ) : (
+                            <Ionicons name="trash-outline" size={20} color={colors.terracottaInk} />
+                          )}
+                        </Pressable>
+                      </View>
+                    )}
+                  </View>
+                </>
+              )}
             </View>
           ))}
         </View>
@@ -235,6 +325,22 @@ const styles = StyleSheet.create({
     fontSize: 14,
     lineHeight: 20,
     color: colors.ink,
+  },
+  noteActions: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "space-between",
+    gap: 10,
+  },
+  iconActions: {
+    flexDirection: "row",
+    gap: 14,
+  },
+  iconButton: {
+    minWidth: 32,
+    minHeight: 32,
+    alignItems: "center",
+    justifyContent: "center",
   },
   promoteButton: {
     flexDirection: "row",

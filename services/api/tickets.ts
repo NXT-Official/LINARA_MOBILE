@@ -130,6 +130,36 @@ export async function getFocusTask(helperId: string): Promise<FocusTask | null> 
   };
 }
 
+/** One row of "Lahat ng task ngayon": every task of hers today, done ones included. */
+export interface TodayTask {
+  id: string;
+  title: string;
+  notes: string | null;
+  status: FocusTask["status"];
+  scheduledStart: string;
+  blockReason: string | null;
+}
+
+/** Everything on her list today, in time order -- the same tickets the focus card picks from. */
+export async function getTodayTasks(helperId: string): Promise<TodayTask[]> {
+  const rows = await getMyTodayRows<{
+    id: string;
+    title: string;
+    notes: string | null;
+    status: FocusTask["status"];
+    scheduled_start: string;
+    block_reason: string | null;
+  }>(helperId, "id, title, notes, status, scheduled_start, block_reason");
+  return rows.map((row) => ({
+    id: row.id,
+    title: row.title,
+    notes: row.notes,
+    status: row.status,
+    scheduledStart: row.scheduled_start,
+    blockReason: row.block_reason,
+  }));
+}
+
 export interface TodayProgress {
   total: number;
   done: number;

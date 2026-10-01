@@ -66,6 +66,22 @@ export async function createVoiceNote(helperId: string, transcript: string): Pro
   }
 }
 
+/** Rewrites one of her notes. RLS (helper_notes_privacy) only lets her touch her own. */
+export async function updateNote(noteId: string, text: string): Promise<void> {
+  const { error } = await supabase.from("helper_notes").update({ text }).eq("id", noteId);
+  if (error) {
+    throw new Error(error.message);
+  }
+}
+
+/** Deletes one of her notes for good. */
+export async function deleteNote(noteId: string): Promise<void> {
+  const { error } = await supabase.from("helper_notes").delete().eq("id", noteId);
+  if (error) {
+    throw new Error(error.message);
+  }
+}
+
 /**
  * Marks a note as promoted (reuses the `done` boolean) so "Promote to Board"
  * can't be tapped twice on the same note.

@@ -10,6 +10,7 @@ import { DignityHeader } from "@/components/features/today/dignity-header";
 import { ActiveFocusCard } from "@/components/features/today/active-focus-card";
 import { DayCloseCard, type CloseReason } from "@/components/features/today/day-close-card";
 import { MovedTasksBanner } from "@/components/features/today/moved-tasks-banner";
+import { TodayTaskList } from "@/components/features/today/today-task-list";
 import { getBoardClosed } from "@/services/api/household";
 import { dayPhase } from "@/lib/today";
 import { FloatingQuickUtosFeed } from "@/components/features/utos/floating-quick-utos-feed";
@@ -100,6 +101,7 @@ export default function TodayScreen() {
     queryClient.invalidateQueries({ queryKey: ["focus-task", helperId] });
     queryClient.invalidateQueries({ queryKey: ["today-progress", helperId] });
     queryClient.invalidateQueries({ queryKey: ["moved-tasks", helperId] });
+    queryClient.invalidateQueries({ queryKey: ["today-tasks", helperId] });
   };
 
   const quickUtosQuery = useQuery({
@@ -326,6 +328,8 @@ export default function TodayScreen() {
                 ) : null}
               </>
             )}
+
+            <TodayTaskList helperId={profileQuery.data.id} myUserId={profileQuery.data.userId} />
 
             <PrivateScratchpad
               helperId={profileQuery.data.id}
