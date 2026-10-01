@@ -1,4 +1,4 @@
-import { WEB_APP_URL } from "@/lib/env";
+import { MANAGER_DASHBOARD_URL } from "@/lib/env";
 import { unregisterForPush } from "@/lib/notifications";
 import { queryClient } from "@/lib/query-client";
 import { getQueuedActions } from "@/services/sqlite-queue";
@@ -69,10 +69,12 @@ export async function signIn(email: string, password: string): Promise<AccountKi
  * Supabase doesn't reveal whether the address has an account.
  */
 export async function requestPasswordReset(email: string): Promise<void> {
-  const { error } = await supabase.auth.resetPasswordForEmail(
-    email.trim(),
-    WEB_APP_URL ? { redirectTo: `${WEB_APP_URL}/reset-password` } : undefined,
-  );
+  // Always say where the link goes. With no redirectTo it used Supabase's
+  // Site URL, a retired deployment (404), whenever a build lacked
+  // EXPO_PUBLIC_WEB_APP_URL. Must be in Supabase's Redirect URLs allowlist.
+  const { error } = await supabase.auth.resetPasswordForEmail(email.trim(), {
+    redirectTo: `${MANAGER_DASHBOARD_URL}/reset-password`,
+  });
   if (error) {
     throw new Error(error.message);
   }
