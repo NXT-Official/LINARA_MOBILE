@@ -1,4 +1,6 @@
 roadmap/LINARA.code-workspace
+app_dev_rules.md
+
 # Learn more https://docs.github.com/en/get-started/getting-started-with-git/ignoring-files
 
 # dependencies
@@ -32,7 +34,9 @@ yarn-error.*
 *.pem
 
 # local env files
+.env
 .env*.local
+!.env.example
 
 # typescript
 *.tsbuildinfo
@@ -42,3 +46,4 @@ example
 # generated native folders
 /ios
 /android
+

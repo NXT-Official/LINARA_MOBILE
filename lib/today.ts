@@ -1,0 +1,138 @@
+/**
+ * The Worker's Station is day-by-day, the same rule the manager's Pass follows
+ * (../LINARA/src/features/tasks/task.utils.ts `isLaterThanToday`): today's
+ * tickets and anything carried over from an earlier day are hers now; a ticket
+ * scheduled from tomorrow on waits, unless she has already started it.
+ *
+ * Day boundaries are the phone's local midnight, which is the household's for
+ * a helper in the home. Both apps render ticket times the same way.
+ */
+
+/** "cancelled": the manager called it off (../LINARA/supabase/add-cancelled-tasks.sql). */
+export type TicketStatus = "todo" | "in_progress" | "done" | "blocked" | "cancelled";
+
+export interface DayTicket {
+  status: TicketStatus;
+  scheduledStart: string;
+}
+
+/** Local midnight at the start of the day containing `now`. */
+export function startOfToday(now: Date): Date {
+  const d = new Date(now);
+  d.setHours(0, 0, 0, 0);
+  return d;
+}
+
+/** Local midnight at the start of the day after `now`. */
+export function startOfTomorrow(now: Date): Date {
+  const d = startOfToday(now);
+  d.setDate(d.getDate() + 1);
+  return d;
+}
+
+/** Scheduled for a later day and not yet started. */
+export function isLaterThanToday(ticket: DayTicket, now: Date): boolean {
+  if (ticket.status === "in_progress") return false;
+  const start = Date.parse(ticket.scheduledStart);
+  return !Number.isNaN(start) && start >= startOfTomorrow(now).getTime();
+}
+
+/**
+ * The one ticket the focus card shows. What she's already doing comes first,
+ * then the earliest not-yet-started one; a ticket she has put on hold only
+ * comes up once nothing else is left, so one "can't now" never stalls her day.
+ * Expects `tickets` in scheduled order and already limited to today's.
+ */
+export function pickFocus<T extends DayTicket>(tickets: T[]): T | null {
+  return (
+    tickets.find((t) => t.status === "in_progress") ??
+    tickets.find((t) => t.status === "todo") ??
+    tickets.find((t) => t.status === "blocked") ??
+    null
+  );
+}
+
+/**
+ * Which of today's open tasks the focus card shows: the one she swiped to, as
+ * long as it's still open, else `pickFocus`'s choice. -1 when there are none.
+ */
+export function focusIndex<T extends DayTicket & { id: string }>(
+  tickets: T[],
+  chosenId: string | null,
+): number {
+  const chosen = chosenId ? tickets.findIndex((t) => t.id === chosenId) : -1;
+  if (chosen >= 0) return chosen;
+  const picked = pickFocus(tickets);
+  return picked ? tickets.indexOf(picked) : -1;
+}
+
+/**
+ * The tasks she can swipe through. Once her day is closed, only what still
+ * belongs in it: a task she already started, or one the manager deliberately
+ * sent off-hours.
+ */
+export function deckFor<T extends DayTicket & { afterHours: boolean }>(
+  tickets: T[],
+  dayClosed: boolean,
+): T[] {
+  return dayClosed ? tickets.filter((t) => t.status === "in_progress" || t.afterHours) : tickets;
+}
+
+/** Where an unticked task goes back to: "Ginagawa" if she had started it, else "Gagawin". */
+export function reopenedStatus(started: boolean): "in_progress" | "todo" {
+  return started ? "in_progress" : "todo";
+}
+
+/**
+ * Today's count for the close: tickets scheduled today plus unfinished ones
+ * carried over, and how many of those are done. A task finished on an earlier
+ * day isn't part of today's list.
+ */
+export function summarizeToday(tickets: DayTicket[], now: Date) {
+  const todayStart = startOfToday(now).getTime();
+  const todays = tickets.filter(
+    (t) =>
+      t.status !== "cancelled" &&
+      !isLaterThanToday(t, now) &&
+      (t.status !== "done" || Date.parse(t.scheduledStart) >= todayStart),
+  );
+  return {
+    total: todays.length,
+    done: todays.filter((t) => t.status === "done").length,
+    onHold: todays.filter((t) => t.status === "blocked").length,
+  };
+}
+
+/** "Magandang umaga / tanghali / hapon / gabi" by the hour, not always "umaga". */
+export function greetingFor(now: Date): string {
+  const h = now.getHours();
+  if (h >= 5 && h < 11) return "Magandang umaga";
+  if (h >= 11 && h < 13) return "Magandang tanghali";
+  if (h >= 13 && h < 18) return "Magandang hapon";
+  return "Magandang gabi";
+}
+
+export type DayPhase = "rest_day" | "night" | "before_shift" | "on_shift" | "after_shift";
+
+/**
+ * Where she is in her own day, for the close. Night is the overnight quiet
+ * window (22:00-06:00, lib/availability.ts), which wins over the shift so an
+ * early-morning hour reads as rest, not "before your shift". A break counts as
+ * on shift here: the day isn't over.
+ */
+export function dayPhase(
+  now: Date,
+  shift: { shiftStart: string; shiftEnd: string; weeklyRestDay: number },
+): DayPhase {
+  if (now.getDay() === shift.weeklyRestDay) return "rest_day";
+  const h = now.getHours();
+  if (h >= 22 || h < 6) return "night";
+  const toMin = (t: string) => {
+    const [hh, mm] = t.split(":").map(Number);
+    return hh * 60 + mm;
+  };
+  const minutes = h * 60 + now.getMinutes();
+  if (minutes < toMin(shift.shiftStart)) return "before_shift";
+  if (minutes >= toMin(shift.shiftEnd)) return "after_shift";
+  return "on_shift";
+}

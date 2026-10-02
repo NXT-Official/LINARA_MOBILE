@@ -17,23 +17,23 @@ The execution roadmap is divided into six sequential phases:
 
 ### Phase 2: Backend Core (Supabase Integrations)
 
-- **[`Story_3_DatabaseRealtimeAndStoragePipes.md`](roadmap/Story_3_DatabaseRealtimeAndStoragePipes.md):** Implement Supabase client instances, media upload pipelines with local image compression, and Realtime Broadcast listeners.
-- **[`Story_4_HandshakeInvitationAndClaimAPIs.md`](roadmap/Story_4_HandshakeInvitationAndClaimAPIs.md):** Connect invitation verification, discrepancy flagging, and profile activation claiming endpoints.
+- **(complete)[`Story_3_DatabaseRealtimeAndStoragePipes.md`](roadmap/Story_3_DatabaseRealtimeAndStoragePipes.md):** Implement Supabase client instances, media upload pipelines with local image compression, and Realtime Broadcast listeners.
+- **(complete)[`Story_4_HandshakeInvitationAndClaimAPIs.md`](roadmap/Story_4_HandshakeInvitationAndClaimAPIs.md):** Connect invitation verification, discrepancy flagging, and profile activation claiming endpoints.
 
 ### Phase 3: Frontend Core (Shell, Navigation, & Screens)
 
-- **[`Story_5_MobileShellAndBottomNavigationTabs.md`](roadmap/Story_5_MobileShellAndBottomNavigationTabs.md):** Establish the root layouts, Expo Router bottom tabs, and the high-contrast custom brand themes.
-- **[`Story_6_OnboardingHandshakeAndClaimScreens.md`](roadmap/Story_6_OnboardingHandshakeAndClaimScreens.md):** Construct the invitation lookup, read-only contract review, flag logging, and claim forms.
-- **[`Story_7_TodayActiveFocusCardAndSOPCarousel.md`](roadmap/Story_7_TodayActiveFocusCardAndSOPCarousel.md):** Create the focus card displaying active tickets with interactive swipable SOP visual cards.
-- **[`Story_8_PantryAndPalengkeBudgetChecklists.md`](roadmap/Story_8_PantryAndPalengkeBudgetChecklists.md):** Bind pantry inventories, grocery checklists, budget dials, and photo receipt capture slots.
+- **(complete)[`Story_5_MobileShellAndBottomNavigationTabs.md`](roadmap/Story_5_MobileShellAndBottomNavigationTabs.md):** Establish the root layouts, Expo Router bottom tabs, and the high-contrast custom brand themes.
+- **(complete)[`Story_6_OnboardingHandshakeAndClaimScreens.md`](roadmap/Story_6_OnboardingHandshakeAndClaimScreens.md):** Construct the invitation lookup, read-only contract review, flag logging, and claim forms.
+- **(complete)[`Story_7_TodayActiveFocusCardAndSOPCarousel.md`](roadmap/Story_7_TodayActiveFocusCardAndSOPCarousel.md):** Create the focus card displaying active tickets with interactive swipable SOP visual cards.
+- **(complete)[`Story_8_PantryAndPalengkeBudgetChecklists.md`](roadmap/Story_8_PantryAndPalengkeBudgetChecklists.md):** Bind pantry inventories, grocery checklists, budget dials, and photo receipt capture slots.
 
 ### Phase 4: AI Intelligence (Taglish voice transcribing)
 
-- **[`Story_9_VoiceToTaskPromoterAndSOPTranslator.md`](roadmap/Story_9_VoiceToTaskPromoterAndSOPTranslator.md):** Integrate voice audio note recorders, transcribe WebM audio via Whisper, and simplify complex English SOPs into Taglish slides.
+- **(complete)[`Story_9_VoiceToTaskPromoterAndSOPTranslator.md`](roadmap/Story_9_VoiceToTaskPromoterAndSOPTranslator.md):** Integrate voice audio note recorders, transcribe WebM audio via Whisper, and simplify complex English SOPs into Taglish slides.
 
 ### Phase 5: Interaction (Offline-First State Sync)
 
-- **[`Story_10_SQLiteOfflineFirstSyncQueueAndRealtime.md`](roadmap/Story_10_SQLiteOfflineFirstSyncQueueAndRealtime.md):** Implement persistent offline queues, intercept disconnected status writes, and automate chronological sync runs.
+- **(complete)[`Story_10_SQLiteOfflineFirstSyncQueueAndRealtime.md`](roadmap/Story_10_SQLiteOfflineFirstSyncQueueAndRealtime.md):** Implement persistent offline queues, intercept disconnected status writes, and automate chronological sync runs.
 
 ### Phase 6: Polish (Accrual Dials & native builds)
 

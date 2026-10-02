@@ -67,6 +67,8 @@ Make sure your local Supabase database container is running and contains the app
 supabase status
 ```
 
+Section 8 also includes a **Realtime Publication** block (`ALTER PUBLICATION supabase_realtime ADD TABLE ...`) — without it, `quick_utos`/`tickets` changes only appear after force-restarting the app instead of live, with no error anywhere. This isn't a Supabase paid-tier limitation; it just has to be applied explicitly (see `../LINARA/KNOWN_GAPS.md` C23).
+
 ### 3. Boot the Development Bundler
 
 Start the local Expo development bundler:

@@ -310,6 +310,14 @@ const ticketSubscription = supabase
 
 This channel forces TanStack Query to invalidate cache lines when tasks are assigned, modified, or completed, ensuring real-time UI synchronization without requiring manual refresh gestures.
 
+`.subscribe()` succeeds even if `tickets`/`quick_utos` aren't in Postgres's
+`supabase_realtime` publication -- it just silently never delivers events,
+which looks identical to "the client code is broken" but only shows up as
+changes requiring an app restart to appear. That publication membership is
+schema-side config owned by `LINARA` (`../LINARA/architecture.md` Section
+8, "Realtime Publication"), not something this client code can fix alone.
+See `../LINARA/KNOWN_GAPS.md` C23.
+
 ### 9.2 Local Grocery Checklist State Context
 
 `GroceryCtx` handles local purchase lists:
