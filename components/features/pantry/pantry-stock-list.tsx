@@ -3,7 +3,7 @@ import { Pressable, StyleSheet, Text, View } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
 
 import { colors } from "@/lib/theme";
-import { CATEGORY_LABEL, STOCK_LABEL, stockState, unitFor } from "@/lib/pantry";
+import { CATEGORY_LABEL, rowActions, STOCK_LABEL, stockState, unitFor } from "@/lib/pantry";
 import type { PantryItemRow } from "@/services/api/pantry";
 
 import { ItemForm, type ItemFormValues } from "./item-form";
@@ -14,10 +14,15 @@ import { ItemForm, type ItemFormValues } from "./item-form";
  * 2026-10-02): − and + step the count, tapping the name edits the item.
  * "Ubos na" says the most common thing about stock in one tap: it's gone, put
  * it on the palengke list. Deleting an item stays with the manager, on the web.
+ *
+ * Without `canManage` (she buys from the list but doesn't keep the pantry,
+ * ../LINARA/supabase/add-pantry-roles.sql) the list is to look at, and
+ * "Ubos na" is the one thing she can do: say something ran out.
  */
 export function PantryStockList({
   items,
   emptyText = "Walang laman sa pantry list.",
+  canManage,
   listedIds,
   savingId,
   onStep,
@@ -27,6 +32,8 @@ export function PantryStockList({
 }: {
   items: PantryItemRow[];
   emptyText?: string;
+  /** She keeps the pantry: counts, edits, listing. Otherwise only "Ubos na". */
+  canManage: boolean;
   /** Pantry items already waiting on the palengke list. */
   listedIds: Set<string>;
   savingId: string | null;
@@ -64,15 +71,17 @@ export function PantryStockList({
         }
         const state = stockState(item);
         const listed = listedIds.has(item.id);
+        const offers = rowActions(state, listed, canManage);
         const saving = savingId === item.id;
         return (
           <View key={item.id} style={[styles.row, index > 0 && styles.divider]}>
             <View style={styles.rowTop}>
               <Pressable
                 style={styles.rowMain}
+                disabled={!canManage}
                 onPress={() => setEditingId(item.id)}
-                accessibilityRole="button"
-                accessibilityHint="Ayusin ang item"
+                accessibilityRole={canManage ? "button" : undefined}
+                accessibilityHint={canManage ? "Ayusin ang item" : undefined}
               >
                 <View style={styles.nameRow}>
                   <Text style={styles.name}>{item.name}</Text>
@@ -87,45 +96,49 @@ export function PantryStockList({
                   {CATEGORY_LABEL[item.category]}
                 </Text>
               </Pressable>
-              <View style={styles.stepper}>
-                <Pressable
-                  onPress={() => onStep(item, -1)}
-                  disabled={item.qty <= 0}
-                  accessibilityLabel={`Bawasan ang ${item.name}`}
-                  style={[styles.stepButton, item.qty <= 0 && styles.stepDisabled]}
-                >
-                  <Ionicons name="remove" size={16} color={colors.ink} />
-                </Pressable>
+              {canManage ? (
+                <View style={styles.stepper}>
+                  <Pressable
+                    onPress={() => onStep(item, -1)}
+                    disabled={item.qty <= 0}
+                    accessibilityLabel={`Bawasan ang ${item.name}`}
+                    style={[styles.stepButton, item.qty <= 0 && styles.stepDisabled]}
+                  >
+                    <Ionicons name="remove" size={16} color={colors.ink} />
+                  </Pressable>
+                  <Text style={styles.qtyText}>
+                    {item.qty} <Text style={styles.unitText}>{unitFor(item.qty, item.unit)}</Text>
+                  </Text>
+                  <Pressable
+                    onPress={() => onStep(item, 1)}
+                    accessibilityLabel={`Dagdagan ang ${item.name}`}
+                    style={styles.stepButton}
+                  >
+                    <Ionicons name="add" size={16} color={colors.ink} />
+                  </Pressable>
+                </View>
+              ) : (
                 <Text style={styles.qtyText}>
                   {item.qty} <Text style={styles.unitText}>{unitFor(item.qty, item.unit)}</Text>
                 </Text>
-                <Pressable
-                  onPress={() => onStep(item, 1)}
-                  accessibilityLabel={`Dagdagan ang ${item.name}`}
-                  style={styles.stepButton}
-                >
-                  <Ionicons name="add" size={16} color={colors.ink} />
-                </Pressable>
-              </View>
+              )}
             </View>
 
             <View style={styles.actions}>
-              {state !== "ok" &&
-                (listed ? (
-                  <Text style={styles.listedText}>Nasa palengke list na</Text>
-                ) : (
-                  <Pressable
-                    onPress={() => onList(item)}
-                    disabled={saving}
-                    hitSlop={6}
-                    style={styles.action}
-                    accessibilityLabel={`Ilagay ang ${item.name} sa palengke list`}
-                  >
-                    <Ionicons name="cart-outline" size={15} color={colors.pineTeal} />
-                    <Text style={styles.actionText}>Ilista sa palengke</Text>
-                  </Pressable>
-                ))}
-              {state !== "out" && (
+              {offers.listedNote && <Text style={styles.listedText}>Nasa palengke list na</Text>}
+              {offers.list && (
+                <Pressable
+                  onPress={() => onList(item)}
+                  disabled={saving}
+                  hitSlop={6}
+                  style={styles.action}
+                  accessibilityLabel={`Ilagay ang ${item.name} sa palengke list`}
+                >
+                  <Ionicons name="cart-outline" size={15} color={colors.pineTeal} />
+                  <Text style={styles.actionText}>Ilista sa palengke</Text>
+                </Pressable>
+              )}
+              {offers.markOut && (
                 <Pressable
                   onPress={() => onMarkOut(item, listed)}
                   disabled={saving}

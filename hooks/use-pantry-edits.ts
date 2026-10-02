@@ -32,8 +32,12 @@ export function usePantryEdits(householdId: string | null) {
 
   const refreshGroceries = () => queryClient.invalidateQueries({ queryKey: ["grocery-items"] });
   const refreshPantry = () => queryClient.invalidateQueries({ queryKey: ["pantry-items"] });
-  const fail = (fallback: string) => (err: unknown) =>
+  // A refusal may mean the manager changed who keeps the pantry since the
+  // tab was opened, so the screen re-checks.
+  const fail = (fallback: string) => (err: unknown) => {
     setError(err instanceof Error ? err.message : fallback);
+    void queryClient.invalidateQueries({ queryKey: ["my-pantry-role"] });
+  };
 
   const run = async (id: string | null, work: () => Promise<unknown>, fallback: string) => {
     setError(null);

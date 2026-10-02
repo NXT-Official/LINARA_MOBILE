@@ -53,11 +53,13 @@ function CostField({
  * The active Palengke shopping checklist (roadmap Story 8, step 2).
  * Checking an item off marks it bought and reveals a cost field, which
  * feeds the BudgetBar's spent total. Before it's bought, an item can be
- * fixed (tap its name) or taken off the list.
+ * fixed (tap its name) or taken off the list -- by whoever keeps the pantry
+ * (`canEdit`); someone who only buys from the list ticks and prices.
  */
 export function PalengkeChecklist({
   items,
   emptyText = "Walang laman ang palengke list ngayon.",
+  canEdit,
   savingId,
   onToggle,
   onCost,
@@ -67,6 +69,8 @@ export function PalengkeChecklist({
   items: GroceryItemRow[];
   /** Shown when nothing matches, e.g. while searching. */
   emptyText?: string;
+  /** She keeps the pantry, so can fix and remove lines, not just tick them. */
+  canEdit: boolean;
   /** The item whose edit is saving, so its form can say so. */
   savingId: string | null;
   onToggle: (item: GroceryItemRow) => void;
@@ -117,9 +121,9 @@ export function PalengkeChecklist({
 
             <Pressable
               style={styles.itemInfo}
-              disabled={item.bought}
+              disabled={item.bought || !canEdit}
               onPress={() => setEditingId(item.id)}
-              accessibilityHint={item.bought ? undefined : "Ayusin ang item"}
+              accessibilityHint={item.bought || !canEdit ? undefined : "Ayusin ang item"}
             >
               <Text style={[styles.itemName, item.bought && styles.itemNameBought]}>
                 {item.name}
@@ -135,7 +139,7 @@ export function PalengkeChecklist({
                 item={item}
                 onCost={(cost) => onCost(item, cost)}
               />
-            ) : (
+            ) : canEdit ? (
               <Pressable
                 onPress={() => confirmRemove(item)}
                 hitSlop={8}
@@ -144,7 +148,7 @@ export function PalengkeChecklist({
               >
                 <Ionicons name="trash-outline" size={18} color={colors.mutedInk} />
               </Pressable>
-            )}
+            ) : null}
           </View>
         ),
       )}

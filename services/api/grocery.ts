@@ -70,7 +70,11 @@ export interface GroceryItemInput {
   pantryItemId?: string | null;
 }
 
-/** Puts something on the palengke list. Anyone in the household can. */
+/**
+ * Puts something on the palengke list. Whoever keeps the pantry can add
+ * anything; every helper can add a pantry item that ran out
+ * (../LINARA/supabase/add-pantry-roles.sql).
+ */
 export async function addGroceryItem(householdId: string, input: GroceryItemInput): Promise<void> {
   const { error } = await supabase.from("grocery_items").insert({
     household_id: householdId,

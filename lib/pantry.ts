@@ -27,6 +27,25 @@ export const STOCK_LABEL: Record<Exclude<StockState, "ok">, string> = {
   low: "Paubos",
 };
 
+/**
+ * What a stock row offers. Whoever keeps the pantry lists a low item herself
+ * ("Ilista sa palengke") and says "Ubos na" while there's any left. Someone
+ * who only buys from the list has "Ubos na" alone, so it stays until the item
+ * is both out and on the list -- otherwise she'd have no way to list an item
+ * someone else zeroed. Either way, a low item already listed says so.
+ */
+export function rowActions(
+  state: StockState,
+  listed: boolean,
+  canManage: boolean,
+): { listedNote: boolean; list: boolean; markOut: boolean } {
+  return {
+    listedNote: state !== "ok" && listed,
+    list: canManage && state !== "ok" && !listed,
+    markOut: canManage ? state !== "out" : !(state === "out" && listed),
+  };
+}
+
 const PLURAL_UNITS = new Set(["packs", "bottles", "cans", "bars", "rolls", "heads", "boxes"]);
 
 /** "1 pack", "2 packs": drops a plural unit's "s" at exactly one. Other units as typed. */

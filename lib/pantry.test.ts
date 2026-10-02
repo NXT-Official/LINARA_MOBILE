@@ -1,6 +1,13 @@
 import { describe, expect, it } from "vitest";
 
-import { groupByPantryCategory, STARTER_ITEMS, STARTER_ORDER, stockState, unitFor } from "./pantry";
+import {
+  groupByPantryCategory,
+  rowActions,
+  STARTER_ITEMS,
+  STARTER_ORDER,
+  stockState,
+  unitFor,
+} from "./pantry";
 
 // pantry_items.category's CHECK (services/api/pantry.ts), inlined so this
 // test doesn't load the Supabase client.
@@ -11,6 +18,55 @@ describe("stockState", () => {
     expect(stockState({ qty: 0, par: 2 })).toBe("out");
     expect(stockState({ qty: 2, par: 2 })).toBe("low");
     expect(stockState({ qty: 3, par: 2 })).toBe("ok");
+  });
+});
+
+describe("rowActions", () => {
+  it("lets whoever keeps the pantry list a low item, and say Ubos na while any is left", () => {
+    expect(rowActions("ok", false, true)).toEqual({
+      listedNote: false,
+      list: false,
+      markOut: true,
+    });
+    expect(rowActions("low", false, true)).toEqual({
+      listedNote: false,
+      list: true,
+      markOut: true,
+    });
+    expect(rowActions("low", true, true)).toEqual({ listedNote: true, list: false, markOut: true });
+    expect(rowActions("out", false, true)).toEqual({
+      listedNote: false,
+      list: true,
+      markOut: false,
+    });
+    expect(rowActions("out", true, true)).toEqual({
+      listedNote: true,
+      list: false,
+      markOut: false,
+    });
+  });
+
+  it("gives someone who only buys from the list Ubos na alone, until it's out and listed", () => {
+    expect(rowActions("ok", false, false)).toEqual({
+      listedNote: false,
+      list: false,
+      markOut: true,
+    });
+    expect(rowActions("low", true, false)).toEqual({
+      listedNote: true,
+      list: false,
+      markOut: true,
+    });
+    expect(rowActions("out", false, false)).toEqual({
+      listedNote: false,
+      list: false,
+      markOut: true,
+    });
+    expect(rowActions("out", true, false)).toEqual({
+      listedNote: true,
+      list: false,
+      markOut: false,
+    });
   });
 });
 

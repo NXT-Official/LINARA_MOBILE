@@ -1,13 +1,14 @@
-import { useMemo, useState } from "react";
+import { useCallback, useMemo, useState } from "react";
 import { ActivityIndicator, Pressable, ScrollView, StyleSheet, Text, View } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import * as ImagePicker from "expo-image-picker";
+import { useFocusEffect } from "expo-router";
 
 import { colors, fonts } from "@/lib/theme";
 import { usePalengkeBudget } from "@/hooks/use-palengke-budget";
 import { usePantryEdits } from "@/hooks/use-pantry-edits";
-import { getMyHelperProfile } from "@/services/api/helper-profile";
+import { getMyHelperProfile, getMyPantryRole } from "@/services/api/helper-profile";
 import { getPantryItems, PANTRY_CATEGORIES, type PantryCategory } from "@/services/api/pantry";
 import {
   getGroceryItems,
@@ -47,7 +48,9 @@ const PANTRY_CHIPS: { key: PantryFilter; label: string }[] = [
  * checklist with a budget dial, and -- when the helper has an open
  * Palengke Run ticket -- the receipt capture step that completes it.
  * She can add to and fix both lists, and search and filter them (client
- * feedback, 2026-10-02).
+ * feedback, 2026-10-02) -- if the manager has put her in charge of the
+ * pantry. Otherwise she buys from the list and says what ran out
+ * (../LINARA/supabase/add-pantry-roles.sql; the database holds the line).
  */
 export default function PantryScreen() {
   const queryClient = useQueryClient();
@@ -69,6 +72,21 @@ export default function PantryScreen() {
   const helperId = profileQuery.data?.id ?? null;
   const { budget } = usePalengkeBudget(profileQuery.data?.householdId ?? null);
   const edits = usePantryEdits(profileQuery.data?.householdId ?? null);
+
+  // The manager can change this from the web at any time, and nothing pushes
+  // it here, so check again whenever she opens the tab.
+  const roleQuery = useQuery({
+    queryKey: ["my-pantry-role"],
+    queryFn: getMyPantryRole,
+  });
+  const { refetch: refetchRole } = roleQuery;
+  useFocusEffect(
+    useCallback(() => {
+      void refetchRole();
+    }, [refetchRole]),
+  );
+  // Until it's known, show the smaller set rather than flash controls away.
+  const inCharge = roleQuery.data === "lead";
 
   const pantryQuery = useQuery({
     queryKey: ["pantry-items"],
@@ -213,7 +231,7 @@ export default function PantryScreen() {
           <View style={styles.section}>
             <View style={styles.sectionHead}>
               <Text style={styles.sectionTitle}>Palengke checklist</Text>
-              {!addingGrocery && (
+              {inCharge && !addingGrocery && (
                 <Pressable
                   onPress={() => setAddingGrocery(true)}
                   style={styles.addButton}
@@ -224,7 +242,7 @@ export default function PantryScreen() {
                 </Pressable>
               )}
             </View>
-            {addingGrocery && (
+            {inCharge && addingGrocery && (
               <ItemForm
                 kind="grocery"
                 submitLabel="Idagdag"
@@ -254,6 +272,7 @@ export default function PantryScreen() {
                       ? "Kapag may laman na ang pantry, dito lalabas ang mga paubos na."
                       : "Walang laman ang palengke list ngayon."
                 }
+                canEdit={inCharge}
                 savingId={edits.savingId}
                 onToggle={(item) => toggleMutation.mutate(item)}
                 onCost={(item, cost) => costMutation.mutate({ item, cost })}
@@ -268,6 +287,7 @@ export default function PantryScreen() {
                   )}
                   <PalengkeChecklist
                     items={items}
+                    canEdit={inCharge}
                     savingId={edits.savingId}
                     onToggle={(item) => toggleMutation.mutate(item)}
                     onCost={(item, cost) => costMutation.mutate({ item, cost })}
@@ -308,7 +328,7 @@ export default function PantryScreen() {
       <View style={styles.section}>
         <View style={styles.sectionHead}>
           <Text style={styles.sectionTitle}>Pantry stock</Text>
-          {!addingPantry && (
+          {inCharge && !addingPantry && (
             <Pressable
               onPress={() => setAddingPantry(true)}
               style={styles.addButton}
@@ -319,7 +339,12 @@ export default function PantryScreen() {
             </Pressable>
           )}
         </View>
-        {addingPantry && (
+        {!inCharge && pantryItems.length > 0 && (
+          <Text style={styles.roleNote}>
+            Pindutin ang &quot;Ubos na&quot; kapag may naubos, at ililista ito sa palengke.
+          </Text>
+        )}
+        {inCharge && addingPantry && (
           <ItemForm
             kind="pantry"
             submitLabel="Idagdag"
@@ -345,6 +370,18 @@ export default function PantryScreen() {
           </View>
         ) : pantryQuery.isError ? (
           <Text style={styles.errorText}>Hindi ma-load ang pantry list. Subukan ulit mamaya.</Text>
+        ) : pantryItems.length === 0 && !inCharge ? (
+          <PantryStockList
+            items={[]}
+            canManage={false}
+            emptyText="Wala pang laman ang pantry. Ang manager o ang namamahala ng pantry ang maglalagay."
+            listedIds={listedPantryIds}
+            savingId={edits.savingId}
+            onStep={edits.stepPantry}
+            onEdit={edits.editPantry}
+            onList={edits.listPantryItem}
+            onMarkOut={edits.markOut}
+          />
         ) : pantryItems.length === 0 ? (
           <PantryStarter
             saving={edits.savingId === "new-pantry"}
@@ -354,6 +391,7 @@ export default function PantryScreen() {
         ) : (
           <PantryStockList
             items={shownPantry}
+            canManage={inCharge}
             emptyText={
               filtering(pantrySearch, pantryFilter)
                 ? "Walang tugma."
@@ -428,6 +466,11 @@ const styles = StyleSheet.create({
   loading: {
     paddingVertical: 24,
     alignItems: "center",
+  },
+  roleNote: {
+    fontSize: 13,
+    lineHeight: 18,
+    color: colors.mutedInk,
   },
   errorText: {
     fontSize: 13,

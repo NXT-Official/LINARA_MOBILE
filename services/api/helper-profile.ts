@@ -76,3 +76,40 @@ export async function getMyHelperProfile(): Promise<HelperProfileSummary> {
       : null,
   };
 }
+
+/** Who keeps the pantry (../LINARA/supabase/add-pantry-roles.sql). */
+export type PantryRole = "lead" | "runner";
+
+/**
+ * Her pantry role: "lead" keeps the stock and the palengke list, "runner"
+ * buys from it. Every helper can say something ran out.
+ *
+ * Its own read, not part of getMyHelperProfile, so this build still works
+ * before add-pantry-roles.sql is applied: asking for a column the database
+ * doesn't have yet fails the whole select, which would lock her out of every
+ * tab. Until then she keeps the full pantry she had ("lead").
+ */
+export async function getMyPantryRole(): Promise<PantryRole> {
+  const {
+    data: { user },
+    error: userError,
+  } = await supabase.auth.getUser();
+
+  if (userError || !user) {
+    throw new Error("Not authenticated");
+  }
+
+  const { data, error } = await supabase
+    .from("helper_profiles")
+    .select("pantry_role")
+    .eq("user_id", user.id)
+    .eq("status", "ACTIVE")
+    .single();
+
+  // 42703: undefined column, i.e. the migration isn't applied yet.
+  if (error?.code === "42703") return "lead";
+  if (error || !data) {
+    throw new Error(error?.message || "Helper profile not found");
+  }
+  return data.pantry_role === "lead" ? "lead" : "runner";
+}
