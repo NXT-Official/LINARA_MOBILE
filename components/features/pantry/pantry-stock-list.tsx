@@ -3,16 +3,17 @@ import { Pressable, StyleSheet, Text, View } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
 
 import { colors } from "@/lib/theme";
+import { CATEGORY_LABEL, STOCK_LABEL, stockState, unitFor } from "@/lib/pantry";
 import type { PantryItemRow } from "@/services/api/pantry";
 
 import { ItemForm, type ItemFormValues } from "./item-form";
 
 /**
- * Pantry stock (roadmap Story 8, step 1). Items at or below their PAR level
- * get a "Low" badge. She keeps the counts herself (plan.md §2.5's Cook;
- * client feedback 2026-10-02): − and + step the count, tapping the name
- * edits the item, and a low item can go straight onto the palengke list.
- * Deleting an item stays with the manager, on the web.
+ * Pantry stock (roadmap Story 8, step 1), one card with a line per item.
+ * She keeps the counts herself (plan.md §2.5's Cook; client feedback
+ * 2026-10-02): − and + step the count, tapping the name edits the item.
+ * "Ubos na" says the most common thing about stock in one tap: it's gone, put
+ * it on the palengke list. Deleting an item stays with the manager, on the web.
  */
 export function PantryStockList({
   items,
@@ -22,6 +23,7 @@ export function PantryStockList({
   onStep,
   onEdit,
   onList,
+  onMarkOut,
 }: {
   items: PantryItemRow[];
   emptyText?: string;
@@ -31,6 +33,7 @@ export function PantryStockList({
   onStep: (item: PantryItemRow, delta: number) => void;
   onEdit: (item: PantryItemRow, values: ItemFormValues, done: () => void) => void;
   onList: (item: PantryItemRow) => void;
+  onMarkOut: (item: PantryItemRow, alreadyListed: boolean) => void;
 }) {
   const [editingId, setEditingId] = useState<string | null>(null);
 
@@ -43,75 +46,100 @@ export function PantryStockList({
   }
 
   return (
-    <View style={styles.list}>
-      {items.map((item) => {
+    <View style={styles.card}>
+      {items.map((item, index) => {
         if (editingId === item.id) {
           return (
-            <ItemForm
-              key={item.id}
-              kind="pantry"
-              initial={item}
-              submitLabel="I-save"
-              saving={savingId === item.id}
-              onSubmit={(values) => onEdit(item, values, () => setEditingId(null))}
-              onCancel={() => setEditingId(null)}
-            />
+            <View key={item.id} style={[styles.editWrap, index > 0 && styles.divider]}>
+              <ItemForm
+                kind="pantry"
+                initial={item}
+                submitLabel="I-save"
+                saving={savingId === item.id}
+                onSubmit={(values) => onEdit(item, values, () => setEditingId(null))}
+                onCancel={() => setEditingId(null)}
+              />
+            </View>
           );
         }
-        const low = item.qty <= item.par;
+        const state = stockState(item);
         const listed = listedIds.has(item.id);
+        const saving = savingId === item.id;
         return (
-          <View key={item.id} style={[styles.row, low && styles.rowLow]}>
-            <Pressable
-              style={styles.rowMain}
-              onPress={() => setEditingId(item.id)}
-              accessibilityHint="Ayusin ang item"
-            >
-              <View style={styles.nameRow}>
-                <Text style={styles.name}>{item.name}</Text>
-                {low && (
-                  <View style={styles.lowBadge}>
-                    <Text style={styles.lowBadgeText}>Low</Text>
-                  </View>
-                )}
+          <View key={item.id} style={[styles.row, index > 0 && styles.divider]}>
+            <View style={styles.rowTop}>
+              <Pressable
+                style={styles.rowMain}
+                onPress={() => setEditingId(item.id)}
+                accessibilityRole="button"
+                accessibilityHint="Ayusin ang item"
+              >
+                <View style={styles.nameRow}>
+                  <Text style={styles.name}>{item.name}</Text>
+                  {state !== "ok" && (
+                    <View style={[styles.badge, state === "out" && styles.badgeOut]}>
+                      <Text style={styles.badgeText}>{STOCK_LABEL[state]}</Text>
+                    </View>
+                  )}
+                </View>
+                <Text style={styles.parText}>
+                  Bilhin kapag {item.par} {unitFor(item.par, item.unit)} na lang ·{" "}
+                  {CATEGORY_LABEL[item.category]}
+                </Text>
+              </Pressable>
+              <View style={styles.stepper}>
+                <Pressable
+                  onPress={() => onStep(item, -1)}
+                  disabled={item.qty <= 0}
+                  accessibilityLabel={`Bawasan ang ${item.name}`}
+                  style={[styles.stepButton, item.qty <= 0 && styles.stepDisabled]}
+                >
+                  <Ionicons name="remove" size={16} color={colors.ink} />
+                </Pressable>
+                <Text style={styles.qtyText}>
+                  {item.qty} <Text style={styles.unitText}>{unitFor(item.qty, item.unit)}</Text>
+                </Text>
+                <Pressable
+                  onPress={() => onStep(item, 1)}
+                  accessibilityLabel={`Dagdagan ang ${item.name}`}
+                  style={styles.stepButton}
+                >
+                  <Ionicons name="add" size={16} color={colors.ink} />
+                </Pressable>
               </View>
-              <Text style={styles.parText}>
-                par {item.par} {item.unit} · {item.category}
-              </Text>
-              {low &&
+            </View>
+
+            <View style={styles.actions}>
+              {state !== "ok" &&
                 (listed ? (
                   <Text style={styles.listedText}>Nasa palengke list na</Text>
                 ) : (
                   <Pressable
                     onPress={() => onList(item)}
+                    disabled={saving}
                     hitSlop={6}
-                    style={styles.listButton}
+                    style={styles.action}
                     accessibilityLabel={`Ilagay ang ${item.name} sa palengke list`}
                   >
-                    <Ionicons name="cart-outline" size={14} color={colors.pineTeal} />
-                    <Text style={styles.listButtonText}>Ilista sa palengke</Text>
+                    <Ionicons name="cart-outline" size={15} color={colors.pineTeal} />
+                    <Text style={styles.actionText}>Ilista sa palengke</Text>
                   </Pressable>
                 ))}
-            </Pressable>
-            <View style={styles.stepper}>
-              <Pressable
-                onPress={() => onStep(item, -1)}
-                disabled={item.qty <= 0}
-                accessibilityLabel={`Bawasan ang ${item.name}`}
-                style={[styles.stepButton, item.qty <= 0 && styles.stepDisabled]}
-              >
-                <Ionicons name="remove" size={16} color={colors.ink} />
-              </Pressable>
-              <Text style={styles.qtyText}>
-                {item.qty} <Text style={styles.unitText}>{item.unit}</Text>
-              </Text>
-              <Pressable
-                onPress={() => onStep(item, 1)}
-                accessibilityLabel={`Dagdagan ang ${item.name}`}
-                style={styles.stepButton}
-              >
-                <Ionicons name="add" size={16} color={colors.ink} />
-              </Pressable>
+              {state !== "out" && (
+                <Pressable
+                  onPress={() => onMarkOut(item, listed)}
+                  disabled={saving}
+                  hitSlop={6}
+                  style={styles.action}
+                  accessibilityLabel={`Ubos na ang ${item.name}`}
+                  accessibilityHint={
+                    listed ? "Gagawing zero ang bilang" : "Gagawing zero at ililista sa palengke"
+                  }
+                >
+                  <Ionicons name="close-circle-outline" size={15} color={colors.terracottaInk} />
+                  <Text style={[styles.actionText, styles.actionOut]}>Ubos na</Text>
+                </Pressable>
+              )}
             </View>
           </View>
         );
@@ -121,8 +149,12 @@ export function PantryStockList({
 }
 
 const styles = StyleSheet.create({
-  list: {
-    gap: 8,
+  card: {
+    borderRadius: 20,
+    paddingHorizontal: 14,
+    backgroundColor: colors.cardCream,
+    borderWidth: 1,
+    borderColor: colors.border,
   },
   emptyCard: {
     borderRadius: 16,
@@ -136,21 +168,21 @@ const styles = StyleSheet.create({
     fontSize: 13,
     color: colors.mutedInk,
   },
+  divider: {
+    borderTopWidth: 1,
+    borderTopColor: colors.border,
+  },
+  editWrap: {
+    paddingVertical: 10,
+  },
   row: {
+    paddingVertical: 12,
+    gap: 6,
+  },
+  rowTop: {
     flexDirection: "row",
     alignItems: "center",
-    justifyContent: "space-between",
     gap: 12,
-    borderRadius: 16,
-    borderWidth: 1,
-    borderColor: colors.border,
-    backgroundColor: colors.cardCream,
-    paddingHorizontal: 14,
-    paddingVertical: 12,
-  },
-  rowLow: {
-    borderColor: colors.terracottaGold,
-    backgroundColor: "rgba(217,154,108,0.1)",
   },
   rowMain: {
     flex: 1,
@@ -159,47 +191,55 @@ const styles = StyleSheet.create({
   nameRow: {
     flexDirection: "row",
     alignItems: "center",
+    flexWrap: "wrap",
     gap: 8,
   },
   name: {
-    fontSize: 14,
+    fontSize: 15,
     fontWeight: "700",
     color: colors.ink,
   },
-  lowBadge: {
+  badge: {
     borderRadius: 999,
-    backgroundColor: colors.terracottaGold,
+    backgroundColor: colors.terracottaWash,
     paddingHorizontal: 8,
     paddingVertical: 2,
   },
-  lowBadgeText: {
-    fontSize: 9,
+  badgeOut: {
+    backgroundColor: colors.terracottaGold,
+  },
+  badgeText: {
+    fontSize: 13,
     fontWeight: "700",
-    letterSpacing: 0.4,
-    textTransform: "uppercase",
-    color: colors.cardCream,
+    color: colors.ink,
   },
   parText: {
-    fontSize: 11,
+    fontSize: 13,
     color: colors.mutedInk,
   },
-  listedText: {
-    marginTop: 4,
-    fontSize: 12,
-    color: colors.mutedInk,
-  },
-  listButton: {
-    marginTop: 4,
+  actions: {
     flexDirection: "row",
     alignItems: "center",
-    alignSelf: "flex-start",
+    flexWrap: "wrap",
+    gap: 16,
+  },
+  listedText: {
+    fontSize: 13,
+    color: colors.mutedInk,
+  },
+  action: {
+    flexDirection: "row",
+    alignItems: "center",
     gap: 4,
     paddingVertical: 4,
   },
-  listButtonText: {
-    fontSize: 12,
+  actionText: {
+    fontSize: 13,
     fontWeight: "700",
     color: colors.pineTeal,
+  },
+  actionOut: {
+    color: colors.terracottaInk,
   },
   stepper: {
     flexDirection: "row",
@@ -207,9 +247,9 @@ const styles = StyleSheet.create({
     gap: 6,
   },
   stepButton: {
-    width: 36,
-    height: 36,
-    borderRadius: 18,
+    width: 40,
+    height: 40,
+    borderRadius: 20,
     borderWidth: 1,
     borderColor: colors.border,
     backgroundColor: colors.sand,
@@ -227,7 +267,7 @@ const styles = StyleSheet.create({
     color: colors.ink,
   },
   unitText: {
-    fontSize: 11,
+    fontSize: 13,
     fontWeight: "500",
     color: colors.mutedInk,
   },

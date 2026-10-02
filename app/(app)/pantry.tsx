@@ -25,6 +25,8 @@ import { PalengkeChecklist } from "@/components/features/pantry/palengke-checkli
 import { ReceiptCaptureCard } from "@/components/features/pantry/receipt-capture-card";
 import { ItemForm } from "@/components/features/pantry/item-form";
 import { ListFilter, matchesQuery } from "@/components/features/pantry/list-filter";
+import { PantryStarter } from "@/components/features/pantry/pantry-starter";
+import { CATEGORY_LABEL, groupByPantryCategory } from "@/lib/pantry";
 
 type PalengkeFilter = "all" | "to_buy" | "bought";
 type PantryFilter = "all" | "low" | PantryCategory;
@@ -36,8 +38,8 @@ const PALENGKE_CHIPS: { key: PalengkeFilter; label: string }[] = [
 ];
 const PANTRY_CHIPS: { key: PantryFilter; label: string }[] = [
   { key: "all", label: "Lahat" },
-  { key: "low", label: "Low" },
-  ...PANTRY_CATEGORIES.map((c) => ({ key: c, label: c })),
+  { key: "low", label: "Paubos" },
+  ...PANTRY_CATEGORIES.map((c) => ({ key: c, label: CATEGORY_LABEL[c] })),
 ];
 
 /**
@@ -151,6 +153,8 @@ export default function PantryScreen() {
     [groceryItems],
   );
   const filtering = (search: string, filter: string) => Boolean(search.trim()) || filter !== "all";
+  // By shelf, once there's more than one; one heading over the lot is noise.
+  const groceryGroups = groupByPantryCategory(shownGroceries, pantryItems, PANTRY_CATEGORIES);
   const spent = groceryItems
     .filter((item) => item.bought)
     .reduce((sum, item) => sum + (item.actualCost ?? 0), 0);
@@ -240,19 +244,39 @@ export default function PantryScreen() {
                 onChip={setPalengkeFilter}
               />
             )}
-            <PalengkeChecklist
-              items={shownGroceries}
-              emptyText={
-                filtering(palengkeSearch, palengkeFilter)
-                  ? "Walang tugma."
-                  : "Walang laman ang palengke list ngayon."
-              }
-              savingId={edits.savingId}
-              onToggle={(item) => toggleMutation.mutate(item)}
-              onCost={(item, cost) => costMutation.mutate({ item, cost })}
-              onEdit={edits.editGrocery}
-              onRemove={edits.removeGrocery}
-            />
+            {groceryGroups.length === 0 ? (
+              <PalengkeChecklist
+                items={[]}
+                emptyText={
+                  filtering(palengkeSearch, palengkeFilter)
+                    ? "Walang tugma."
+                    : pantryItems.length === 0
+                      ? "Kapag may laman na ang pantry, dito lalabas ang mga paubos na."
+                      : "Walang laman ang palengke list ngayon."
+                }
+                savingId={edits.savingId}
+                onToggle={(item) => toggleMutation.mutate(item)}
+                onCost={(item, cost) => costMutation.mutate({ item, cost })}
+                onEdit={edits.editGrocery}
+                onRemove={edits.removeGrocery}
+              />
+            ) : (
+              groceryGroups.map(({ section, items }) => (
+                <View key={section.key} style={styles.group}>
+                  {groceryGroups.length > 1 && (
+                    <Text style={styles.groupLabel}>{section.label}</Text>
+                  )}
+                  <PalengkeChecklist
+                    items={items}
+                    savingId={edits.savingId}
+                    onToggle={(item) => toggleMutation.mutate(item)}
+                    onCost={(item, cost) => costMutation.mutate({ item, cost })}
+                    onEdit={edits.editGrocery}
+                    onRemove={edits.removeGrocery}
+                  />
+                </View>
+              ))
+            )}
           </View>
         </>
       )}
@@ -321,6 +345,12 @@ export default function PantryScreen() {
           </View>
         ) : pantryQuery.isError ? (
           <Text style={styles.errorText}>Hindi ma-load ang pantry list. Subukan ulit mamaya.</Text>
+        ) : pantryItems.length === 0 ? (
+          <PantryStarter
+            saving={edits.savingId === "new-pantry"}
+            onAdd={(items) => void edits.addStarter(items)}
+            onAddOwn={() => setAddingPantry(true)}
+          />
         ) : (
           <PantryStockList
             items={shownPantry}
@@ -334,6 +364,7 @@ export default function PantryScreen() {
             onStep={edits.stepPantry}
             onEdit={edits.editPantry}
             onList={edits.listPantryItem}
+            onMarkOut={edits.markOut}
           />
         )}
       </View>
@@ -342,6 +373,15 @@ export default function PantryScreen() {
 }
 
 const styles = StyleSheet.create({
+  group: {
+    gap: 6,
+  },
+  groupLabel: {
+    fontSize: 13,
+    fontWeight: "700",
+    color: colors.mutedInk,
+    paddingHorizontal: 4,
+  },
   screen: {
     flex: 1,
     backgroundColor: colors.sand,

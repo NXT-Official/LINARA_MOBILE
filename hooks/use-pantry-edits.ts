@@ -8,7 +8,13 @@ import {
   updateGroceryItem,
   type GroceryItemRow,
 } from "@/services/api/grocery";
-import { addPantryItem, updatePantryItem, type PantryItemRow } from "@/services/api/pantry";
+import {
+  addPantryItem,
+  addPantryItems,
+  updatePantryItem,
+  type PantryItemInput,
+  type PantryItemRow,
+} from "@/services/api/pantry";
 
 /** Matches the web's low-stock suggestion: enough to get back to par, at least one. */
 const restockQty = (item: PantryItemRow) =>
@@ -110,6 +116,40 @@ export function usePantryEdits(householdId: string | null) {
       "Hindi naidagdag sa pantry.",
     );
 
+  /** The starter list, in one go. */
+  const addStarter = async (items: PantryItemInput[]) =>
+    run(
+      "new-pantry",
+      async () => {
+        await addPantryItems(needHousehold(), items);
+        await refreshPantry();
+      },
+      "Hindi naidagdag sa pantry. Subukan ulit.",
+    );
+
+  /**
+   * "Ubos na": the count goes to zero and, unless it's already there, the
+   * item goes on the palengke list -- the one thing she most often needs to
+   * say about stock, in one tap.
+   */
+  const markOut = (item: PantryItemRow, alreadyListed: boolean) =>
+    void run(
+      item.id,
+      async () => {
+        await updatePantryItem(item.id, { qty: 0 });
+        if (!alreadyListed) {
+          await addGroceryItem(needHousehold(), {
+            name: item.name,
+            qty: restockQty({ ...item, qty: 0 }),
+            unit: item.unit,
+            pantryItemId: item.id,
+          });
+        }
+        await Promise.all([refreshPantry(), refreshGroceries()]);
+      },
+      "Hindi na-save.",
+    );
+
   const editPantry = (item: PantryItemRow, values: ItemFormValues, done: () => void) =>
     void run(
       item.id,
@@ -158,6 +198,8 @@ export function usePantryEdits(householdId: string | null) {
     removeGrocery,
     listPantryItem,
     addPantry,
+    addStarter,
+    markOut,
     editPantry,
     stepPantry,
   };
