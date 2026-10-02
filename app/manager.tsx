@@ -160,7 +160,7 @@ function Dashboard({ session }: { session: Session | null }) {
   // Fixed for the life of each WebView: later sessions reach it by injection.
   const [start, setStart] = useState(() => startFor(session));
 
-  /** Hands the page a session, then reloads it -- or opens `landingUrl`, since /login doesn't forward a signed-in manager. */
+  /** Hands the page a session, then reloads it -- or opens `landingUrl` directly, skipping the hop through /login's own signed-in forward. */
   const pushSession = useCallback((next: Session, landingUrl?: string) => {
     pageTokenRef.current = next.access_token;
     const go = landingUrl
