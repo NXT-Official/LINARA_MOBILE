@@ -12,6 +12,8 @@ import { getMyHelperProfile, getMyPantryRole } from "@/services/api/helper-profi
 import { getPantryItems, PANTRY_CATEGORIES, type PantryCategory } from "@/services/api/pantry";
 import {
   getGroceryItems,
+  getLatestGroceryReceipt,
+  recordGroceryReceipt,
   setGroceryItemBought,
   setGroceryItemCost,
   type GroceryItemRow,
@@ -24,6 +26,7 @@ import { PantryStockList } from "@/components/features/pantry/pantry-stock-list"
 import { BudgetBar } from "@/components/features/pantry/budget-bar";
 import { PalengkeChecklist } from "@/components/features/pantry/palengke-checklist";
 import { ReceiptCaptureCard } from "@/components/features/pantry/receipt-capture-card";
+import { ReceiptSnapCard } from "@/components/features/pantry/receipt-snap-card";
 import { ItemForm } from "@/components/features/pantry/item-form";
 import { ListFilter, matchesQuery } from "@/components/features/pantry/list-filter";
 import { PantryStarter } from "@/components/features/pantry/pantry-starter";
@@ -96,6 +99,39 @@ export default function PantryScreen() {
   const groceryQuery = useQuery({
     queryKey: ["grocery-items"],
     queryFn: getGroceryItems,
+  });
+
+  const latestReceiptQuery = useQuery({
+    queryKey: ["grocery-receipt-latest"],
+    queryFn: getLatestGroceryReceipt,
+  });
+  const [snapError, setSnapError] = useState<string | null>(null);
+
+  /** A receipt after buying, with or without a Palengke Run task. Online only. */
+  const snapMutation = useMutation({
+    mutationFn: async () => {
+      const householdId = profileQuery.data?.householdId;
+      if (!householdId) throw new Error("Hindi pa na-load ang household. Subukan ulit.");
+      const permission = await ImagePicker.requestCameraPermissionsAsync();
+      if (!permission.granted) {
+        throw new Error("Kailangan ng camera access para makuhanan ang resibo.");
+      }
+      const shot = await ImagePicker.launchCameraAsync({ quality: 0.9 });
+      if (shot.canceled || !shot.assets?.[0]) return false;
+      if (await isOffline()) {
+        throw new Error("Walang internet. Kunan ulit ang resibo kapag may signal na.");
+      }
+      const uploaded = await uploadEvidenceImage(
+        shot.assets[0].uri,
+        `${householdId}/receipts/${Date.now()}.jpg`,
+      );
+      await recordGroceryReceipt(householdId, uploaded.path);
+      return true;
+    },
+    onMutate: () => setSnapError(null),
+    onSuccess: () => queryClient.invalidateQueries({ queryKey: ["grocery-receipt-latest"] }),
+    onError: (err) =>
+      setSnapError(err instanceof Error ? err.message : "Hindi na-save ang resibo."),
   });
 
   const palengkeTicketQuery = useQuery({
@@ -201,10 +237,17 @@ export default function PantryScreen() {
     setUploading(true);
     try {
       const householdId = profileQuery.data?.householdId ?? "unknown";
-      const storagePath = `${householdId}/tickets/${Date.now()}.jpg`;
+      const storagePath = `${householdId}/receipts/${Date.now()}.jpg`;
       const uploaded = await uploadEvidenceImage(localUri, storagePath);
       setReceiptUri(uploaded.signedUrl);
       setReceiptPendingUpload(false);
+      // Also on the receipts list, so the manager still sees it after the run
+      // is done. Best effort: the run completes with its photo either way.
+      if (palengkeTicketQuery.data) {
+        recordGroceryReceipt(householdId, uploaded.path, palengkeTicketQuery.data.id)
+          .then(() => queryClient.invalidateQueries({ queryKey: ["grocery-receipt-latest"] }))
+          .catch(() => {});
+      }
     } catch (err) {
       setCaptureError(
         err instanceof Error ? err.message : "Hindi na-upload ang larawan ng resibo.",
@@ -299,6 +342,15 @@ export default function PantryScreen() {
             )}
           </View>
         </>
+      )}
+
+      {!palengkeTicket && !groceryQuery.isLoading && (
+        <ReceiptSnapCard
+          latest={latestReceiptQuery.data ?? null}
+          saving={snapMutation.isPending}
+          error={snapError}
+          onSnap={() => snapMutation.mutate()}
+        />
       )}
 
       {palengkeTicket ? (

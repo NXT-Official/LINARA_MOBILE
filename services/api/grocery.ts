@@ -113,3 +113,51 @@ export async function deleteGroceryItem(id: string): Promise<void> {
     throw new Error(error.message);
   }
 }
+
+export interface GroceryReceipt {
+  id: string;
+  /** Signed for 15 minutes. */
+  url: string;
+  createdAt: string;
+}
+
+/**
+ * Records a receipt photo already uploaded to household-evidence
+ * (../LINARA/supabase/add-grocery-receipts.sql), so the manager sees it on
+ * the web whether or not a Palengke Run task was open. `ticketId` links it to
+ * that run when there was one.
+ */
+export async function recordGroceryReceipt(
+  householdId: string,
+  storagePath: string,
+  ticketId?: string,
+): Promise<{ id: string; createdAt: string }> {
+  const { data, error } = await supabase
+    .from("grocery_receipts")
+    .insert({ household_id: householdId, storage_path: storagePath, ticket_id: ticketId ?? null })
+    .select("id, created_at")
+    .single();
+  if (error || !data) {
+    throw new Error(error?.message ?? "Hindi na-save ang resibo.");
+  }
+  return { id: data.id, createdAt: data.created_at };
+}
+
+/** The household's latest receipt, signed for display; null if none (or the table isn't there yet). */
+export async function getLatestGroceryReceipt(): Promise<GroceryReceipt | null> {
+  const { data, error } = await supabase
+    .from("grocery_receipts")
+    .select("id, storage_path, created_at")
+    .order("created_at", { ascending: false })
+    .limit(1)
+    .maybeSingle();
+  // 42P01 / PGRST205: the table isn't there yet.
+  if (error?.code === "42P01" || error?.code === "PGRST205") return null;
+  if (error) throw new Error(error.message);
+  if (!data) return null;
+
+  const { data: link } = await supabase.storage
+    .from("household-evidence")
+    .createSignedUrl(data.storage_path, 900);
+  return link ? { id: data.id, url: link.signedUrl, createdAt: data.created_at } : null;
+}
