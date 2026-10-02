@@ -8,9 +8,10 @@ import {
   type AddTextNotePayload,
   type BlockTicketFields,
   type CompleteTicketPayload,
+  type ReopenTicketFields,
   type StartTicketPayload,
 } from "@/services/sqlite-queue";
-import { blockTicket, completeTicket, startTicket } from "@/services/api/tickets";
+import { blockTicket, completeTicket, reopenTicket, startTicket } from "@/services/api/tickets";
 import { createTextNote } from "@/services/api/notes";
 import { uploadEvidenceImage } from "@/services/media-upload";
 
@@ -61,12 +62,20 @@ export function useOfflineSync(): void {
               const fields = action.payload as BlockTicketFields;
               await blockTicket(fields.ticketId, fields.reason);
               queryClient.invalidateQueries({ queryKey: ["focus-task"] });
+            } else if (action.actionType === "reopen_ticket") {
+              const fields = action.payload as ReopenTicketFields;
+              await reopenTicket(fields.ticketId, fields.started);
+              queryClient.invalidateQueries({ queryKey: ["focus-task"] });
             } else if (action.actionType === "add_text_note") {
               const payload = action.payload as AddTextNotePayload;
               await createTextNote(payload.helperId, payload.text);
               queryClient.invalidateQueries({ queryKey: ["helper-notes", payload.helperId] });
             }
 
+            if (action.actionType !== "add_text_note") {
+              queryClient.invalidateQueries({ queryKey: ["today-tasks"] });
+              queryClient.invalidateQueries({ queryKey: ["today-progress"] });
+            }
             await removeQueuedAction(action.id);
           } catch {
             break;

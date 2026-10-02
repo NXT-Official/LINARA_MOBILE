@@ -2,9 +2,12 @@ import { describe, expect, it } from "vitest";
 
 import {
   dayPhase,
+  deckFor,
+  focusIndex,
   greetingFor,
   isLaterThanToday,
   pickFocus,
+  reopenedStatus,
   summarizeToday,
   type DayTicket,
 } from "./today";
@@ -100,5 +103,48 @@ describe("dayPhase", () => {
 
   it("puts the rest day first", () => {
     expect(dayPhase(new Date(2026, 9, 4, 10), shift)).toBe("rest_day"); // Sun 4 Oct
+  });
+});
+
+describe("focusIndex", () => {
+  const day = [t("done", at(30, 7), "a"), t("todo", at(30, 8), "b"), t("todo", at(30, 9), "c")];
+
+  it("opens on pickFocus's task when she hasn't swiped", () => {
+    expect(focusIndex(day, null)).toBe(1);
+  });
+
+  it("stays on the task she swiped to", () => {
+    expect(focusIndex(day, "c")).toBe(2);
+  });
+
+  it("falls back to pickFocus once her chosen task is gone", () => {
+    expect(focusIndex(day, "gone")).toBe(1);
+  });
+
+  it("is -1 with nothing to show", () => {
+    expect(focusIndex([], null)).toBe(-1);
+  });
+});
+
+describe("deckFor", () => {
+  const open = [
+    { ...t("todo", at(30, 8), "a"), afterHours: false },
+    { ...t("in_progress", at(30, 9), "b"), afterHours: false },
+    { ...t("todo", at(30, 21), "c"), afterHours: true },
+  ];
+
+  it("is every open task during her day", () => {
+    expect(deckFor(open, false).map((x) => x.id)).toEqual(["a", "b", "c"]);
+  });
+
+  it("keeps only started or off-hours tasks once her day is closed", () => {
+    expect(deckFor(open, true).map((x) => x.id)).toEqual(["b", "c"]);
+  });
+});
+
+describe("reopenedStatus", () => {
+  it("puts a started task back in progress and an unstarted one back to do", () => {
+    expect(reopenedStatus(true)).toBe("in_progress");
+    expect(reopenedStatus(false)).toBe("todo");
   });
 });

@@ -11,8 +11,9 @@ import { ActiveFocusCard } from "@/components/features/today/active-focus-card";
 import { DayCloseCard, type CloseReason } from "@/components/features/today/day-close-card";
 import { MovedTasksBanner } from "@/components/features/today/moved-tasks-banner";
 import { TodayTaskList } from "@/components/features/today/today-task-list";
+import { FocusDeck } from "@/components/features/today/focus-deck";
 import { getBoardClosed } from "@/services/api/household";
-import { dayPhase } from "@/lib/today";
+import { dayPhase, deckFor, focusIndex } from "@/lib/today";
 import { FloatingQuickUtosFeed } from "@/components/features/utos/floating-quick-utos-feed";
 import { PrivateScratchpad } from "@/components/features/notes/PrivateScratchpad";
 import { getMyHelperProfile } from "@/services/api/helper-profile";
@@ -24,7 +25,7 @@ import { setHelperAvailability, setHelperOff } from "@/services/api/availability
 import {
   blockTicket,
   completeTicket,
-  getFocusTask,
+  getFocusTasks,
   getTodayProgress,
   startTicket,
   type FocusTask,
@@ -100,11 +101,15 @@ export default function TodayScreen() {
     onSuccess: invalidateProfile,
   });
 
+  // Every open task today; the card shows one and she swipes between them.
+  // The key keeps its old name so other screens' refreshes still reach it.
   const focusTaskQuery = useQuery({
     queryKey: ["focus-task", helperId],
-    queryFn: () => getFocusTask(helperId as string),
+    queryFn: () => getFocusTasks(helperId as string),
     enabled: Boolean(helperId),
   });
+  // The task she swiped to; null follows pickFocus's choice.
+  const [chosenId, setChosenId] = useState<string | null>(null);
 
   const progressQuery = useQuery({
     queryKey: ["today-progress", helperId],
@@ -127,6 +132,8 @@ export default function TodayScreen() {
     queryClient.invalidateQueries({ queryKey: ["today-progress", helperId] });
     queryClient.invalidateQueries({ queryKey: ["moved-tasks", helperId] });
     queryClient.invalidateQueries({ queryKey: ["today-tasks", helperId] });
+    // A palengke run ticked off or unticked here changes the Pantry tab's receipt step.
+    queryClient.invalidateQueries({ queryKey: ["palengke-ticket", helperId] });
   };
 
   const quickUtosQuery = useQuery({
@@ -146,9 +153,9 @@ export default function TodayScreen() {
     },
     onMutate: async (ticketId) => {
       await queryClient.cancelQueries({ queryKey: ["focus-task", helperId] });
-      const previous = queryClient.getQueryData<FocusTask | null>(["focus-task", helperId]);
-      queryClient.setQueryData<FocusTask | null>(["focus-task", helperId], (old) =>
-        old && old.id === ticketId ? { ...old, status: "in_progress" } : old,
+      const previous = queryClient.getQueryData<FocusTask[]>(["focus-task", helperId]);
+      queryClient.setQueryData<FocusTask[]>(["focus-task", helperId], (old) =>
+        old?.map((t) => (t.id === ticketId ? { ...t, status: "in_progress" } : t)),
       );
       return { previous };
     },
@@ -190,10 +197,12 @@ export default function TodayScreen() {
     onMutate: async ({ ticketId }) => {
       setCompleteError(null);
       await queryClient.cancelQueries({ queryKey: ["focus-task", helperId] });
-      const previous = queryClient.getQueryData<FocusTask | null>(["focus-task", helperId]);
-      queryClient.setQueryData<FocusTask | null>(["focus-task", helperId], (old) =>
-        old && old.id === ticketId ? null : old,
+      const previous = queryClient.getQueryData<FocusTask[]>(["focus-task", helperId]);
+      queryClient.setQueryData<FocusTask[]>(["focus-task", helperId], (old) =>
+        old?.filter((t) => t.id !== ticketId),
       );
+      // On to whatever comes next, not a neighbour of the one just finished.
+      setChosenId(null);
       return { previous };
     },
     onError: (_err, vars, context) => {
@@ -213,8 +222,8 @@ export default function TodayScreen() {
     },
   });
 
-  // "Can't now": on hold with her reason. Shown as on hold straight away; the
-  // next refetch moves the focus card on to her next task.
+  // "Can't now": on hold with her reason. Shown as on hold straight away, and
+  // the card moves on to her next task.
   const holdMutation = useMutation({
     mutationFn: async ({ ticketId, reason }: { ticketId: string; reason: string }) => {
       if (await isOffline()) {
@@ -226,10 +235,11 @@ export default function TodayScreen() {
     },
     onMutate: async ({ ticketId, reason }) => {
       await queryClient.cancelQueries({ queryKey: ["focus-task", helperId] });
-      const previous = queryClient.getQueryData<FocusTask | null>(["focus-task", helperId]);
-      queryClient.setQueryData<FocusTask | null>(["focus-task", helperId], (old) =>
-        old && old.id === ticketId ? { ...old, status: "blocked", blockReason: reason } : old,
+      const previous = queryClient.getQueryData<FocusTask[]>(["focus-task", helperId]);
+      queryClient.setQueryData<FocusTask[]>(["focus-task", helperId], (old) =>
+        old?.map((t) => (t.id === ticketId ? { ...t, status: "blocked", blockReason: reason } : t)),
       );
+      setChosenId(null);
       return { previous };
     },
     onError: (_err, _vars, context) => {
@@ -253,8 +263,6 @@ export default function TodayScreen() {
     },
   });
 
-  const focusTask = focusTaskQuery.data;
-
   useRealtimeSubscription(
     helperId,
     {
@@ -277,9 +285,9 @@ export default function TodayScreen() {
         : null;
   const progress = progressQuery.data;
   const allDone = Boolean(progress && progress.total > 0 && progress.done === progress.total);
-  const showTask =
-    Boolean(focusTask) &&
-    (!closeReason || focusTask?.status === "in_progress" || Boolean(focusTask?.afterHours));
+  const deck = deckFor(focusTaskQuery.data ?? [], Boolean(closeReason));
+  const deckIndex = focusIndex(deck, chosenId);
+  const focusTask = deckIndex >= 0 ? deck[deckIndex] : null;
 
   return (
     <View style={styles.flex}>
@@ -322,7 +330,7 @@ export default function TodayScreen() {
                   <DayCloseCard reason="all_done" progress={progress} />
                 ) : null}
 
-                {focusTask && showTask ? (
+                {focusTask ? (
                   <>
                     {closeReason ? (
                       <Text style={styles.afterHoursNote}>
@@ -331,23 +339,29 @@ export default function TodayScreen() {
                           : "Ipinadala ito kahit off-shift ka. Kapag tinapos mo, naka-log ito bilang rest owed."}
                       </Text>
                     ) : null}
-                    <ActiveFocusCard
-                      // Fresh per task: a photo or half-typed reason never carries
-                      // over to the next one.
-                      key={focusTask.id}
-                      task={focusTask}
-                      myUserId={profileQuery.data.userId}
-                      onStart={() => startMutation.mutate(focusTask.id)}
-                      onComplete={(photoUri) =>
-                        completeMutation.mutate({ ticketId: focusTask.id, photoUri })
-                      }
-                      onCantNow={(reason) =>
-                        holdMutation.mutate({ ticketId: focusTask.id, reason })
-                      }
-                      isStarting={startMutation.isPending}
-                      isCompleting={completeMutation.isPending}
-                      isHolding={holdMutation.isPending}
-                    />
+                    <FocusDeck
+                      count={deck.length}
+                      index={deckIndex}
+                      onIndexChange={(next) => setChosenId(deck[next].id)}
+                    >
+                      <ActiveFocusCard
+                        // Fresh per task: a photo or half-typed reason never carries
+                        // over to the next one.
+                        key={focusTask.id}
+                        task={focusTask}
+                        myUserId={profileQuery.data.userId}
+                        onStart={() => startMutation.mutate(focusTask.id)}
+                        onComplete={(photoUri) =>
+                          completeMutation.mutate({ ticketId: focusTask.id, photoUri })
+                        }
+                        onCantNow={(reason) =>
+                          holdMutation.mutate({ ticketId: focusTask.id, reason })
+                        }
+                        isStarting={startMutation.isPending}
+                        isCompleting={completeMutation.isPending}
+                        isHolding={holdMutation.isPending}
+                      />
+                    </FocusDeck>
                     {completeError ? <Text style={styles.errorText}>{completeError}</Text> : null}
                   </>
                 ) : !closeReason && !allDone ? (
@@ -358,7 +372,12 @@ export default function TodayScreen() {
               </>
             )}
 
-            <TodayTaskList helperId={profileQuery.data.id} myUserId={profileQuery.data.userId} />
+            <TodayTaskList
+              helperId={profileQuery.data.id}
+              householdId={profileQuery.data.householdId}
+              myUserId={profileQuery.data.userId}
+              onChanged={refreshToday}
+            />
 
             <PrivateScratchpad
               helperId={profileQuery.data.id}

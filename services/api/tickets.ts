@@ -1,6 +1,6 @@
 import {
   isLaterThanToday,
-  pickFocus,
+  reopenedStatus,
   startOfToday,
   startOfTomorrow,
   summarizeToday,
@@ -90,46 +90,43 @@ async function getMyTodayRows<T>(helperId: string, columns: string): Promise<T[]
   );
 }
 
-/**
- * The one ticket for the Active Focus Card (roadmap Story 7, step 1): what
- * she's already doing, else the earliest not-yet-started, else one on hold
- * (see `pickFocus`). Done tickets never show.
- */
-export async function getFocusTask(helperId: string): Promise<FocusTask | null> {
-  const rows = (
-    await getMyTodayRows<TicketWithSopRow>(
-      helperId,
-      "id, title, notes, status, scheduled_start, is_after_hours, emergency, block_reason, created_by, created_by_profile:user_profiles(full_name), house_sops(id, title, description, standard_image_url, steps, tools_required, safety_protocol)",
-    )
-  ).filter((row) => row.status !== "done");
-
-  const focus = pickFocus(rows.map((row) => ({ ...row, scheduledStart: row.scheduled_start })));
-  if (!focus) {
-    return null;
-  }
-
+function toFocusTask(row: TicketWithSopRow): FocusTask {
   return {
-    id: focus.id,
-    title: focus.title,
-    notes: focus.notes,
-    status: focus.status,
-    scheduledStart: focus.scheduled_start,
-    afterHours: focus.is_after_hours || focus.emergency,
-    blockReason: focus.block_reason,
-    createdById: focus.created_by,
-    createdByName: focus.created_by_profile?.full_name ?? null,
-    sop: focus.house_sops
+    id: row.id,
+    title: row.title,
+    notes: row.notes,
+    status: row.status,
+    scheduledStart: row.scheduled_start,
+    afterHours: row.is_after_hours || row.emergency,
+    blockReason: row.block_reason,
+    createdById: row.created_by,
+    createdByName: row.created_by_profile?.full_name ?? null,
+    sop: row.house_sops
       ? {
-          id: focus.house_sops.id,
-          title: focus.house_sops.title,
-          description: focus.house_sops.description,
-          standardImageUrl: focus.house_sops.standard_image_url,
-          steps: focus.house_sops.steps ?? [],
-          toolsRequired: focus.house_sops.tools_required ?? [],
-          safetyProtocol: focus.house_sops.safety_protocol,
+          id: row.house_sops.id,
+          title: row.house_sops.title,
+          description: row.house_sops.description,
+          standardImageUrl: row.house_sops.standard_image_url,
+          steps: row.house_sops.steps ?? [],
+          toolsRequired: row.house_sops.tools_required ?? [],
+          safetyProtocol: row.house_sops.safety_protocol,
         }
       : null,
   };
+}
+
+/**
+ * Every task still open today, in time order, for the Active Focus Card's
+ * deck (roadmap Story 7, step 1): she swipes through them and works them in
+ * whatever order the day needs. The card opens on `pickFocus`'s choice.
+ * Done tickets never show; she unticks them on the list instead.
+ */
+export async function getFocusTasks(helperId: string): Promise<FocusTask[]> {
+  const rows = await getMyTodayRows<TicketWithSopRow>(
+    helperId,
+    "id, title, notes, status, scheduled_start, is_after_hours, emergency, block_reason, created_by, created_by_profile:user_profiles(full_name), house_sops(id, title, description, standard_image_url, steps, tools_required, safety_protocol)",
+  );
+  return rows.filter((row) => row.status !== "done").map(toFocusTask);
 }
 
 /** One row of "Lahat ng task ngayon": every task of hers today, done ones included. */
@@ -140,6 +137,8 @@ export interface TodayTask {
   status: FocusTask["status"];
   scheduledStart: string;
   blockReason: string | null;
+  /** She pressed Start at some point, so unticking it puts it back as "Ginagawa". */
+  started: boolean;
 }
 
 /** Everything on her list today, in time order -- the same tickets the focus card picks from. */
@@ -151,7 +150,8 @@ export async function getTodayTasks(helperId: string): Promise<TodayTask[]> {
     status: FocusTask["status"];
     scheduled_start: string;
     block_reason: string | null;
-  }>(helperId, "id, title, notes, status, scheduled_start, block_reason");
+    actual_start: string | null;
+  }>(helperId, "id, title, notes, status, scheduled_start, block_reason, actual_start");
   return rows.map((row) => ({
     id: row.id,
     title: row.title,
@@ -159,6 +159,7 @@ export async function getTodayTasks(helperId: string): Promise<TodayTask[]> {
     status: row.status,
     scheduledStart: row.scheduled_start,
     blockReason: row.block_reason,
+    started: row.actual_start != null,
   }));
 }
 
@@ -361,6 +362,8 @@ export async function startTicket(ticketId: string): Promise<void> {
  * Marks a ticket done, stamping `actual_end` for the shift record. Pass
  * `photoEvidenceUrl` for tickets that require photo proof (e.g. a Palengke
  * Run receipt, roadmap Story 8 step 4) to persist it in the same write.
+ * Works from any open status: she may tick off a task she never pressed
+ * Start on, or one she had put on hold and then sorted out.
  */
 export async function completeTicket(ticketId: string, photoEvidenceUrl?: string): Promise<void> {
   const { error } = await supabase
@@ -368,8 +371,24 @@ export async function completeTicket(ticketId: string, photoEvidenceUrl?: string
     .update({
       status: "done",
       actual_end: new Date().toISOString(),
+      block_reason: null,
       ...(photoEvidenceUrl ? { photo_evidence_url: photoEvidenceUrl } : {}),
     })
+    .eq("id", ticketId);
+
+  if (error) {
+    throw new Error(error.message);
+  }
+}
+
+/**
+ * Unticks a task she marked done by mistake: back to "Ginagawa" if she had
+ * started it, otherwise to "Gagawin", with the finish time cleared.
+ */
+export async function reopenTicket(ticketId: string, started: boolean): Promise<void> {
+  const { error } = await supabase
+    .from("tickets")
+    .update({ status: reopenedStatus(started), actual_end: null })
     .eq("id", ticketId);
 
   if (error) {

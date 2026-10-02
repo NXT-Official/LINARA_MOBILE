@@ -53,6 +53,37 @@ export function pickFocus<T extends DayTicket>(tickets: T[]): T | null {
 }
 
 /**
+ * Which of today's open tasks the focus card shows: the one she swiped to, as
+ * long as it's still open, else `pickFocus`'s choice. -1 when there are none.
+ */
+export function focusIndex<T extends DayTicket & { id: string }>(
+  tickets: T[],
+  chosenId: string | null,
+): number {
+  const chosen = chosenId ? tickets.findIndex((t) => t.id === chosenId) : -1;
+  if (chosen >= 0) return chosen;
+  const picked = pickFocus(tickets);
+  return picked ? tickets.indexOf(picked) : -1;
+}
+
+/**
+ * The tasks she can swipe through. Once her day is closed, only what still
+ * belongs in it: a task she already started, or one the manager deliberately
+ * sent off-hours.
+ */
+export function deckFor<T extends DayTicket & { afterHours: boolean }>(
+  tickets: T[],
+  dayClosed: boolean,
+): T[] {
+  return dayClosed ? tickets.filter((t) => t.status === "in_progress" || t.afterHours) : tickets;
+}
+
+/** Where an unticked task goes back to: "Ginagawa" if she had started it, else "Gagawin". */
+export function reopenedStatus(started: boolean): "in_progress" | "todo" {
+  return started ? "in_progress" : "todo";
+}
+
+/**
  * Today's count for the close: tickets scheduled today plus unfinished ones
  * carried over, and how many of those are done. A task finished on an earlier
  * day isn't part of today's list.
