@@ -2,7 +2,8 @@ import { useState } from "react";
 import { Pressable, StyleSheet, Text, TextInput, View } from "react-native";
 
 import { colors } from "@/lib/theme";
-import { PANTRY_CATEGORIES, type PantryCategory } from "@/services/api/pantry";
+import { CATEGORY_LABEL, STARTER_ORDER } from "@/lib/pantry";
+import type { PantryCategory } from "@/services/api/pantry";
 
 export interface ItemFormValues {
   name: string;
@@ -50,7 +51,7 @@ export function ItemForm({
     if (!name.trim()) return setError("Lagyan ng pangalan.");
     if (qtyN === null) return setError("Dami: numero lang, 0 pataas.");
     if (!unit.trim()) return setError("Lagyan ng unit (hal. kg, pcs, pack).");
-    if (kind === "pantry" && parN === null) return setError("Par: numero lang, 0 pataas.");
+    if (kind === "pantry" && parN === null) return setError("Bilhin kapag: numero lang, 0 pataas.");
     setError(null);
     onSubmit({
       name: name.trim(),
@@ -94,13 +95,13 @@ export function ItemForm({
         </View>
         {kind === "pantry" && (
           <View style={styles.cell}>
-            <Text style={styles.label}>Par</Text>
+            <Text style={styles.label}>Bilhin kapag</Text>
             <TextInput
               value={par}
               onChangeText={setPar}
               keyboardType="decimal-pad"
               style={styles.input}
-              accessibilityLabel="Par, ang dapat laging meron"
+              accessibilityLabel="Bilhin kapag ganito na lang"
             />
           </View>
         )}
@@ -108,17 +109,27 @@ export function ItemForm({
       {kind === "pantry" && (
         <>
           <Text style={styles.hint}>
-            Par: kapag ganito na lang o kulang pa, lalabas na &ldquo;Low&rdquo;.
+            Kapag ganito na lang o kulang pa, lalabas na &ldquo;Paubos&rdquo;.
           </Text>
-          <View style={styles.categories}>
-            {PANTRY_CATEGORIES.map((c) => (
+          <Text style={styles.label} nativeID="pantry-category-label">
+            Saang lalagyan
+          </Text>
+          <View
+            style={styles.categories}
+            accessibilityRole="radiogroup"
+            accessibilityLabelledBy="pantry-category-label"
+          >
+            {STARTER_ORDER.map((c) => (
               <Pressable
                 key={c}
                 onPress={() => setCategory(c)}
-                accessibilityState={{ selected: c === category }}
+                accessibilityRole="radio"
+                accessibilityState={{ checked: c === category }}
                 style={[styles.chip, c === category && styles.chipOn]}
               >
-                <Text style={[styles.chipText, c === category && styles.chipTextOn]}>{c}</Text>
+                <Text style={[styles.chipText, c === category && styles.chipTextOn]}>
+                  {CATEGORY_LABEL[c]}
+                </Text>
               </Pressable>
             ))}
           </View>
@@ -159,7 +170,7 @@ const styles = StyleSheet.create({
     gap: 4,
   },
   label: {
-    fontSize: 11,
+    fontSize: 13,
     fontWeight: "700",
     color: colors.mutedInk,
   },
@@ -174,7 +185,7 @@ const styles = StyleSheet.create({
     color: colors.ink,
   },
   hint: {
-    fontSize: 12,
+    fontSize: 13,
     color: colors.mutedInk,
   },
   categories: {
@@ -183,18 +194,19 @@ const styles = StyleSheet.create({
     gap: 6,
   },
   chip: {
-    borderRadius: 999,
+    minHeight: 40,
+    justifyContent: "center",
+    borderRadius: 10,
     borderWidth: 1,
     borderColor: colors.border,
-    paddingHorizontal: 10,
-    paddingVertical: 5,
+    paddingHorizontal: 12,
   },
   chipOn: {
     borderColor: colors.pineTeal,
     backgroundColor: colors.pineTeal,
   },
   chipText: {
-    fontSize: 12,
+    fontSize: 13,
     fontWeight: "600",
     color: colors.ink,
   },
