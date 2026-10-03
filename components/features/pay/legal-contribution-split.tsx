@@ -2,6 +2,7 @@ import { StyleSheet, Text, View } from "react-native";
 
 import { colors } from "@/lib/theme";
 import { formatPeso } from "@/lib/format";
+import { computeStatutorySplit } from "@/lib/statutory";
 
 /**
  * The split itself lives in lib/statutory.ts so it can be unit-tested without
@@ -10,7 +11,6 @@ import { formatPeso } from "@/lib/format";
  * original home and other files import it from here.
  */
 export { computeStatutorySplit, type StatutorySplit } from "@/lib/statutory";
-import { computeStatutorySplit } from "@/lib/statutory";
 
 /** Roadmap Story 11 step 1's statutory split display. */
 export function LegalContributionSplit({ wagePHP }: { wagePHP: number }) {
