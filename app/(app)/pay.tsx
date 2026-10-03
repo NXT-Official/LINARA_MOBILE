@@ -29,6 +29,7 @@ import { LeaveRequestForm } from "@/components/features/pay/leave-request-form";
 import { RestOffRequestForm } from "@/components/features/pay/rest-off-request-form";
 import { DigitalPayslip } from "@/components/features/pay/digital-payslip";
 import { PaymentConfirmations } from "@/components/features/pay/payment-confirmations";
+import { PayoutAccountCard } from "@/components/features/pay/payout-account-card";
 import { UnpaidPeriods } from "@/components/features/pay/unpaid-periods";
 import { PayslipHistory } from "@/components/features/pay/payslip-history";
 import { RestOwedCounter } from "@/components/features/pay/rest-owed-counter";
@@ -214,6 +215,7 @@ export default function PayScreen() {
       ) : (
         <>
           <PaymentConfirmations />
+          <PayoutAccountCard defaultName={profileQuery.data.name} />
           <DigitalPayslip
             monthlyRate={profileQuery.data.monthlyRate}
             paydayInterval={profileQuery.data.paydayInterval}
