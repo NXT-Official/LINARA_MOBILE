@@ -58,6 +58,8 @@
     "lint": "eslint .",
     "test": "vitest run",
     "test:watch": "vitest",
+    "qa": "node scripts/qa.mjs",
+    "qa:fast": "node scripts/qa.mjs --fast",
     "format": "prettier --write .",
     "typecheck": "tsc --noEmit"
   },
