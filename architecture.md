@@ -136,7 +136,7 @@ LINARA_MOBILE/
 
 ### 5.1 Supabase Object Storage Media Pipeline
 
-- **Evidence uploads:** Photo evidence and paper receipt captures utilize `expo-image-picker`. Images are resized client-side to a maximum width of 1200px and 80% compression to reduce mobile data usage.
+- **Evidence uploads:** Photo evidence and paper receipt captures utilize `expo-image-picker`. Images are resized client-side to a maximum width of 1200px and 80% compression to reduce mobile data usage, plus a 480px thumbnail at `<name>.thumb.jpg` for lists (best effort). Task photos are deleted after 30 days and receipts after 60 by `../LINARA`'s nightly purge (`../LINARA/KNOWN_GAPS.md` O28); costs and task history stay in the database.
 - **Signed Storage Pipe:** The app generates temporary pre-signed S3 URLs via Supabase Storage client nodes to write compressed JPEGs directly into the private `household-evidence` storage bucket with a strict 15-minute expiry, keeping household records private.
 
 ### 5.2 HitPay / Xendit Fintech Payout Pipeline
