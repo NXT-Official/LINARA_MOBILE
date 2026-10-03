@@ -9,6 +9,8 @@ node_modules/
 # Expo
 .expo/
 dist/
+# Local QA runs (npm run qa)
+qa-reports/
 web-build/
 expo-env.d.ts
 
