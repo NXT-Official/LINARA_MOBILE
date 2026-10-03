@@ -61,7 +61,8 @@
     "qa": "node scripts/qa.mjs",
     "qa:fast": "node scripts/qa.mjs --fast",
     "format": "prettier --write .",
-    "typecheck": "tsc --noEmit"
+    "typecheck": "tsc --noEmit",
+    "prepare": "node scripts/install-hooks.mjs"
   },
   "type": "module",
   "private": true
