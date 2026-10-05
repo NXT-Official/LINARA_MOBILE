@@ -313,6 +313,8 @@ function CurrentRecord({ employment }: { employment: Employment }) {
           Ito ang record ng household tungkol sa trabaho mo. Parehong numero ang nakikita nila.
         </Text>
         <Row label="Role" value={terms.station} />
+        {terms.team ? <Row label="Team" value={terms.team} /> : null}
+        {terms.labels.length > 0 ? <Row label="Mga label" value={terms.labels.join(", ")} /> : null}
         <Row
           label="Tirahan"
           value={
