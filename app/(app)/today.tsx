@@ -11,6 +11,12 @@ import { ActiveFocusCard } from "@/components/features/today/active-focus-card";
 import { DayCloseCard, type CloseReason } from "@/components/features/today/day-close-card";
 import { MovedTasksBanner } from "@/components/features/today/moved-tasks-banner";
 import { TodayTaskList } from "@/components/features/today/today-task-list";
+import { LayoutSwitch } from "@/components/features/today/layout-switch";
+import { HouseSwitcher } from "@/components/features/workplace/house-switcher";
+import { PlaceTag } from "@/components/features/workplace/place-tag";
+import { TeamDay } from "@/components/features/workplace/team-day";
+import { useTodayLayout } from "@/hooks/use-today-layout";
+import { useWorkplaces } from "@/hooks/use-workplaces";
 import { FocusDeck } from "@/components/features/today/focus-deck";
 import { getBoardClosed } from "@/services/api/household";
 import { dayPhase, deckFor, focusIndex } from "@/lib/today";
@@ -54,6 +60,9 @@ export default function TodayScreen() {
     queryFn: getMyHelperProfile,
   });
   const helperId = profileQuery.data?.id ?? null;
+  // Every house she works in, and the one she's looking at (all by default).
+  const places = useWorkplaces(profileQuery.data?.householdId ?? null);
+  const [layout, setLayout] = useTodayLayout();
 
   const manual: ManualAvailability =
     profileQuery.data?.manualStatus === "available" && profileQuery.data.manualAvailableUntil
@@ -181,8 +190,17 @@ export default function TodayScreen() {
   // marking it done without the photo she meant to attach.
   const [completeError, setCompleteError] = useState<string | null>(null);
   const completeMutation = useMutation({
-    mutationFn: async ({ ticketId, photoUri }: { ticketId: string; photoUri: string | null }) => {
-      const householdId = profileQuery.data?.householdId ?? "";
+    mutationFn: async ({
+      ticketId,
+      photoUri,
+      taskHouseholdId,
+    }: {
+      ticketId: string;
+      photoUri: string | null;
+      /** The task's own house: its photo goes in that house's folder, for its managers. */
+      taskHouseholdId: string;
+    }) => {
+      const householdId = taskHouseholdId || profileQuery.data?.householdId || "";
       if (await isOffline()) {
         await enqueueSyncAction("complete_ticket", { ticketId, householdId }, photoUri);
         return { queued: true };
@@ -305,6 +323,7 @@ export default function TodayScreen() {
       onQuickUtoChange: () => queryClient.invalidateQueries({ queryKey: ["quick-utos", helperId] }),
     },
     profileQuery.data?.householdId,
+    places.otherHouseholdIds,
   );
 
   // The close replaces the next task once her day is over -- unless she has
@@ -320,7 +339,12 @@ export default function TodayScreen() {
         : null;
   const progress = progressQuery.data;
   const allDone = Boolean(progress && progress.total > 0 && progress.done === progress.total);
-  const deck = deckFor(focusTaskQuery.data ?? [], Boolean(closeReason));
+  const deck = deckFor(
+    (focusTaskQuery.data ?? []).filter(
+      (t) => places.house === "all" || t.householdId === places.house,
+    ),
+    Boolean(closeReason),
+  );
   const deckIndex = focusIndex(deck, chosenId);
   const focusTask = deckIndex >= 0 ? deck[deckIndex] : null;
 
@@ -349,7 +373,10 @@ export default function TodayScreen() {
 
             <MovedTasksBanner helperId={profileQuery.data.id} />
 
-            {focusTaskQuery.isLoading ? (
+            <HouseSwitcher places={places} allowAll />
+            <LayoutSwitch value={layout} onChange={setLayout} />
+
+            {layout !== "focus" ? null : focusTaskQuery.isLoading ? (
               <View style={styles.loading}>
                 <ActivityIndicator color={colors.pineTeal} />
               </View>
@@ -374,6 +401,12 @@ export default function TodayScreen() {
                           : "Ipinadala ito kahit off-shift ka. Kapag tinapos mo, naka-log ito bilang rest owed."}
                       </Text>
                     ) : null}
+                    <PlaceTag
+                      places={places}
+                      householdId={focusTask.householdId}
+                      from={focusTask.from}
+                      to={focusTask.to}
+                    />
                     <FocusDeck
                       count={deck.length}
                       index={deckIndex}
@@ -387,7 +420,11 @@ export default function TodayScreen() {
                         myUserId={profileQuery.data.userId}
                         onStart={() => startMutation.mutate(focusTask.id)}
                         onComplete={(photoUri) =>
-                          completeMutation.mutate({ ticketId: focusTask.id, photoUri })
+                          completeMutation.mutate({
+                            ticketId: focusTask.id,
+                            photoUri,
+                            taskHouseholdId: focusTask.householdId,
+                          })
                         }
                         onCantNow={(reason) =>
                           holdMutation.mutate({ ticketId: focusTask.id, reason })
@@ -415,7 +452,11 @@ export default function TodayScreen() {
               householdId={profileQuery.data.householdId}
               myUserId={profileQuery.data.userId}
               onChanged={refreshToday}
+              places={places}
+              variant={layout === "timeline" ? "timeline" : "list"}
             />
+
+            <TeamDay places={places} helperId={profileQuery.data.id} />
 
             <PrivateScratchpad
               helperId={profileQuery.data.id}
@@ -428,7 +469,11 @@ export default function TodayScreen() {
       </ScrollView>
 
       <FloatingQuickUtosFeed
-        utosList={quickUtosQuery.data ?? []}
+        // With more than one house, say which one is asking.
+        utosList={(quickUtosQuery.data ?? []).map((u) => {
+          const from = places.multi ? places.houseName(u.householdId) : null;
+          return from ? { ...u, senderName: `${u.senderName} · ${from}` } : u;
+        })}
         onAck={(id, ack) => ackMutation.mutate({ id, ack })}
         ackingId={ackingId}
       />

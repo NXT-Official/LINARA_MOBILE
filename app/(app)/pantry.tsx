@@ -31,6 +31,8 @@ import { ItemForm } from "@/components/features/pantry/item-form";
 import { ListFilter, matchesQuery } from "@/components/features/pantry/list-filter";
 import { PantryStarter } from "@/components/features/pantry/pantry-starter";
 import { CATEGORY_LABEL, groupByPantryCategory } from "@/lib/pantry";
+import { HouseSwitcher } from "@/components/features/workplace/house-switcher";
+import { useWorkplaces } from "@/hooks/use-workplaces";
 
 type PalengkeFilter = "all" | "to_buy" | "bought";
 type PantryFilter = "all" | "low" | PantryCategory;
@@ -73,8 +75,11 @@ export default function PantryScreen() {
     queryFn: getMyHelperProfile,
   });
   const helperId = profileQuery.data?.id ?? null;
-  const { budget } = usePalengkeBudget(profileQuery.data?.householdId ?? null);
-  const edits = usePantryEdits(profileQuery.data?.householdId ?? null);
+  // One house's pantry: hers, or the one she picked if she works in several.
+  const places = useWorkplaces(profileQuery.data?.householdId ?? null);
+  const house = places.oneHouse;
+  const { budget } = usePalengkeBudget(house);
+  const edits = usePantryEdits(house);
 
   // The manager can change this from the web at any time, and nothing pushes
   // it here, so check again whenever she opens the tab.
@@ -92,25 +97,28 @@ export default function PantryScreen() {
   const inCharge = roleQuery.data === "lead";
 
   const pantryQuery = useQuery({
-    queryKey: ["pantry-items"],
-    queryFn: getPantryItems,
+    queryKey: ["pantry-items", house],
+    queryFn: () => getPantryItems(house as string),
+    enabled: Boolean(house),
   });
 
   const groceryQuery = useQuery({
-    queryKey: ["grocery-items"],
-    queryFn: getGroceryItems,
+    queryKey: ["grocery-items", house],
+    queryFn: () => getGroceryItems(house as string),
+    enabled: Boolean(house),
   });
 
   const latestReceiptQuery = useQuery({
-    queryKey: ["grocery-receipt-latest"],
-    queryFn: getLatestGroceryReceipt,
+    queryKey: ["grocery-receipt-latest", house],
+    queryFn: () => getLatestGroceryReceipt(house as string),
+    enabled: Boolean(house),
   });
   const [snapError, setSnapError] = useState<string | null>(null);
 
   /** A receipt after buying, with or without a Palengke Run task. Online only. */
   const snapMutation = useMutation({
     mutationFn: async () => {
-      const householdId = profileQuery.data?.householdId;
+      const householdId = house;
       if (!householdId) throw new Error("Hindi pa na-load ang household. Subukan ulit.");
       const permission = await ImagePicker.requestCameraPermissionsAsync();
       if (!permission.granted) {
@@ -236,7 +244,7 @@ export default function PantryScreen() {
 
     setUploading(true);
     try {
-      const householdId = profileQuery.data?.householdId ?? "unknown";
+      const householdId = house ?? "unknown";
       const storagePath = `${householdId}/receipts/${Date.now()}.jpg`;
       const uploaded = await uploadEvidenceImage(localUri, storagePath);
       setReceiptUri(uploaded.signedUrl);
@@ -262,6 +270,7 @@ export default function PantryScreen() {
   return (
     <ScrollView style={styles.screen} contentContainerStyle={styles.content}>
       <Text style={styles.header}>Pantry &amp; Palengke</Text>
+      <HouseSwitcher places={places} />
 
       {groceryQuery.isLoading ? (
         <View style={styles.loading}>

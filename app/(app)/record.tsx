@@ -34,6 +34,7 @@ import {
   getMyTermsOnFile,
   type TermsFlagField,
 } from "@/services/api/record";
+import { getMyCoveredTeams, getMyWorkplaces } from "@/services/api/workplaces";
 import { loadRecordPdfInput, shareRecordPdf } from "@/services/record-export";
 import { PrivacyAccountCard } from "@/components/features/account/privacy-account-card";
 import { SignOutButton } from "@/components/features/account/sign-out-button";
@@ -224,6 +225,11 @@ function CurrentRecord({ employment }: { employment: Employment }) {
     queryKey: ["terms-on-file", helperId],
     queryFn: () => getMyTermsOnFile(helperId),
   });
+  // Every house she works in (LINARA add-shared-staff-and-places.sql), and
+  // teams she also covers. Empty before that SQL: the single Team row stays.
+  const workplacesQuery = useQuery({ queryKey: ["my-workplaces"], queryFn: getMyWorkplaces });
+  const coversQuery = useQuery({ queryKey: ["my-covered-teams"], queryFn: getMyCoveredTeams });
+  const workplaces = workplacesQuery.data ?? [];
   const payslipsQuery = useQuery({
     queryKey: ["payslips", helperId],
     queryFn: () => getMyPayslips(helperId),
@@ -313,7 +319,28 @@ function CurrentRecord({ employment }: { employment: Employment }) {
           Ito ang record ng household tungkol sa trabaho mo. Parehong numero ang nakikita nila.
         </Text>
         <Row label="Role" value={terms.station} />
-        {terms.team ? <Row label="Team" value={terms.team} /> : null}
+        {workplaces.length > 1 ? (
+          <Row
+            label="Mga bahay"
+            value={workplaces
+              .map((w) => (w.isHome ? `${w.name} (dito ka naka-employ)` : w.name))
+              .join(", ")}
+          />
+        ) : null}
+        {workplaces.some((w) => w.teamName) ? (
+          <Row
+            label="Team"
+            value={workplaces
+              .filter((w) => w.teamName)
+              .map((w) => (workplaces.length > 1 ? `${w.teamName} (${w.name})` : w.teamName))
+              .join(", ")}
+          />
+        ) : terms.team ? (
+          <Row label="Team" value={terms.team} />
+        ) : null}
+        {(coversQuery.data ?? []).length > 0 ? (
+          <Row label="Tumutulong din sa" value={(coversQuery.data ?? []).join(", ")} />
+        ) : null}
         {terms.labels.length > 0 ? <Row label="Mga label" value={terms.labels.join(", ")} /> : null}
         <Row
           label="Tirahan"
