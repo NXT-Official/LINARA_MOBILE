@@ -25,12 +25,16 @@ import { setHelperAvailability, setHelperOff } from "@/services/api/availability
 import {
   blockTicket,
   completeTicket,
+  editMyTicket,
   getFocusTasks,
   getTodayProgress,
   startTicket,
   type FocusTask,
 } from "@/services/api/tickets";
 import { acknowledgeQuickUto, getPendingQuickUtos } from "@/services/api/quick-utos";
+import { addTaskComment } from "@/services/api/ticket-comments";
+import { formatClockTime } from "@/lib/format";
+import type { TaskEdit } from "@/components/features/today/edit-task-form";
 import { enqueueSyncAction } from "@/services/sqlite-queue";
 import { uploadEvidenceImage } from "@/services/media-upload";
 import { isOffline } from "@/lib/network";
@@ -254,6 +258,37 @@ export default function TodayScreen() {
     },
   });
 
+  // Her own fix to a task's time or note (O31). Online only: a time she moved
+  // while offline could land after the manager moved it too. A moved time is
+  // also posted to the task's updates, so the manager's Pass shows who moved
+  // it and from when; that note is best effort, the move itself is what counts.
+  const editMutation = useMutation({
+    mutationFn: async ({ task, edit }: { task: FocusTask; edit: TaskEdit }) => {
+      if (await isOffline()) {
+        throw new Error("Kailangan ng internet para i-save ito.");
+      }
+      await editMyTicket(task.id, edit);
+      if (new Date(edit.scheduledStart).getTime() !== new Date(task.scheduledStart).getTime()) {
+        await addTaskComment(
+          task.id,
+          `Inilipat ko sa ${whenLabel(edit.scheduledStart)} (dati ${whenLabel(task.scheduledStart)}).`,
+        ).catch((err) =>
+          console.warn("[today] Couldn't post the move note:", (err as Error).message),
+        );
+      }
+    },
+    onSuccess: () => {
+      setChosenId(null);
+      refreshToday();
+      queryClient.invalidateQueries({ queryKey: ["my-week", helperId] });
+    },
+  });
+  const editError = editMutation.isError
+    ? editMutation.error.message.startsWith("Kailangan")
+      ? editMutation.error.message
+      : "Hindi na-save. Subukan ulit."
+    : null;
+
   const ackMutation = useMutation({
     mutationFn: ({ id, ack }: { id: string; ack: "seen" | "done" }) => acknowledgeQuickUto(id, ack),
     onMutate: ({ id }) => setAckingId(id),
@@ -359,7 +394,10 @@ export default function TodayScreen() {
                         }
                         isStarting={startMutation.isPending}
                         isCompleting={completeMutation.isPending}
+                        onEdit={(edit) => editMutation.mutateAsync({ task: focusTask, edit })}
                         isHolding={holdMutation.isPending}
+                        isEditing={editMutation.isPending}
+                        editError={editError}
                       />
                     </FocusDeck>
                     {completeError ? <Text style={styles.errorText}>{completeError}</Text> : null}
@@ -396,6 +434,15 @@ export default function TodayScreen() {
       />
     </View>
   );
+}
+
+/** "3:00 PM" today, "Oct 6, 3:00 PM" on another day: for the move note. */
+function whenLabel(iso: string): string {
+  const at = new Date(iso);
+  const time = formatClockTime(iso);
+  return toIsoDate(at) === toIsoDate(new Date())
+    ? time
+    : `${at.toLocaleDateString(undefined, { month: "short", day: "numeric" })}, ${time}`;
 }
 
 const styles = StyleSheet.create({

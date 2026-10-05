@@ -63,6 +63,20 @@ export function parseHm(hm: string): Date | null {
   return date;
 }
 
+/**
+ * `YYYY-MM-DD` + `HH:MM` -> that wall-clock moment on this phone, the way a
+ * task's time is shown and picked (formatClockTime reads it back the same way).
+ * Built from parts, never parsed as a string, so no UTC step. Null if either
+ * half is malformed.
+ */
+export function combineLocalDateTime(isoDate: string, hm: string): Date | null {
+  const day = parseIsoDate(isoDate);
+  const time = parseHm(hm);
+  if (!day || !time) return null;
+  day.setHours(time.getHours(), time.getMinutes(), 0, 0);
+  return day;
+}
+
 /** "2026-08-20" -> "Aug 20, 2026" for a button face. Parsed from parts, so the
  *  displayed day always matches the string it came from. */
 export function formatIsoDateLabel(iso: string): string {

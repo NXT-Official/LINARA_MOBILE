@@ -397,6 +397,27 @@ export async function reopenTicket(ticketId: string, started: boolean): Promise<
 }
 
 /**
+ * Fixes her own task's time or note (../LINARA/KNOWN_GAPS.md O31). The
+ * database lets her change only these two (and her progress) on a task that's
+ * hers and still open (../LINARA/supabase/add-helper-task-edit.sql); the title
+ * and who it's for stay the manager's. Rest owed follows when she actually
+ * finishes, not the scheduled time, so moving it changes nothing there.
+ */
+export async function editMyTicket(
+  ticketId: string,
+  patch: { scheduledStart: string; notes: string | null },
+): Promise<void> {
+  const { error } = await supabase
+    .from("tickets")
+    .update({ scheduled_start: patch.scheduledStart, notes: patch.notes })
+    .eq("id", ticketId);
+
+  if (error) {
+    throw new Error(error.message);
+  }
+}
+
+/**
  * "Can't now": puts the ticket on hold with her reason. The manager's Pass
  * shows it in Needs You, where they can reply or put it back on the board.
  * Being able to say "not now" is what separates a colleague from a
