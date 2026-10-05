@@ -6,6 +6,7 @@ import {
   summarizeToday,
 } from "@/lib/today";
 import { supabase } from "@/services/supabase";
+import { placeRef, type PlaceRef } from "@/services/api/workplaces";
 
 export interface FocusTaskSop {
   id: string;
@@ -31,9 +32,29 @@ export interface FocusTask {
   createdById: string | null;
   createdByName: string | null;
   sop: FocusTaskSop | null;
+  /** The house it's at: hers, or one of the family's she also works in. */
+  householdId: string;
+  /** A trip's ends, when it's a trip (LINARA add-shared-staff-and-places.sql). */
+  from: PlaceRef | null;
+  to: PlaceRef | null;
 }
 
-interface TicketWithSopRow {
+/** The house and trip columns, read with "*" so they're simply absent before that SQL. */
+interface PlaceColumns {
+  household_id: string;
+  from_household_id?: string | null;
+  from_place_id?: string | null;
+  to_household_id?: string | null;
+  to_place_id?: string | null;
+}
+
+const placesOf = (row: PlaceColumns) => ({
+  householdId: row.household_id,
+  from: placeRef(row.from_household_id ?? null, row.from_place_id ?? null),
+  to: placeRef(row.to_household_id ?? null, row.to_place_id ?? null),
+});
+
+interface TicketWithSopRow extends PlaceColumns {
   id: string;
   title: string;
   notes: string | null;
@@ -112,6 +133,7 @@ function toFocusTask(row: TicketWithSopRow): FocusTask {
           safetyProtocol: row.house_sops.safety_protocol,
         }
       : null,
+    ...placesOf(row),
   };
 }
 
@@ -124,7 +146,7 @@ function toFocusTask(row: TicketWithSopRow): FocusTask {
 export async function getFocusTasks(helperId: string): Promise<FocusTask[]> {
   const rows = await getMyTodayRows<TicketWithSopRow>(
     helperId,
-    "id, title, notes, status, scheduled_start, is_after_hours, emergency, block_reason, created_by, created_by_profile:user_profiles(full_name), house_sops(id, title, description, standard_image_url, steps, tools_required, safety_protocol)",
+    "*, created_by_profile:user_profiles(full_name), house_sops(id, title, description, standard_image_url, steps, tools_required, safety_protocol)",
   );
   return rows.filter((row) => row.status !== "done").map(toFocusTask);
 }
@@ -139,19 +161,24 @@ export interface TodayTask {
   blockReason: string | null;
   /** She pressed Start at some point, so unticking it puts it back as "Ginagawa". */
   started: boolean;
+  householdId: string;
+  from: PlaceRef | null;
+  to: PlaceRef | null;
 }
 
 /** Everything on her list today, in time order -- the same tickets the focus card picks from. */
 export async function getTodayTasks(helperId: string): Promise<TodayTask[]> {
-  const rows = await getMyTodayRows<{
-    id: string;
-    title: string;
-    notes: string | null;
-    status: FocusTask["status"];
-    scheduled_start: string;
-    block_reason: string | null;
-    actual_start: string | null;
-  }>(helperId, "id, title, notes, status, scheduled_start, block_reason, actual_start");
+  const rows = await getMyTodayRows<
+    PlaceColumns & {
+      id: string;
+      title: string;
+      notes: string | null;
+      status: FocusTask["status"];
+      scheduled_start: string;
+      block_reason: string | null;
+      actual_start: string | null;
+    }
+  >(helperId, "*");
   return rows.map((row) => ({
     id: row.id,
     title: row.title,
@@ -160,6 +187,7 @@ export async function getTodayTasks(helperId: string): Promise<TodayTask[]> {
     scheduledStart: row.scheduled_start,
     blockReason: row.block_reason,
     started: row.actual_start != null,
+    ...placesOf(row),
   }));
 }
 

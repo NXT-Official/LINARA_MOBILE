@@ -8,6 +8,8 @@ export interface QuickUtoItem {
   emergency: boolean;
   waiting: boolean;
   createdAt: string;
+  /** Which house sent it (LINARA add-shared-staff-and-places.sql); null before that. */
+  householdId: string | null;
 }
 
 /**
@@ -20,7 +22,8 @@ export interface QuickUtoItem {
 export async function getPendingQuickUtos(helperId: string): Promise<QuickUtoItem[]> {
   const { data, error } = await supabase
     .from("quick_utos")
-    .select("id, sender_name, content, after_hours, emergency, waiting, created_at")
+    // "*" so household_id is read once it exists, without failing before.
+    .select("*")
     .eq("recipient_id", helperId)
     .eq("ack_state", "sent")
     .order("created_at", { ascending: false });
@@ -37,6 +40,7 @@ export async function getPendingQuickUtos(helperId: string): Promise<QuickUtoIte
     emergency: row.emergency,
     waiting: row.waiting,
     createdAt: row.created_at,
+    householdId: (row as { household_id?: string | null }).household_id ?? null,
   }));
 }
 

@@ -15,10 +15,12 @@ export interface GroceryItemRow {
  * Unbought items surface first so the list reads as a to-do list, matching
  * the web reference's GroceryRow ordering.
  */
-export async function getGroceryItems(): Promise<GroceryItemRow[]> {
+export async function getGroceryItems(householdId: string): Promise<GroceryItemRow[]> {
+  // One house's list: she may read several (see getPantryItems).
   const { data, error } = await supabase
     .from("grocery_items")
     .select("id, name, qty, unit, pantry_item_id, bought, actual_cost")
+    .eq("household_id", householdId)
     .order("bought", { ascending: true })
     .order("created_at", { ascending: true });
 
@@ -144,10 +146,11 @@ export async function recordGroceryReceipt(
 }
 
 /** The household's latest receipt, signed for display; null if none (or the table isn't there yet). */
-export async function getLatestGroceryReceipt(): Promise<GroceryReceipt | null> {
+export async function getLatestGroceryReceipt(householdId: string): Promise<GroceryReceipt | null> {
   const { data, error } = await supabase
     .from("grocery_receipts")
     .select("id, storage_path, created_at")
+    .eq("household_id", householdId)
     .order("created_at", { ascending: false })
     .limit(1)
     .maybeSingle();
