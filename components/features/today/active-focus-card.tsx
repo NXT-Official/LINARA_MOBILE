@@ -3,7 +3,7 @@ import { Image, Pressable, StyleSheet, Text, View } from "react-native";
 import * as ImagePicker from "expo-image-picker";
 
 import { colors } from "@/lib/theme";
-import { formatClockTime } from "@/lib/format";
+import { formatTimeSpan } from "@/lib/format";
 import type { FocusTask } from "@/services/api/tickets";
 import { PrimaryButton } from "@/components/ui/primary-button";
 import { TextField } from "@/components/ui/text-field";
@@ -102,7 +102,7 @@ export function ActiveFocusCard({
         <Text style={styles.from}>Mula kay {task.createdByName}</Text>
       ) : null}
       <Text style={styles.status}>
-        {STATUS_LABEL[task.status]} · {formatClockTime(task.scheduledStart)}
+        {STATUS_LABEL[task.status]} · {formatTimeSpan(task.scheduledStart, task.durationMinutes)}
       </Text>
 
       {task.status === "blocked" && (

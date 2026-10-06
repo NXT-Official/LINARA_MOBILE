@@ -4,7 +4,7 @@ import { Ionicons } from "@expo/vector-icons";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 
 import { colors, fonts } from "@/lib/theme";
-import { formatClockTime } from "@/lib/format";
+import { formatClockTime, formatTimeSpan } from "@/lib/format";
 import { isOffline } from "@/lib/network";
 import { reopenedStatus } from "@/lib/today";
 import {
@@ -195,7 +195,7 @@ export function TodayTaskList({
                     style={styles.rowTap}
                   >
                     <Text style={[styles.time, isDone && styles.taskDone]}>
-                      {formatClockTime(task.scheduledStart)}
+                      {formatTimeSpan(task.scheduledStart, task.durationMinutes)}
                     </Text>
                     <View style={styles.rowMain}>
                       <Text

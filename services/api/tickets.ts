@@ -37,11 +37,14 @@ export interface FocusTask {
   /** A trip's ends, when it's a trip (LINARA add-shared-staff-and-places.sql). */
   from: PlaceRef | null;
   to: PlaceRef | null;
+  /** How long it takes, when the manager set it (add-task-length-and-leave-unassign.sql). */
+  durationMinutes: number | null;
 }
 
-/** The house and trip columns, read with "*" so they're simply absent before that SQL. */
+/** The house, trip and length columns, read with "*" so they're simply absent before that SQL. */
 interface PlaceColumns {
   household_id: string;
+  duration_minutes?: number | null;
   from_household_id?: string | null;
   from_place_id?: string | null;
   to_household_id?: string | null;
@@ -52,6 +55,7 @@ const placesOf = (row: PlaceColumns) => ({
   householdId: row.household_id,
   from: placeRef(row.from_household_id ?? null, row.from_place_id ?? null),
   to: placeRef(row.to_household_id ?? null, row.to_place_id ?? null),
+  durationMinutes: row.duration_minutes ?? null,
 });
 
 interface TicketWithSopRow extends PlaceColumns {
@@ -164,6 +168,7 @@ export interface TodayTask {
   householdId: string;
   from: PlaceRef | null;
   to: PlaceRef | null;
+  durationMinutes: number | null;
 }
 
 /** Everything on her list today, in time order -- the same tickets the focus card picks from. */
