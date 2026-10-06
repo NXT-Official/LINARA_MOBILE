@@ -8,6 +8,7 @@ import { useRosaAvailability } from "@/hooks/use-rosa-availability";
 import { useRealtimeSubscription } from "@/hooks/use-realtime-subscription";
 import { DignityHeader } from "@/components/features/today/dignity-header";
 import { ActiveFocusCard } from "@/components/features/today/active-focus-card";
+import { RunLink } from "@/components/features/pantry/run-link";
 import { DayCloseCard, type CloseReason } from "@/components/features/today/day-close-card";
 import { MovedTasksBanner } from "@/components/features/today/moved-tasks-banner";
 import { TodayTaskList } from "@/components/features/today/today-task-list";
@@ -407,6 +408,7 @@ export default function TodayScreen() {
                       from={focusTask.from}
                       to={focusTask.to}
                     />
+                    <RunLink ticketId={focusTask.id} />
                     <FocusDeck
                       count={deck.length}
                       index={deckIndex}
