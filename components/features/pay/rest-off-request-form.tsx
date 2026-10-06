@@ -8,6 +8,8 @@ import { TextField } from "@/components/ui/text-field";
 import { PrimaryButton } from "@/components/ui/primary-button";
 import type { RestOffRequest, RestOffStatus } from "@/services/api/rest-off";
 
+import { RequestDisclosure } from "./request-disclosure";
+
 const STATUS_LABEL: Record<RestOffStatus, string> = {
   pending: "Hinihintay",
   approved: "Aprubado",
@@ -60,6 +62,7 @@ export function RestOffRequestForm({
   const [startTime, setStartTime] = useState("");
   const [endTime, setEndTime] = useState("");
   const [note, setNote] = useState("");
+  const [open, setOpen] = useState(false);
 
   const validShape =
     DATE_RE.test(restDate.trim()) && TIME_RE.test(startTime.trim()) && TIME_RE.test(endTime.trim());
@@ -100,73 +103,18 @@ export function RestOffRequestForm({
     setStartTime("");
     setEndTime("");
     setNote("");
+    setOpen(false);
   };
 
   const recent = requests.slice(0, 4);
 
   return (
     <View style={styles.card}>
-      <Text style={styles.eyebrow}>Humiling ng day off</Text>
+      <Text style={styles.eyebrow}>Day off</Text>
       <Text style={styles.hint}>
         {formatHoursMinutes(uncommitted)} ang pwede mong hilingin
         {pendingMinutes > 0 ? ` (${formatHoursMinutes(pendingMinutes)} naghihintay)` : ""}.
       </Text>
-      {isPastDate ? (
-        <Text style={styles.warning}>
-          Lumipas na ang petsang iyon{householdToday ? ` (ngayon: ${householdToday})` : ""}.
-        </Text>
-      ) : null}
-
-      {/* Native pickers rather than typed text (E3b). The values are still
-          YYYY-MM-DD / HH:MM strings, so everything downstream is unchanged --
-          see lib/datetime-fields.ts, which converts without ever passing
-          through UTC. */}
-      <DateTimeField
-        label="Petsa"
-        mode="date"
-        value={restDate}
-        onChange={setRestDate}
-        placeholder="Pumili ng petsa"
-        // The server refuses a past date against household_today() anyway; this
-        // stops the picker offering one in the first place. Falls back to
-        // unrestricted while the household date is still loading rather than
-        // guessing from the device clock.
-        minimumIsoDate={householdToday}
-      />
-      <DateTimeField
-        label="Simula"
-        mode="time"
-        value={startTime}
-        onChange={setStartTime}
-        placeholder="Anong oras magsisimula?"
-      />
-      <DateTimeField
-        label="Katapusan"
-        mode="time"
-        value={endTime}
-        onChange={setEndTime}
-        placeholder="Anong oras matatapos?"
-      />
-      <TextField
-        label="Dahilan (optional)"
-        value={note}
-        onChangeText={setNote}
-        placeholder="Doktor"
-      />
-
-      {validShape && minutesAsked > 0 && (
-        <Text style={styles.preview}>
-          {formatHoursMinutes(minutesAsked)}
-          {minutesAsked > uncommitted ? " — sobra sa natitira mong oras." : ""}
-        </Text>
-      )}
-
-      <PrimaryButton
-        label={submitting ? "Sinesend..." : "Ipadala sa manager"}
-        onPress={handleSubmit}
-        disabled={!canSubmit}
-      />
-
       {recent.length > 0 && (
         <View style={styles.list}>
           {recent.map((r) => (
@@ -207,6 +155,68 @@ export function RestOffRequestForm({
           ))}
         </View>
       )}
+      <RequestDisclosure
+        open={open}
+        onOpenChange={setOpen}
+        openLabel="Humiling ng day off"
+        disabled={uncommitted <= 0}
+      >
+        {isPastDate ? (
+          <Text style={styles.warning}>
+            Lumipas na ang petsang iyon{householdToday ? ` (ngayon: ${householdToday})` : ""}.
+          </Text>
+        ) : null}
+
+        {/* Native pickers rather than typed text (E3b). The values are still
+            YYYY-MM-DD / HH:MM strings, so everything downstream is unchanged --
+            see lib/datetime-fields.ts, which converts without ever passing
+            through UTC. */}
+        <DateTimeField
+          label="Petsa"
+          mode="date"
+          value={restDate}
+          onChange={setRestDate}
+          placeholder="Pumili ng petsa"
+          // The server refuses a past date against household_today() anyway; this
+          // stops the picker offering one in the first place. Falls back to
+          // unrestricted while the household date is still loading rather than
+          // guessing from the device clock.
+          minimumIsoDate={householdToday}
+        />
+        <DateTimeField
+          label="Simula"
+          mode="time"
+          value={startTime}
+          onChange={setStartTime}
+          placeholder="Anong oras magsisimula?"
+        />
+        <DateTimeField
+          label="Katapusan"
+          mode="time"
+          value={endTime}
+          onChange={setEndTime}
+          placeholder="Anong oras matatapos?"
+        />
+        <TextField
+          label="Dahilan (optional)"
+          value={note}
+          onChangeText={setNote}
+          placeholder="Doktor"
+        />
+
+        {validShape && minutesAsked > 0 && (
+          <Text style={styles.preview}>
+            {formatHoursMinutes(minutesAsked)}
+            {minutesAsked > uncommitted ? " — sobra sa natitira mong oras." : ""}
+          </Text>
+        )}
+
+        <PrimaryButton
+          label={submitting ? "Sinesend..." : "Ipadala sa manager"}
+          onPress={handleSubmit}
+          disabled={!canSubmit}
+        />
+      </RequestDisclosure>
     </View>
   );
 }

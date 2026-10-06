@@ -7,6 +7,8 @@ import { TextField } from "@/components/ui/text-field";
 import { PrimaryButton } from "@/components/ui/primary-button";
 import type { ValeRequest } from "@/services/api/vales";
 
+import { RequestDisclosure } from "./request-disclosure";
+
 const STATUS_LABEL: Record<ValeRequest["status"], string> = {
   pending: "Waiting",
   approved: "Approved",
@@ -31,6 +33,7 @@ export function ValeRequestForm({
 }) {
   const [amount, setAmount] = useState("");
   const [reason, setReason] = useState("");
+  const [open, setOpen] = useState(false);
 
   const parsedAmount = parseFloat(amount);
   const canSubmit = Number.isFinite(parsedAmount) && parsedAmount > 0 && reason.trim().length > 0;
@@ -40,6 +43,7 @@ export function ValeRequestForm({
     onSubmit(parsedAmount, reason.trim());
     setAmount("");
     setReason("");
+    setOpen(false);
   };
 
   const openRequests = vales.filter((v) => v.status !== "approved");
@@ -47,27 +51,6 @@ export function ValeRequestForm({
   return (
     <View style={styles.card}>
       <Text style={styles.eyebrow}>Vale (cash advance)</Text>
-
-      <TextField
-        label="Amount (₱)"
-        value={amount}
-        onChangeText={setAmount}
-        keyboardType="decimal-pad"
-        placeholder="500"
-      />
-      <TextField
-        label="Reason"
-        value={reason}
-        onChangeText={setReason}
-        placeholder="Gamot para sa anak"
-        multiline
-      />
-      <PrimaryButton
-        label="Request cash advance"
-        onPress={handleSubmit}
-        disabled={!canSubmit}
-        loading={submitting}
-      />
 
       {openRequests.length > 0 ? (
         <View style={styles.list}>
@@ -95,6 +78,28 @@ export function ValeRequestForm({
           ))}
         </View>
       ) : null}
+      <RequestDisclosure open={open} onOpenChange={setOpen} openLabel="Humiling ng vale">
+        <TextField
+          label="Amount (₱)"
+          value={amount}
+          onChangeText={setAmount}
+          keyboardType="decimal-pad"
+          placeholder="500"
+        />
+        <TextField
+          label="Reason"
+          value={reason}
+          onChangeText={setReason}
+          placeholder="Gamot para sa anak"
+          multiline
+        />
+        <PrimaryButton
+          label="Request cash advance"
+          onPress={handleSubmit}
+          disabled={!canSubmit}
+          loading={submitting}
+        />
+      </RequestDisclosure>
     </View>
   );
 }

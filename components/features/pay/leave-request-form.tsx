@@ -9,6 +9,8 @@ import { TextField } from "@/components/ui/text-field";
 import { PrimaryButton } from "@/components/ui/primary-button";
 import type { Leave, LeaveKind, LeaveReason, LeaveStatus, SilBalance } from "@/services/api/leave";
 
+import { RequestDisclosure } from "./request-disclosure";
+
 /** What she can ask for. An extra paid day is the household's to give, so it's recorded, not asked. */
 const ASKABLE: { kind: LeaveKind; label: string; hint: string }[] = [
   { kind: "sil", label: "SIL", hint: "May bayad. Bawas sa SIL mo ngayong taon ng serbisyo." },
@@ -85,6 +87,7 @@ export function LeaveRequestForm({
   const [startDate, setStartDate] = useState("");
   const [endDate, setEndDate] = useState("");
   const [note, setNote] = useState("");
+  const [open, setOpen] = useState(false);
 
   const days = countLeaveDays(startDate, endDate || startDate, weeklyRestDay);
   const silLeft = sil?.days ?? 0;
@@ -97,6 +100,7 @@ export function LeaveRequestForm({
     setStartDate("");
     setEndDate("");
     setNote("");
+    setOpen(false);
   };
 
   const toConfirm = leave.filter((l) => l.helperAck === "pending");
@@ -104,7 +108,7 @@ export function LeaveRequestForm({
 
   return (
     <View style={styles.card}>
-      <Text style={styles.eyebrow}>Humiling ng leave</Text>
+      <Text style={styles.eyebrow}>Leave</Text>
       <Text style={styles.hint}>
         {sil?.yearEnd
           ? `SIL: ${silLeft} araw pa hanggang ${leaveDatesLabel(sil.yearEnd, sil.yearEnd)}.`
@@ -135,70 +139,6 @@ export function LeaveRequestForm({
           </View>
         </View>
       ))}
-
-      <View style={styles.chips} accessibilityRole="radiogroup">
-        {ASKABLE.map((a) => (
-          <Chip
-            key={a.kind}
-            label={a.label}
-            selected={kind === a.kind}
-            onPress={() => setKind(a.kind)}
-          />
-        ))}
-      </View>
-      <Text style={styles.hint}>{ASKABLE.find((a) => a.kind === kind)?.hint}</Text>
-
-      <View style={styles.chips} accessibilityRole="radiogroup">
-        {REASONS.map((r) => (
-          <Chip
-            key={r.reason}
-            label={r.label}
-            selected={reason === r.reason}
-            onPress={() => setReason(r.reason)}
-          />
-        ))}
-      </View>
-
-      <DateTimeField
-        label="Unang araw"
-        mode="date"
-        value={startDate}
-        onChange={(v) => {
-          setStartDate(v);
-          if (endDate && endDate < v) setEndDate(v);
-        }}
-        placeholder="Pumili ng petsa"
-        minimumIsoDate={householdToday}
-      />
-      <DateTimeField
-        label="Huling araw"
-        mode="date"
-        value={endDate}
-        onChange={setEndDate}
-        placeholder="Kung isang araw lang, iwanang blangko"
-        minimumIsoDate={startDate || householdToday}
-      />
-      <TextField
-        label="Note (optional)"
-        value={note}
-        onChangeText={setNote}
-        placeholder="Piyesta"
-      />
-
-      {startDate ? (
-        <Text style={styles.preview}>
-          {days === 0
-            ? "Rest day mo lahat ng araw na iyon."
-            : `${days} araw${tooMuch ? ` — ${silLeft} na lang ang SIL mo.` : ""}`}
-        </Text>
-      ) : null}
-      {error ? <Text style={styles.warning}>{error}</Text> : null}
-
-      <PrimaryButton
-        label={submitting ? "Sinesend..." : "Ipadala sa manager"}
-        onPress={handleSubmit}
-        disabled={!canSubmit}
-      />
 
       {recent.length > 0 && (
         <View style={styles.list}>
@@ -231,6 +171,71 @@ export function LeaveRequestForm({
           ))}
         </View>
       )}
+      {error ? <Text style={styles.warning}>{error}</Text> : null}
+      <RequestDisclosure open={open} onOpenChange={setOpen} openLabel="Humiling ng leave">
+        <View style={styles.chips} accessibilityRole="radiogroup">
+          {ASKABLE.map((a) => (
+            <Chip
+              key={a.kind}
+              label={a.label}
+              selected={kind === a.kind}
+              onPress={() => setKind(a.kind)}
+            />
+          ))}
+        </View>
+        <Text style={styles.hint}>{ASKABLE.find((a) => a.kind === kind)?.hint}</Text>
+
+        <View style={styles.chips} accessibilityRole="radiogroup">
+          {REASONS.map((r) => (
+            <Chip
+              key={r.reason}
+              label={r.label}
+              selected={reason === r.reason}
+              onPress={() => setReason(r.reason)}
+            />
+          ))}
+        </View>
+
+        <DateTimeField
+          label="Unang araw"
+          mode="date"
+          value={startDate}
+          onChange={(v) => {
+            setStartDate(v);
+            if (endDate && endDate < v) setEndDate(v);
+          }}
+          placeholder="Pumili ng petsa"
+          minimumIsoDate={householdToday}
+        />
+        <DateTimeField
+          label="Huling araw"
+          mode="date"
+          value={endDate}
+          onChange={setEndDate}
+          placeholder="Kung isang araw lang, iwanang blangko"
+          minimumIsoDate={startDate || householdToday}
+        />
+        <TextField
+          label="Note (optional)"
+          value={note}
+          onChangeText={setNote}
+          placeholder="Piyesta"
+        />
+
+        {startDate ? (
+          <Text style={styles.preview}>
+            {days === 0
+              ? "Rest day mo lahat ng araw na iyon."
+              : `${days} araw${tooMuch ? ` — ${silLeft} na lang ang SIL mo.` : ""}`}
+          </Text>
+        ) : null}
+
+        <PrimaryButton
+          label={submitting ? "Sinesend..." : "Ipadala sa manager"}
+          onPress={handleSubmit}
+          disabled={!canSubmit}
+        />
+      </RequestDisclosure>
     </View>
   );
 }
