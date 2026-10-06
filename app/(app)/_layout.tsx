@@ -1,5 +1,5 @@
 import type { ReactNode } from "react";
-import { ActivityIndicator, StyleSheet, View, type StyleProp, type ViewStyle } from "react-native";
+import { StyleSheet, View, type StyleProp, type ViewStyle } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
 import { Redirect, Tabs, usePathname } from "expo-router";
 import { useQuery } from "@tanstack/react-query";
@@ -10,6 +10,7 @@ import { colors } from "@/lib/theme";
 import { useSession } from "@/lib/session-context";
 import { getMyEmployments } from "@/services/api/employment";
 import { useAccountKind } from "@/hooks/use-account-kind";
+import { StartupWait } from "@/components/ui/startup-wait";
 
 /**
  * A tab she can see but not open: no household means no board, pantry, week
@@ -67,11 +68,7 @@ export default function AppTabsLayout() {
   });
 
   if (isLoading || (session && (employmentsQuery.isLoading || kindQuery.isLoading))) {
-    return (
-      <View style={styles.loading}>
-        <ActivityIndicator color={colors.pineTeal} />
-      </View>
-    );
+    return <StartupWait />;
   }
 
   // Losing the session in here means she already has an account (signed out,
@@ -165,12 +162,6 @@ export default function AppTabsLayout() {
 }
 
 const styles = StyleSheet.create({
-  loading: {
-    flex: 1,
-    alignItems: "center",
-    justifyContent: "center",
-    backgroundColor: colors.sand,
-  },
   locked: {
     flex: 1,
     alignItems: "center",

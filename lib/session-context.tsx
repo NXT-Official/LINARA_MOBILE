@@ -1,4 +1,4 @@
-import { createContext, useContext, useEffect, useState, type ReactNode } from "react";
+import { createContext, useCallback, useContext, useEffect, useState, type ReactNode } from "react";
 import type { Session } from "@supabase/supabase-js";
 
 import { supabase } from "@/services/supabase";
@@ -7,6 +7,14 @@ interface SessionContextValue {
   session: Session | null;
   /** True until the persisted AsyncStorage session has been read at least once. */
   isLoading: boolean;
+  /** Reads the saved session again, after a start that seems stuck. */
+  reload: () => void;
+  /**
+   * Treats this phone as signed out without waiting on Supabase or storage:
+   * the way out when signing out properly stalls. Any session that arrives
+   * later (a stalled read finishing) still takes over.
+   */
+  dropSession: () => void;
 }
 
 const SessionContext = createContext<SessionContextValue | null>(null);
@@ -20,11 +28,24 @@ export function SessionProvider({ children }: { children: ReactNode }) {
   const [session, setSession] = useState<Session | null>(null);
   const [isLoading, setIsLoading] = useState(true);
 
+  const reload = useCallback(() => {
+    supabase.auth
+      .getSession()
+      .then(({ data }) => setSession(data.session))
+      .catch((err: unknown) => {
+        // Storage that can't be read: carry on signed out, to the sign-in screen.
+        console.warn("[session] Couldn't read the saved session:", (err as Error).message);
+      })
+      .finally(() => setIsLoading(false));
+  }, []);
+
+  const dropSession = useCallback(() => {
+    setSession(null);
+    setIsLoading(false);
+  }, []);
+
   useEffect(() => {
-    supabase.auth.getSession().then(({ data }) => {
-      setSession(data.session);
-      setIsLoading(false);
-    });
+    reload();
 
     const { data: subscription } = supabase.auth.onAuthStateChange((_event, nextSession) => {
       setSession(nextSession);
@@ -32,10 +53,12 @@ export function SessionProvider({ children }: { children: ReactNode }) {
     });
 
     return () => subscription.subscription.unsubscribe();
-  }, []);
+  }, [reload]);
 
   return (
-    <SessionContext.Provider value={{ session, isLoading }}>{children}</SessionContext.Provider>
+    <SessionContext.Provider value={{ session, isLoading, reload, dropSession }}>
+      {children}
+    </SessionContext.Provider>
   );
 }
 

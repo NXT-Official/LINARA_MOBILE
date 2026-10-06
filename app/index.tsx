@@ -1,9 +1,8 @@
-import { ActivityIndicator, StyleSheet, View } from "react-native";
 import { Redirect } from "expo-router";
 
-import { colors } from "@/lib/theme";
 import { useSession } from "@/lib/session-context";
 import { useAccountKind } from "@/hooks/use-account-kind";
+import { StartupWait } from "@/components/ui/startup-wait";
 
 /**
  * Entry redirect: bounces to the authenticated tab shell or the onboarding
@@ -17,11 +16,7 @@ export default function Index() {
   const kindQuery = useAccountKind();
 
   if (isLoading || (session && kindQuery.isLoading)) {
-    return (
-      <View style={styles.loading}>
-        <ActivityIndicator color={colors.pineTeal} />
-      </View>
-    );
+    return <StartupWait />;
   }
 
   if (!session) {
@@ -30,12 +25,3 @@ export default function Index() {
   }
   return <Redirect href={kindQuery.data === "manager" ? "/manager" : "/(app)/today"} />;
 }
-
-const styles = StyleSheet.create({
-  loading: {
-    flex: 1,
-    alignItems: "center",
-    justifyContent: "center",
-    backgroundColor: colors.sand,
-  },
-});
