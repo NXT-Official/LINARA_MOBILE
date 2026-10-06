@@ -58,7 +58,7 @@ export default function WelcomeScreen() {
             setError(null);
           }}
           error={error}
-          placeholder="LN98A2"
+          hint="6 na letra at numero"
           autoCapitalize="characters"
           autoCorrect={false}
           maxLength={INVITE_CODE_LENGTH}
