@@ -101,7 +101,9 @@ export default function PantryScreen() {
   const openRunIds = runsOn ? runs.open.map((r) => r.id) : null;
 
   // The manager can change this from the web at any time, and nothing pushes
-  // it here, so check again whenever she opens the tab.
+  // it here, so check again whenever she opens the tab. The same goes for the
+  // palengke: a run approved, or a line added, on the web since she last
+  // looked (tabs stay mounted, so nothing else would re-read them).
   const roleQuery = useQuery({
     queryKey: ["my-pantry-role"],
     queryFn: getMyPantryRole,
@@ -110,7 +112,10 @@ export default function PantryScreen() {
   useFocusEffect(
     useCallback(() => {
       void refetchRole();
-    }, [refetchRole]),
+      void queryClient.invalidateQueries({ queryKey: ["grocery-runs"] });
+      void queryClient.invalidateQueries({ queryKey: ["grocery-items"] });
+      void queryClient.invalidateQueries({ queryKey: ["pantry-items"] });
+    }, [refetchRole, queryClient]),
   );
   // Until it's known, show the smaller set rather than flash controls away.
   const inCharge = roleQuery.data === "lead";
