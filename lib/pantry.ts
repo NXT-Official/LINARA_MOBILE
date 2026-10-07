@@ -1,7 +1,7 @@
-import type { PantryCategory, PantryItemInput, PantryItemRow } from "@/services/api/pantry";
+import type { PantryCategory, PantryItemRow } from "@/services/api/pantry";
 
 /**
- * Pantry wording and the starter list, kept in step with the web's
+ * Pantry wording and the shelf order, kept in step with the web's
  * ../LINARA/src/features/pantry/pantry.utils.ts (neither app can import the
  * other). The labels here are hers, in Filipino; the stored categories stay
  * as pantry_items' CHECK has them.
@@ -62,49 +62,13 @@ export function unitFor(n: number, unit: string): string {
   return unit.toLowerCase() === "boxes" ? unit.slice(0, -2) : unit.slice(0, -1);
 }
 
-/** The starter list's shelves: baby things last, since most homes untick them. */
-export const STARTER_ORDER: PantryCategory[] = [
+/** The shelves, in the order the item form offers them: baby things last. */
+export const CATEGORY_ORDER: PantryCategory[] = [
   "Rice & grains",
   "Fresh",
   "Pantry",
   "Cleaning",
   "Baby",
-];
-
-export type StarterItem = PantryItemInput & { picked: boolean };
-
-/**
- * What a Filipino home usually keeps, for a pantry that's still empty (client
- * feedback, 2026-10-02). Each starts stocked at twice its keep-at-least amount;
- * whatever is already running out is one "Ubos na" away. Same list as the web.
- */
-export const STARTER_ITEMS: StarterItem[] = [
-  { name: "Bigas", qty: 10, unit: "kg", par: 5, category: "Rice & grains", picked: true },
-  { name: "Itlog", qty: 12, unit: "pcs", par: 6, category: "Fresh", picked: true },
-  { name: "Bawang", qty: 4, unit: "heads", par: 2, category: "Fresh", picked: true },
-  { name: "Sibuyas", qty: 6, unit: "pcs", par: 3, category: "Fresh", picked: true },
-  { name: "Mantika", qty: 2, unit: "L", par: 1, category: "Pantry", picked: true },
-  { name: "Toyo", qty: 2, unit: "bottles", par: 1, category: "Pantry", picked: true },
-  { name: "Suka", qty: 2, unit: "bottles", par: 1, category: "Pantry", picked: true },
-  { name: "Patis", qty: 2, unit: "bottles", par: 1, category: "Pantry", picked: true },
-  { name: "Asin", qty: 2, unit: "packs", par: 1, category: "Pantry", picked: true },
-  { name: "Asukal", qty: 2, unit: "kg", par: 1, category: "Pantry", picked: true },
-  { name: "Kape", qty: 2, unit: "packs", par: 1, category: "Pantry", picked: true },
-  { name: "Sabon panlaba", qty: 2, unit: "packs", par: 1, category: "Cleaning", picked: true },
-  {
-    name: "Dishwashing liquid",
-    qty: 2,
-    unit: "bottles",
-    par: 1,
-    category: "Cleaning",
-    picked: true,
-  },
-  { name: "Toilet paper", qty: 8, unit: "rolls", par: 4, category: "Cleaning", picked: true },
-  { name: "Sabong pampaligo", qty: 4, unit: "bars", par: 2, category: "Cleaning", picked: true },
-  { name: "Bleach", qty: 2, unit: "bottles", par: 1, category: "Cleaning", picked: false },
-  { name: "Diaper", qty: 20, unit: "pcs", par: 10, category: "Baby", picked: false },
-  { name: "Gatas ng baby", qty: 2, unit: "cans", par: 1, category: "Baby", picked: false },
-  { name: "Baby wipes", qty: 2, unit: "packs", par: 1, category: "Baby", picked: false },
 ];
 
 export type GrocerySection = { key: PantryCategory | "other"; label: string };
