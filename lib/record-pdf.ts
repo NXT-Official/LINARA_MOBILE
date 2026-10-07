@@ -44,9 +44,9 @@ const METHOD: Record<string, string> = {
 function howPaid(p: RecordPdfPayslip): string {
   const method = METHOD[p.payoutChannelCode ?? ""] ?? "—";
   if (p.payoutProvider !== "manual") return method;
-  if (p.helperAck === "confirmed") return `${method}, confirmed by her`;
-  if (p.helperAck === "disputed") return `${method}, she disputes this`;
-  return `${method}, not yet confirmed by her`;
+  if (p.helperAck === "confirmed") return `${method}, confirmed by the helper`;
+  if (p.helperAck === "disputed") return `${method}, disputed by the helper`;
+  return `${method}, not yet confirmed by the helper`;
 }
 
 export interface RecordPdfRest {
@@ -85,10 +85,10 @@ const LEAVE_REASON: Record<RecordPdfLeave["reason"], string> = {
 
 /** Who put it on the record, and what she said about it. */
 function leaveSource(l: RecordPdfLeave): string {
-  if (l.helperAck === null) return "She asked; approved";
-  if (l.helperAck === "confirmed") return "Recorded by the household; confirmed by her";
-  if (l.helperAck === "disputed") return "Recorded by the household; she disputes this";
-  return "Recorded by the household; not yet confirmed by her";
+  if (l.helperAck === null) return "Asked by the helper; approved";
+  if (l.helperAck === "confirmed") return "Recorded by the household; confirmed by the helper";
+  if (l.helperAck === "disputed") return "Recorded by the household; disputed by the helper";
+  return "Recorded by the household; not yet confirmed by the helper";
 }
 
 export interface RecordPdfInput {
@@ -210,7 +210,7 @@ export function recordPdfHtml(r: RecordPdfInput): string {
   const household =
     r.householdName && r.householdName !== "My Household"
       ? r.householdName
-      : "her employer's household";
+      : "the employer's household";
 
   const employment = [
     row("Role", r.station),
@@ -378,8 +378,8 @@ export function recordPdfHtml(r: RecordPdfInput): string {
   </table>
 
   <footer>
-    <p>Pay figures are taken from payslips paid through Linara (GCash, Maya) and payments the household recorded as made outside it (cash, bank transfer, other). A payment made outside Linara counts in the totals only once she has confirmed it. Payslips still processing or failed are not included. Government contributions are shown as deducted from her pay (employee share). This record does not show whether they were remitted to SSS, PhilHealth or Pag-IBIG.</p>
-    <p>Leave is whole working days (her weekly rest day isn't counted), approved leave only. Service incentive leave is the five paid days a year RA 10361 gives after a year of service; a day off in kind is paid from rest she earned working after hours; unpaid leave is deducted from the pay for the period it ends in, shown above.</p>
+    <p>Pay figures are taken from payslips paid through Linara (GCash, Maya) and payments the household recorded as made outside it (cash, bank transfer, other). A payment made outside Linara counts in the totals only once the helper has confirmed it. Payslips still processing or failed are not included. Government contributions are shown as deducted from the helper's pay (employee share). This record does not show whether they were remitted to SSS, PhilHealth or Pag-IBIG.</p>
+    <p>Leave is whole working days (the weekly rest day isn't counted), approved leave only. Service incentive leave is the five paid days a year RA 10361 gives after a year of service; a day off in kind is paid from rest earned working after hours; unpaid leave is deducted from the pay for the period it ends in, shown above.</p>
     <p>This is a summary of the household's records, not a certificate of employment.</p>
   </footer>
 </body>

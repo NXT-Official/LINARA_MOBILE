@@ -9,16 +9,22 @@ import { TextField } from "@/components/ui/text-field";
 import { PrimaryButton } from "@/components/ui/primary-button";
 import type { Leave, LeaveKind, LeaveReason, LeaveStatus, SilBalance } from "@/services/api/leave";
 
+import { RequestDisclosure } from "./request-disclosure";
+
 /** What she can ask for. An extra paid day is the household's to give, so it's recorded, not asked. */
 const ASKABLE: { kind: LeaveKind; label: string; hint: string }[] = [
   { kind: "sil", label: "SIL", hint: "May bayad. Bawas sa SIL mo ngayong taon ng serbisyo." },
-  { kind: "in_kind", label: "Day off in kind", hint: "Bayad sa oras: galing sa rest owed mo." },
+  {
+    kind: "in_kind",
+    label: "Day off mula sa rest owed",
+    hint: "Bayad sa oras: galing sa rest owed mo.",
+  },
   { kind: "unpaid", label: "Walang bayad", hint: "Ibabawas sa sahod ng cutoff na iyon." },
 ];
 
 const KIND_LABEL: Record<LeaveKind, string> = {
   sil: "SIL",
-  in_kind: "Day off in kind",
+  in_kind: "Day off mula sa rest owed",
   unpaid: "Walang bayad",
   extra_paid: "Dagdag na bayad na day off",
 };
@@ -85,6 +91,7 @@ export function LeaveRequestForm({
   const [startDate, setStartDate] = useState("");
   const [endDate, setEndDate] = useState("");
   const [note, setNote] = useState("");
+  const [open, setOpen] = useState(false);
 
   const days = countLeaveDays(startDate, endDate || startDate, weeklyRestDay);
   const silLeft = sil?.days ?? 0;
@@ -97,6 +104,7 @@ export function LeaveRequestForm({
     setStartDate("");
     setEndDate("");
     setNote("");
+    setOpen(false);
   };
 
   const toConfirm = leave.filter((l) => l.helperAck === "pending");
@@ -104,7 +112,7 @@ export function LeaveRequestForm({
 
   return (
     <View style={styles.card}>
-      <Text style={styles.eyebrow}>Humiling ng leave</Text>
+      <Text style={styles.eyebrow}>Leave</Text>
       <Text style={styles.hint}>
         {sil?.yearEnd
           ? `SIL: ${silLeft} araw pa hanggang ${leaveDatesLabel(sil.yearEnd, sil.yearEnd)}.`
@@ -135,70 +143,6 @@ export function LeaveRequestForm({
           </View>
         </View>
       ))}
-
-      <View style={styles.chips} accessibilityRole="radiogroup">
-        {ASKABLE.map((a) => (
-          <Chip
-            key={a.kind}
-            label={a.label}
-            selected={kind === a.kind}
-            onPress={() => setKind(a.kind)}
-          />
-        ))}
-      </View>
-      <Text style={styles.hint}>{ASKABLE.find((a) => a.kind === kind)?.hint}</Text>
-
-      <View style={styles.chips} accessibilityRole="radiogroup">
-        {REASONS.map((r) => (
-          <Chip
-            key={r.reason}
-            label={r.label}
-            selected={reason === r.reason}
-            onPress={() => setReason(r.reason)}
-          />
-        ))}
-      </View>
-
-      <DateTimeField
-        label="Unang araw"
-        mode="date"
-        value={startDate}
-        onChange={(v) => {
-          setStartDate(v);
-          if (endDate && endDate < v) setEndDate(v);
-        }}
-        placeholder="Pumili ng petsa"
-        minimumIsoDate={householdToday}
-      />
-      <DateTimeField
-        label="Huling araw"
-        mode="date"
-        value={endDate}
-        onChange={setEndDate}
-        placeholder="Kung isang araw lang, iwanang blangko"
-        minimumIsoDate={startDate || householdToday}
-      />
-      <TextField
-        label="Note (optional)"
-        value={note}
-        onChangeText={setNote}
-        placeholder="Piyesta"
-      />
-
-      {startDate ? (
-        <Text style={styles.preview}>
-          {days === 0
-            ? "Rest day mo lahat ng araw na iyon."
-            : `${days} araw${tooMuch ? ` — ${silLeft} na lang ang SIL mo.` : ""}`}
-        </Text>
-      ) : null}
-      {error ? <Text style={styles.warning}>{error}</Text> : null}
-
-      <PrimaryButton
-        label={submitting ? "Sinesend..." : "Ipadala sa manager"}
-        onPress={handleSubmit}
-        disabled={!canSubmit}
-      />
 
       {recent.length > 0 && (
         <View style={styles.list}>
@@ -231,6 +175,71 @@ export function LeaveRequestForm({
           ))}
         </View>
       )}
+      {error ? <Text style={styles.warning}>{error}</Text> : null}
+      <RequestDisclosure open={open} onOpenChange={setOpen} openLabel="Humiling ng leave">
+        <View style={styles.chips} accessibilityRole="radiogroup">
+          {ASKABLE.map((a) => (
+            <Chip
+              key={a.kind}
+              label={a.label}
+              selected={kind === a.kind}
+              onPress={() => setKind(a.kind)}
+            />
+          ))}
+        </View>
+        <Text style={styles.hint}>{ASKABLE.find((a) => a.kind === kind)?.hint}</Text>
+
+        <View style={styles.chips} accessibilityRole="radiogroup">
+          {REASONS.map((r) => (
+            <Chip
+              key={r.reason}
+              label={r.label}
+              selected={reason === r.reason}
+              onPress={() => setReason(r.reason)}
+            />
+          ))}
+        </View>
+
+        <DateTimeField
+          label="Unang araw"
+          mode="date"
+          value={startDate}
+          onChange={(v) => {
+            setStartDate(v);
+            if (endDate && endDate < v) setEndDate(v);
+          }}
+          placeholder="Pumili ng petsa"
+          minimumIsoDate={householdToday}
+        />
+        <DateTimeField
+          label="Huling araw"
+          mode="date"
+          value={endDate}
+          onChange={setEndDate}
+          placeholder="Kung isang araw lang, iwanang blangko"
+          minimumIsoDate={startDate || householdToday}
+        />
+        <TextField
+          label="Note (optional)"
+          value={note}
+          onChangeText={setNote}
+          placeholder="Piyesta"
+        />
+
+        {startDate ? (
+          <Text style={styles.preview}>
+            {days === 0
+              ? "Rest day mo lahat ng araw na iyon."
+              : `${days} araw${tooMuch ? ` — ${silLeft} na lang ang SIL mo.` : ""}`}
+          </Text>
+        ) : null}
+
+        <PrimaryButton
+          label={submitting ? "Sinesend..." : "Ipadala sa manager"}
+          onPress={handleSubmit}
+          disabled={!canSubmit}
+        />
+      </RequestDisclosure>
     </View>
   );
 }
@@ -266,14 +275,12 @@ const styles = StyleSheet.create({
     gap: 10,
   },
   eyebrow: {
-    fontSize: 11,
+    fontSize: 13,
     fontWeight: "700",
-    letterSpacing: 0.4,
-    textTransform: "uppercase",
     color: colors.terracottaGold,
   },
   hint: {
-    fontSize: 12,
+    fontSize: 13,
     color: colors.mutedInk,
   },
   chips: {
@@ -314,12 +321,12 @@ const styles = StyleSheet.create({
     color: colors.ink,
   },
   preview: {
-    fontSize: 12,
+    fontSize: 13,
     fontFamily: fonts.bodyBold,
     color: colors.ink,
   },
   warning: {
-    fontSize: 12,
+    fontSize: 13,
     fontFamily: fonts.bodyBold,
     color: colors.terracottaInk,
   },
@@ -344,11 +351,11 @@ const styles = StyleSheet.create({
     color: colors.ink,
   },
   rowMeta: {
-    fontSize: 11,
+    fontSize: 13,
     color: colors.mutedInk,
   },
   status: {
-    fontSize: 11,
+    fontSize: 13,
     fontFamily: fonts.bodyBold,
     color: colors.mutedInk,
   },
@@ -360,7 +367,7 @@ const styles = StyleSheet.create({
     borderColor: colors.mutedInk,
   },
   cancelText: {
-    fontSize: 11,
+    fontSize: 13,
     fontFamily: fonts.bodyBold,
     color: colors.mutedInk,
   },

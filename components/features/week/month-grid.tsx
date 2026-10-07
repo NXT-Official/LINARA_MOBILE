@@ -109,7 +109,7 @@ const styles = StyleSheet.create({
   weekday: {
     width: `${100 / 7}%`,
     textAlign: "center",
-    fontSize: 12,
+    fontSize: 13,
     fontWeight: "700",
     color: colors.mutedInk,
     paddingVertical: 6,
@@ -172,7 +172,7 @@ const styles = StyleSheet.create({
     opacity: 0.35,
   },
   more: {
-    fontSize: 11,
+    fontSize: 13,
     color: colors.mutedInk,
   },
 });

@@ -34,6 +34,7 @@ import {
   getMyTermsOnFile,
   type TermsFlagField,
 } from "@/services/api/record";
+import { getMyCoveredTeams, getMyWorkplaces } from "@/services/api/workplaces";
 import { loadRecordPdfInput, shareRecordPdf } from "@/services/record-export";
 import { PrivacyAccountCard } from "@/components/features/account/privacy-account-card";
 import { SignOutButton } from "@/components/features/account/sign-out-button";
@@ -46,8 +47,8 @@ const FLAG_FIELDS: { value: TermsFlagField; label: string }[] = [
   { value: "wage", label: "Sahod" },
   { value: "shift", label: "Oras ng shift" },
   { value: "restDay", label: "Rest day" },
-  { value: "station", label: "Role" },
-  { value: "employment", label: "Live-in / live-out" },
+  { value: "station", label: "Trabaho" },
+  { value: "employment", label: "Stay-in / stay-out" },
   { value: "other", label: "Iba pa" },
 ];
 
@@ -141,7 +142,7 @@ function JoinHouseholdCard() {
       <Text style={styles.cardTitle}>Wala kang household ngayon</Text>
       <Text style={styles.cardSub}>
         Kapag may bago kang employer, i-enter ang invite code na ibibigay nila. Makikita mo muna ang
-        terms bago ka sumali. Bubukas ulit ang Today, My Week, Pantry at My Pay pagkasali mo.
+        terms bago ka sumali. Bubukas ulit ang Ngayon, Linggo ko, Pantry at Sahod ko pagkasali mo.
       </Text>
       <TextField
         label="Invite code"
@@ -151,7 +152,7 @@ function JoinHouseholdCard() {
           setError(null);
         }}
         error={error}
-        placeholder="LN98A2"
+        hint="6 na letra at numero"
         autoCapitalize="characters"
         autoCorrect={false}
         maxLength={INVITE_CODE_LENGTH}
@@ -224,6 +225,11 @@ function CurrentRecord({ employment }: { employment: Employment }) {
     queryKey: ["terms-on-file", helperId],
     queryFn: () => getMyTermsOnFile(helperId),
   });
+  // Every house she works in (LINARA add-shared-staff-and-places.sql), and
+  // teams she also covers. Empty before that SQL: the single Team row stays.
+  const workplacesQuery = useQuery({ queryKey: ["my-workplaces"], queryFn: getMyWorkplaces });
+  const coversQuery = useQuery({ queryKey: ["my-covered-teams"], queryFn: getMyCoveredTeams });
+  const workplaces = workplacesQuery.data ?? [];
   const payslipsQuery = useQuery({
     queryKey: ["payslips", helperId],
     queryFn: () => getMyPayslips(helperId),
@@ -312,14 +318,37 @@ function CurrentRecord({ employment }: { employment: Employment }) {
         <Text style={styles.cardSub}>
           Ito ang record ng household tungkol sa trabaho mo. Parehong numero ang nakikita nila.
         </Text>
-        <Row label="Role" value={terms.station} />
+        <Row label="Trabaho" value={terms.station} />
+        {workplaces.length > 1 ? (
+          <Row
+            label="Mga bahay"
+            value={workplaces
+              .map((w) => (w.isHome ? `${w.name} (dito ka naka-employ)` : w.name))
+              .join(", ")}
+          />
+        ) : null}
+        {workplaces.some((w) => w.teamName) ? (
+          <Row
+            label="Team"
+            value={workplaces
+              .filter((w) => w.teamName)
+              .map((w) => (workplaces.length > 1 ? `${w.teamName} (${w.name})` : w.teamName))
+              .join(", ")}
+          />
+        ) : terms.team ? (
+          <Row label="Team" value={terms.team} />
+        ) : null}
+        {(coversQuery.data ?? []).length > 0 ? (
+          <Row label="Tumutulong din sa" value={(coversQuery.data ?? []).join(", ")} />
+        ) : null}
+        {terms.labels.length > 0 ? <Row label="Mga label" value={terms.labels.join(", ")} /> : null}
         <Row
           label="Tirahan"
           value={
             terms.employment === "live-in"
-              ? "Live-in"
+              ? "Stay-in"
               : terms.employment === "live-out"
-                ? "Live-out"
+                ? "Stay-out"
                 : "Hindi nakalagay"
           }
         />

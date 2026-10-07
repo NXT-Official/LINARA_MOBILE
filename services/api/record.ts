@@ -17,6 +17,10 @@ export interface TermsOnFile {
   /** The last day she gave notice for, while still employed. */
   noticeLastDay: string | null;
   noticeNote: string | null;
+  /** Her team (the part of the house she works in), when the household uses teams. */
+  team: string | null;
+  /** Labels the household gave her; she sees every one (LINARA add-teams-and-labels.sql). */
+  labels: string[];
 }
 
 /**
@@ -54,6 +58,38 @@ export async function getMyTermsOnFile(helperId: string): Promise<TermsOnFile> {
     endedOn: data.ended_on ?? null,
     noticeLastDay: data.notice_last_day ?? null,
     noticeNote: data.notice_note ?? null,
+    ...(await readTeamAndLabels(helperId, data.team_id ?? null)),
+  };
+}
+
+/**
+ * Her team's name and her labels. RLS lets her read only her own labels, and
+ * only while she works in that household. Before the web's
+ * add-teams-and-labels.sql is applied the tables don't exist; that, or any
+ * other failure, reads as no team and no labels rather than failing the
+ * whole Record.
+ */
+async function readTeamAndLabels(
+  helperId: string,
+  teamId: string | null,
+): Promise<{ team: string | null; labels: string[] }> {
+  const [team, labels] = await Promise.all([
+    teamId
+      ? supabase.from("household_teams").select("name").eq("id", teamId).maybeSingle()
+      : Promise.resolve({ data: null, error: null }),
+    supabase.from("helper_labels").select("household_labels(name)").eq("helper_id", helperId),
+  ]);
+  const names = (labels.error ? [] : (labels.data ?? []))
+    .map((row) => {
+      const l = (row as { household_labels: { name: string } | { name: string }[] | null })
+        .household_labels;
+      return Array.isArray(l) ? l[0]?.name : l?.name;
+    })
+    .filter((n): n is string => !!n)
+    .sort((a, b) => a.localeCompare(b));
+  return {
+    team: team.error ? null : ((team.data as { name: string } | null)?.name ?? null),
+    labels: names,
   };
 }
 

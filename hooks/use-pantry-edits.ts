@@ -177,7 +177,7 @@ export function usePantryEdits(householdId: string | null) {
       updatePantryItem(item.id, { qty }),
     onMutate: ({ item, qty }) => {
       setError(null);
-      queryClient.setQueryData<PantryItemRow[]>(["pantry-items"], (rows) =>
+      queryClient.setQueryData<PantryItemRow[]>(["pantry-items", householdId], (rows) =>
         rows?.map((r) => (r.id === item.id ? { ...r, qty } : r)),
       );
     },
@@ -189,8 +189,9 @@ export function usePantryEdits(householdId: string | null) {
 
   const stepPantry = (item: PantryItemRow, delta: number) => {
     const current =
-      queryClient.getQueryData<PantryItemRow[]>(["pantry-items"])?.find((r) => r.id === item.id)
-        ?.qty ?? item.qty;
+      queryClient
+        .getQueryData<PantryItemRow[]>(["pantry-items", householdId])
+        ?.find((r) => r.id === item.id)?.qty ?? item.qty;
     step.mutate({ item, qty: Math.max(0, current + delta) });
   };
 

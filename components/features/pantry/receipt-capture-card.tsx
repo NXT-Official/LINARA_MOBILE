@@ -67,7 +67,7 @@ export function ReceiptCaptureCard({
       ) : null}
 
       <PrimaryButton
-        label="Mark Run Complete"
+        label="Tapos na ang run"
         disabled={!receiptUri}
         loading={completing}
         onPress={onComplete}
@@ -86,10 +86,8 @@ const styles = StyleSheet.create({
     gap: 12,
   },
   eyebrow: {
-    fontSize: 11,
+    fontSize: 13,
     fontWeight: "700",
-    letterSpacing: 0.6,
-    textTransform: "uppercase",
     color: colors.terracottaGold,
   },
   title: {
@@ -128,7 +126,7 @@ const styles = StyleSheet.create({
     color: colors.ink,
   },
   receiptRetake: {
-    fontSize: 12,
+    fontSize: 13,
     fontWeight: "600",
     color: colors.pineTeal,
     textDecorationLine: "underline",
@@ -139,7 +137,7 @@ const styles = StyleSheet.create({
     gap: 8,
   },
   uploadingText: {
-    fontSize: 12,
+    fontSize: 13,
     color: colors.mutedInk,
   },
 });

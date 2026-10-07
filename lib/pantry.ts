@@ -16,11 +16,19 @@ export const CATEGORY_LABEL: Record<PantryCategory, string> = {
 
 export type StockState = "out" | "low" | "ok";
 
-/** Out at zero, low at or under the buy-more point, otherwise fine. */
+/**
+ * Out at zero, low under the keep-at-least amount (`par`), otherwise fine.
+ * Under, not at: "Ilista sa palengke" lists `par - qty`, so a line bought as
+ * listed lands on `par` and has to count as enough, or it would go straight
+ * back on the list (decided 2026-10-07; the web's pantry.utils.ts matches).
+ */
 export function stockState(item: Pick<PantryItemRow, "qty" | "par">): StockState {
   if (item.qty <= 0) return "out";
-  return item.qty <= item.par ? "low" : "ok";
+  return item.qty < item.par ? "low" : "ok";
 }
+
+/** Out or low: what the "Paubos" filter shows. */
+export const needsBuying = (item: Pick<PantryItemRow, "qty" | "par">) => stockState(item) !== "ok";
 
 export const STOCK_LABEL: Record<Exclude<StockState, "ok">, string> = {
   out: "Ubos",
@@ -67,7 +75,7 @@ export type StarterItem = PantryItemInput & { picked: boolean };
 
 /**
  * What a Filipino home usually keeps, for a pantry that's still empty (client
- * feedback, 2026-10-02). Each starts stocked at twice its buy-more point;
+ * feedback, 2026-10-02). Each starts stocked at twice its keep-at-least amount;
  * whatever is already running out is one "Ubos na" away. Same list as the web.
  */
 export const STARTER_ITEMS: StarterItem[] = [

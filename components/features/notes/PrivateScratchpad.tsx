@@ -155,7 +155,7 @@ export function PrivateScratchpad({
 
   return (
     <View style={styles.card}>
-      <Text style={styles.eyebrow}>Private Notes</Text>
+      <Text style={styles.eyebrow}>Sariling tala</Text>
       <Text style={styles.subtitle}>Sa&apos;yo lang &apos;to. Hindi ito makikita ng manager.</Text>
 
       {notesQuery.isLoading ? (
@@ -209,7 +209,7 @@ export function PrivateScratchpad({
                             size={16}
                             color={colors.pineTeal}
                           />
-                          <Text style={styles.promoteText}>Promote to Board</Text>
+                          <Text style={styles.promoteText}>Gawing task</Text>
                         </>
                       )}
                     </Pressable>
@@ -261,7 +261,7 @@ export function PrivateScratchpad({
 
       <View style={styles.actionsRow}>
         <PrimaryButton
-          label="Add Note"
+          label="Magdagdag ng tala"
           variant="secondary"
           style={styles.actionButton}
           loading={addTextMutation.isPending}
@@ -300,10 +300,8 @@ const styles = StyleSheet.create({
     gap: 12,
   },
   eyebrow: {
-    fontSize: 11,
+    fontSize: 13,
     fontWeight: "700",
-    letterSpacing: 0.6,
-    textTransform: "uppercase",
     color: colors.terracottaGold,
   },
   subtitle: {
@@ -349,7 +347,7 @@ const styles = StyleSheet.create({
     alignSelf: "flex-start",
   },
   promoteText: {
-    fontSize: 12,
+    fontSize: 13,
     fontWeight: "700",
     color: colors.pineTeal,
   },
@@ -373,7 +371,7 @@ const styles = StyleSheet.create({
     backgroundColor: colors.terracottaGold,
   },
   recordHint: {
-    fontSize: 11,
+    fontSize: 13,
     color: colors.mutedInk,
     textAlign: "center",
   },

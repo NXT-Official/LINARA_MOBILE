@@ -12,14 +12,16 @@ export interface PantryItemRow {
 }
 
 /**
- * Fetches the shared household pantry (roadmap Story 8, step 1). No
- * explicit household_id filter is needed -- pantry_items_isolation RLS
- * already scopes every row to the caller's own household.
+ * Fetches one household's pantry (roadmap Story 8, step 1). Filtered by
+ * household explicitly: a helper who also works in another of the family's
+ * houses can read both pantries (LINARA add-shared-staff-and-places.sql), and
+ * they must not mix.
  */
-export async function getPantryItems(): Promise<PantryItemRow[]> {
+export async function getPantryItems(householdId: string): Promise<PantryItemRow[]> {
   const { data, error } = await supabase
     .from("pantry_items")
     .select("id, name, qty, unit, par, category")
+    .eq("household_id", householdId)
     .order("category", { ascending: true })
     .order("name", { ascending: true });
 

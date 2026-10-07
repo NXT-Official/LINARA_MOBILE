@@ -1,5 +1,5 @@
 import type { ReactNode } from "react";
-import { ActivityIndicator, StyleSheet, View, type StyleProp, type ViewStyle } from "react-native";
+import { StyleSheet, View, type StyleProp, type ViewStyle } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
 import { Redirect, Tabs, usePathname } from "expo-router";
 import { useQuery } from "@tanstack/react-query";
@@ -10,6 +10,7 @@ import { colors } from "@/lib/theme";
 import { useSession } from "@/lib/session-context";
 import { getMyEmployments } from "@/services/api/employment";
 import { useAccountKind } from "@/hooks/use-account-kind";
+import { StartupWait } from "@/components/ui/startup-wait";
 
 /**
  * A tab she can see but not open: no household means no board, pantry, week
@@ -67,11 +68,7 @@ export default function AppTabsLayout() {
   });
 
   if (isLoading || (session && (employmentsQuery.isLoading || kindQuery.isLoading))) {
-    return (
-      <View style={styles.loading}>
-        <ActivityIndicator color={colors.pineTeal} />
-      </View>
-    );
+    return <StartupWait />;
   }
 
   // Losing the session in here means she already has an account (signed out,
@@ -115,24 +112,26 @@ export default function AppTabsLayout() {
           backgroundColor: colors.cardCream,
           borderTopColor: colors.border,
         },
+        // DESIGN.md's smallest size; the navigator's default label is smaller.
+        tabBarLabelStyle: { fontSize: 13 },
       }}
     >
       <Tabs.Screen
         name="today"
         options={{
-          title: "Today",
+          title: "Ngayon",
           tabBarIcon: ({ color, size }) => (
             <Ionicons name="checkmark-circle" size={size} color={color} />
           ),
-          ...lockedButton("Today"),
+          ...lockedButton("Ngayon"),
         }}
       />
       <Tabs.Screen
         name="week"
         options={{
-          title: "My Week",
+          title: "Linggo ko",
           tabBarIcon: ({ color, size }) => <Ionicons name="calendar" size={size} color={color} />,
-          ...lockedButton("My Week"),
+          ...lockedButton("Linggo ko"),
         }}
       />
       <Tabs.Screen
@@ -146,15 +145,15 @@ export default function AppTabsLayout() {
       <Tabs.Screen
         name="pay"
         options={{
-          title: "My Pay",
+          title: "Sahod ko",
           tabBarIcon: ({ color, size }) => <Ionicons name="card" size={size} color={color} />,
-          ...lockedButton("My Pay"),
+          ...lockedButton("Sahod ko"),
         }}
       />
       <Tabs.Screen
         name="record"
         options={{
-          title: "My Record",
+          title: "Record ko",
           tabBarIcon: ({ color, size }) => (
             <Ionicons name="document-text" size={size} color={color} />
           ),
@@ -165,12 +164,6 @@ export default function AppTabsLayout() {
 }
 
 const styles = StyleSheet.create({
-  loading: {
-    flex: 1,
-    alignItems: "center",
-    justifyContent: "center",
-    backgroundColor: colors.sand,
-  },
   locked: {
     flex: 1,
     alignItems: "center",

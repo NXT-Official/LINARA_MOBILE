@@ -3,10 +3,12 @@ import { Image, Pressable, StyleSheet, Text, View } from "react-native";
 import * as ImagePicker from "expo-image-picker";
 
 import { colors } from "@/lib/theme";
+import { formatTimeSpan } from "@/lib/format";
 import type { FocusTask } from "@/services/api/tickets";
 import { PrimaryButton } from "@/components/ui/primary-button";
 import { TextField } from "@/components/ui/text-field";
 import { SopCarousel } from "@/components/features/today/sop-carousel";
+import { EditTaskForm, type TaskEdit } from "@/components/features/today/edit-task-form";
 
 const STATUS_LABEL: Record<FocusTask["status"], string> = {
   todo: "Hindi pa sinisimulan",
@@ -32,6 +34,7 @@ const CANT_NOW_REASONS = [
  *
  * A photo of the finished work is optional -- the Done "plated dish" that
  * the household's Pass (and an OFW parent's glance) shows. Never required.
+ * "Ayusin ang oras o note" lets her move it or fix its note (O31).
  */
 export function ActiveFocusCard({
   task,
@@ -39,9 +42,12 @@ export function ActiveFocusCard({
   onStart,
   onComplete,
   onCantNow,
+  onEdit,
   isStarting,
   isCompleting,
   isHolding,
+  isEditing,
+  editError,
 }: {
   task: FocusTask;
   /** Her auth user id, to tell her own promoted notes from a manager's asks. */
@@ -50,16 +56,22 @@ export function ActiveFocusCard({
   /** `photoUri` is a local capture to attach, or null to finish without one. */
   onComplete: (photoUri: string | null) => void;
   onCantNow: (reason: string) => void;
+  /** Resolves once saved, so the form can close; rejects on failure. */
+  onEdit: (edit: TaskEdit) => Promise<unknown>;
   isStarting: boolean;
   isCompleting: boolean;
   isHolding: boolean;
+  isEditing: boolean;
+  editError: string | null;
 }) {
   const [photoUri, setPhotoUri] = useState<string | null>(null);
   const [photoError, setPhotoError] = useState<string | null>(null);
   const [askingWhy, setAskingWhy] = useState(false);
   const [picked, setPicked] = useState<string | null>(null);
   const [typed, setTyped] = useState("");
+  const [editing, setEditing] = useState(false);
   const reason = typed.trim() || picked;
+  const open = task.status === "todo" || task.status === "in_progress" || task.status === "blocked";
 
   const takePhoto = async () => {
     setPhotoError(null);
@@ -89,7 +101,9 @@ export function ActiveFocusCard({
       ) : task.createdByName ? (
         <Text style={styles.from}>Mula kay {task.createdByName}</Text>
       ) : null}
-      <Text style={styles.status}>{STATUS_LABEL[task.status]}</Text>
+      <Text style={styles.status}>
+        {STATUS_LABEL[task.status]} · {formatTimeSpan(task.scheduledStart, task.durationMinutes)}
+      </Text>
 
       {task.status === "blocked" && (
         <View style={styles.holdNote}>
@@ -105,7 +119,7 @@ export function ActiveFocusCard({
       {task.sop ? <SopCarousel sop={task.sop} /> : null}
 
       {task.status === "todo" && (
-        <PrimaryButton label="Start Task" loading={isStarting} onPress={onStart} />
+        <PrimaryButton label="Simulan" loading={isStarting} onPress={onStart} />
       )}
       {task.status === "in_progress" && (
         <>
@@ -133,7 +147,7 @@ export function ActiveFocusCard({
           )}
           {photoError ? <Text style={styles.error}>{photoError}</Text> : null}
           <PrimaryButton
-            label={photoUri ? "Done, kasama ang litrato" : "Done"}
+            label={photoUri ? "Tapos na, kasama ang litrato" : "Tapos na"}
             loading={isCompleting}
             onPress={() => onComplete(photoUri)}
           />
@@ -184,12 +198,41 @@ export function ActiveFocusCard({
             <PrimaryButton label="Huwag na" variant="secondary" onPress={closeAsk} />
           </View>
         ) : (
+          !editing && (
+            <Pressable
+              onPress={() => setAskingWhy(true)}
+              accessibilityRole="button"
+              style={styles.cantNow}
+            >
+              <Text style={styles.cantNowText}>Hindi ko magagawa ngayon</Text>
+            </Pressable>
+          )
+        ))}
+
+      {open &&
+        !askingWhy &&
+        (editing ? (
+          <EditTaskForm
+            scheduledStart={task.scheduledStart}
+            notes={task.notes}
+            saving={isEditing}
+            error={editError}
+            onSave={(edit) => {
+              onEdit(edit)
+                .then(() => setEditing(false))
+                .catch(() => {
+                  // The error shows in the form; she can try again.
+                });
+            }}
+            onCancel={() => setEditing(false)}
+          />
+        ) : (
           <Pressable
-            onPress={() => setAskingWhy(true)}
+            onPress={() => setEditing(true)}
             accessibilityRole="button"
             style={styles.cantNow}
           >
-            <Text style={styles.cantNowText}>Hindi ko magagawa ngayon</Text>
+            <Text style={styles.cantNowText}>Ayusin ang oras o note</Text>
           </Pressable>
         ))}
     </View>

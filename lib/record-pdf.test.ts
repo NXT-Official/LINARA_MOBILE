@@ -138,8 +138,8 @@ describe("recordPdfHtml", () => {
     expect(html).toContain("Leave taken in 2026");
     expect(html).toContain("3 days service incentive leave, 1 day unpaid");
     expect(html).toContain("Aug 3, 2026 – Aug 5, 2026");
-    expect(html).toContain("She asked; approved");
-    expect(html).toContain("Recorded by the household; she disputes this");
+    expect(html).toContain("Asked by the helper; approved");
+    expect(html).toContain("Recorded by the household; disputed by the helper");
     // Pending leave isn't leave taken.
     expect(html).not.toContain("Oct 20, 2026");
   });
@@ -161,7 +161,7 @@ describe("recordPdfHtml", () => {
       restOff: [],
       leave: [],
     });
-    expect(out).toContain("the records her employer&#39;s household keeps");
+    expect(out).toContain("the records the employer&#39;s household keeps");
     expect(out).toContain("No paid payslips recorded yet.");
     expect(out).toContain("No time off recorded.");
     expect(out).toContain("No leave recorded.");
@@ -213,13 +213,13 @@ describe("payments made outside Linara and 13th-month pay", () => {
 
   it("says how each was paid and whether she confirmed it", () => {
     expect(recordPdfHtml({ ...base, payslips: [manual("pending")] })).toContain(
-      "Cash, not yet confirmed by her",
+      "Cash, not yet confirmed by the helper",
     );
     expect(recordPdfHtml({ ...base, payslips: [manual("confirmed")] })).toContain(
-      "Cash, confirmed by her",
+      "Cash, confirmed by the helper",
     );
     expect(recordPdfHtml({ ...base, payslips: [manual("disputed")] })).toContain(
-      "Cash, she disputes this",
+      "Cash, disputed by the helper",
     );
     expect(recordPdfHtml({ ...base, payslips: [manual("confirmed")] })).toContain("Sep 2, 2026");
   });

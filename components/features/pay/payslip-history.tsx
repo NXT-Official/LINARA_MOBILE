@@ -39,7 +39,7 @@ export function PayslipHistory({ payslips }: { payslips: Payslip[] }) {
 
   return (
     <View style={styles.card}>
-      <Text style={styles.eyebrow}>Payslip History</Text>
+      <Text style={styles.eyebrow}>Mga payslip</Text>
       {payslips.map((p) => (
         <View key={p.id} style={styles.row}>
           <View style={styles.rowLeft}>
@@ -87,10 +87,8 @@ const styles = StyleSheet.create({
     gap: 10,
   },
   eyebrow: {
-    fontSize: 11,
+    fontSize: 13,
     fontWeight: "700",
-    letterSpacing: 0.4,
-    textTransform: "uppercase",
     color: colors.terracottaGold,
   },
   row: {
@@ -110,11 +108,11 @@ const styles = StyleSheet.create({
     color: colors.ink,
   },
   meta: {
-    fontSize: 11,
+    fontSize: 13,
     color: colors.mutedInk,
   },
   status: {
-    fontSize: 11,
+    fontSize: 13,
     fontFamily: fonts.bodyBold,
   },
 });

@@ -12,6 +12,7 @@ import { queryClient } from "@/lib/query-client";
 import { supabase } from "@/services/supabase";
 import { signOutHelper } from "@/services/api/auth";
 import { PrimaryButton } from "@/components/ui/primary-button";
+import { StartupWait } from "@/components/ui/startup-wait";
 
 // The web dashboard keeps its session under these localStorage keys, not
 // Supabase's own storage -- must match ../LINARA/src/features/people/hooks/use-session.ts.
@@ -127,11 +128,7 @@ export default function ManagerDashboardScreen() {
   const { signup } = useLocalSearchParams<{ signup?: string }>();
 
   if (isLoading) {
-    return (
-      <View style={styles.loadingOverlay}>
-        <ActivityIndicator color={colors.pineTeal} />
-      </View>
-    );
+    return <StartupWait />;
   }
   if (!session && !signup) {
     return <Redirect href="/(auth)/sign-in" />;

@@ -1,6 +1,6 @@
 import { describe, expect, it, vi } from "vitest";
 
-import { parseHm, parseIsoDate, toHm, toIsoDate } from "./datetime-fields";
+import { combineLocalDateTime, parseHm, parseIsoDate, toHm, toIsoDate } from "./datetime-fields";
 
 /**
  * The one thing these conversions must never do is round-trip through UTC.
@@ -103,5 +103,22 @@ describe("parseHm", () => {
 
   it.each(["24:00", "7:05", "12:60", "", "noon"])("rejects %s", (bad) => {
     expect(parseHm(bad)).toBeNull();
+  });
+});
+
+describe("combineLocalDateTime", () => {
+  it.each(ZONES)("is the picked wall-clock moment, round-tripping, under TZ=%s", (tz) => {
+    withTimeZone(tz, () => {
+      // 07:30 is the hour C38 moved to the day before in Manila.
+      const at = combineLocalDateTime("2026-10-05", "07:30");
+      expect(at).not.toBeNull();
+      expect(toIsoDate(at as Date)).toBe("2026-10-05");
+      expect(toHm(at as Date)).toBe("07:30");
+    });
+  });
+
+  it("refuses a malformed half rather than guessing", () => {
+    expect(combineLocalDateTime("2026-02-31", "07:30")).toBeNull();
+    expect(combineLocalDateTime("2026-10-05", "25:00")).toBeNull();
   });
 });

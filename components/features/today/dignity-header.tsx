@@ -3,6 +3,7 @@ import { StyleSheet, Text, View } from "react-native";
 import { colors, fonts } from "@/lib/theme";
 import { greetingFor } from "@/lib/today";
 import { formatShiftTime, weekdayName } from "@/lib/format";
+import { firstNameOf } from "@/lib/names";
 import type { RosaAvailabilityStatus } from "@/lib/availability";
 import { RosaAvailControl } from "@/components/features/availability/rosa-avail-control";
 import type { HelperProfileSummary } from "@/services/api/helper-profile";
@@ -23,18 +24,19 @@ export function DignityHeader({
   onAvailable: (hours: number) => void;
   onOff: () => void;
 }) {
-  const firstName = profile.name.split(" ")[0];
+  // Her own name, not a title saved with it ("Kuya Marito" is Marito).
+  const firstName = firstNameOf(profile.name);
 
   return (
     <View style={styles.card}>
-      <Text style={styles.eyebrow}>{firstName}&apos;s Station</Text>
+      <Text style={styles.eyebrow}>Station ni {firstName}</Text>
       <Text style={styles.greeting}>
         {greetingFor(new Date())}, {firstName}.
       </Text>
 
       <View style={styles.statsRow}>
         <View style={styles.statTile}>
-          <Text style={styles.statLabel}>Today&apos;s shift</Text>
+          <Text style={styles.statLabel}>Shift mo ngayon</Text>
           <Text style={styles.statValue}>
             {formatShiftTime(profile.shiftStart)} – {formatShiftTime(profile.shiftEnd)}
           </Text>
@@ -57,10 +59,8 @@ const styles = StyleSheet.create({
     backgroundColor: colors.pineTeal,
   },
   eyebrow: {
-    fontSize: 11,
+    fontSize: 13,
     fontWeight: "700",
-    letterSpacing: 0.6,
-    textTransform: "uppercase",
     color: "rgba(253,251,246,0.7)",
   },
   greeting: {
@@ -81,10 +81,8 @@ const styles = StyleSheet.create({
     backgroundColor: "rgba(253,251,246,0.1)",
   },
   statLabel: {
-    fontSize: 10,
+    fontSize: 13,
     fontWeight: "700",
-    letterSpacing: 0.4,
-    textTransform: "uppercase",
     color: "rgba(253,251,246,0.7)",
   },
   statValue: {

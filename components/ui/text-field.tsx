@@ -18,12 +18,15 @@ import { colors } from "@/lib/theme";
 export function TextField({
   label,
   error,
+  hint,
   containerStyle,
   style,
   ...inputProps
 }: TextInputProps & {
   label: string;
   error?: string | null;
+  /** Plain help under the field, e.g. what to type; an error takes its place. */
+  hint?: string;
   containerStyle?: ViewStyle;
 }) {
   return (
@@ -34,7 +37,11 @@ export function TextField({
         style={[styles.input, Boolean(error) && styles.inputError, style]}
         {...inputProps}
       />
-      {error ? <Text style={styles.error}>{error}</Text> : null}
+      {error ? (
+        <Text style={styles.error}>{error}</Text>
+      ) : hint ? (
+        <Text style={styles.hint}>{hint}</Text>
+      ) : null}
     </View>
   );
 }
@@ -44,10 +51,8 @@ const styles = StyleSheet.create({
     gap: 6,
   },
   label: {
-    fontSize: 11,
+    fontSize: 13,
     fontWeight: "700",
-    letterSpacing: 0.4,
-    textTransform: "uppercase",
     color: colors.mutedInk,
   },
   input: {
@@ -64,7 +69,11 @@ const styles = StyleSheet.create({
     borderColor: colors.terracottaGold,
   },
   error: {
-    fontSize: 12,
+    fontSize: 13,
     color: colors.terracottaGold,
+  },
+  hint: {
+    fontSize: 13,
+    color: colors.mutedInk,
   },
 });

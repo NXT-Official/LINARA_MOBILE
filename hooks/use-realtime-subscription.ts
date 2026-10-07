@@ -46,8 +46,12 @@ export function useRealtimeSubscription(
   helperId: string | null,
   callbacks: RealtimeSubscriptionCallbacks,
   householdId?: string | null,
+  /** Other households she also works in: her task changes there are heard too. */
+  otherHouseholdIds: string[] = [],
 ): void {
   const callbacksRef = useRef(callbacks);
+  // A stable key, so a new array with the same houses doesn't re-subscribe.
+  const othersKey = [...otherHouseholdIds].sort().join(",");
   useEffect(() => {
     callbacksRef.current = callbacks;
   });
@@ -62,8 +66,19 @@ export function useRealtimeSubscription(
     // My Week are both mounted as tabs) would re-attach listeners to an
     // already-joined channel and join it twice -- the same failure fixed on
     // the web in ../LINARA's app-store-provider.
-    const channel = supabase
-      .channel(`helper-station-${helperId}-${Math.random().toString(36).slice(2, 10)}`)
+    const channel = supabase.channel(
+      `helper-station-${helperId}-${Math.random().toString(36).slice(2, 10)}`,
+    );
+    // Her tasks in the family's other houses she works in (only her own are
+    // readable there, so only those arrive).
+    for (const other of othersKey ? othersKey.split(",") : []) {
+      channel.on<TicketRealtimeRow>(
+        "postgres_changes",
+        { event: "*", schema: "public", table: "tickets", filter: `household_id=eq.${other}` },
+        (payload) => callbacksRef.current.onTicketChange?.(payload),
+      );
+    }
+    channel
       .on<TicketRealtimeRow>(
         "postgres_changes",
         {
@@ -89,5 +104,5 @@ export function useRealtimeSubscription(
     return () => {
       void supabase.removeChannel(channel);
     };
-  }, [helperId, householdId]);
+  }, [helperId, householdId, othersKey]);
 }

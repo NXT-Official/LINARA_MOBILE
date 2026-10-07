@@ -45,7 +45,7 @@ export function SignOutButton() {
               onPress={() => setConfirming(false)}
             />
             <PrimaryButton
-              label="Sign out"
+              label="Mag-sign out"
               style={styles.half}
               loading={loading}
               onPress={signOut}
@@ -53,7 +53,11 @@ export function SignOutButton() {
           </View>
         </>
       ) : (
-        <PrimaryButton label="Sign out" variant="secondary" onPress={() => setConfirming(true)} />
+        <PrimaryButton
+          label="Mag-sign out"
+          variant="secondary"
+          onPress={() => setConfirming(true)}
+        />
       )}
       {error ? <Text style={styles.errorText}>{error}</Text> : null}
     </View>

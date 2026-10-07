@@ -79,7 +79,7 @@ export function PayoutAccountCard({ defaultName }: { defaultName: string }) {
   if (!editing) {
     return (
       <View style={styles.card}>
-        <Text style={styles.eyebrow}>Where to send my pay</Text>
+        <Text style={styles.eyebrow}>Saan ipapadala ang sahod ko</Text>
         {account ? (
           <>
             <Text style={styles.value}>
@@ -118,7 +118,7 @@ export function PayoutAccountCard({ defaultName }: { defaultName: string }) {
 
   return (
     <View style={styles.card}>
-      <Text style={styles.eyebrow}>Where to send my pay</Text>
+      <Text style={styles.eyebrow}>Saan ipapadala ang sahod ko</Text>
       <View style={styles.chips} accessibilityRole="radiogroup">
         {(["PH_GCASH", "PH_PAYMAYA"] as const).map((m) => (
           <Pressable
@@ -205,10 +205,8 @@ const styles = StyleSheet.create({
     gap: 10,
   },
   eyebrow: {
-    fontSize: 11,
+    fontSize: 13,
     fontWeight: "700",
-    letterSpacing: 0.4,
-    textTransform: "uppercase",
     color: colors.terracottaGold,
   },
   value: {

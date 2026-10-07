@@ -92,7 +92,7 @@ export function PantryStockList({
                   )}
                 </View>
                 <Text style={styles.parText}>
-                  Bilhin kapag {item.par} {unitFor(item.par, item.unit)} na lang ·{" "}
+                  Laging may {item.par} {unitFor(item.par, item.unit)} ·{" "}
                   {CATEGORY_LABEL[item.category]}
                 </Text>
               </Pressable>

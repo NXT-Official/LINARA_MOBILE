@@ -67,11 +67,10 @@ export default function ForgotPasswordScreen() {
         {sentTo ? (
           <View style={styles.sentCard} accessibilityRole="alert">
             <Ionicons name="mail-open-outline" size={36} color={colors.pineTeal} />
-            <Text style={styles.sentTitle}>Password reset email sent!</Text>
+            <Text style={styles.sentTitle}>Naipadala na ang link para sa bagong password!</Text>
             <Text style={styles.sentBody}>
-              Please check your email. Kung may account ang{" "}
-              <Text style={styles.strong}>{sentTo}</Text>, may link doon para gumawa ng bagong
-              password.
+              I-check ang email mo. Kung may account ang <Text style={styles.strong}>{sentTo}</Text>
+              , may link doon para gumawa ng bagong password.
             </Text>
             <Text style={styles.sentHint}>
               Hindi makita? Tingnan ang Spam o Promotions folder. Pagkatapos mag-set ng bagong

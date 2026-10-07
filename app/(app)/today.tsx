@@ -8,9 +8,16 @@ import { useRosaAvailability } from "@/hooks/use-rosa-availability";
 import { useRealtimeSubscription } from "@/hooks/use-realtime-subscription";
 import { DignityHeader } from "@/components/features/today/dignity-header";
 import { ActiveFocusCard } from "@/components/features/today/active-focus-card";
+import { RunLink } from "@/components/features/pantry/run-link";
 import { DayCloseCard, type CloseReason } from "@/components/features/today/day-close-card";
 import { MovedTasksBanner } from "@/components/features/today/moved-tasks-banner";
 import { TodayTaskList } from "@/components/features/today/today-task-list";
+import { LayoutSwitch } from "@/components/features/today/layout-switch";
+import { HouseSwitcher } from "@/components/features/workplace/house-switcher";
+import { PlaceTag } from "@/components/features/workplace/place-tag";
+import { TeamDay } from "@/components/features/workplace/team-day";
+import { useTodayLayout } from "@/hooks/use-today-layout";
+import { useWorkplaces } from "@/hooks/use-workplaces";
 import { FocusDeck } from "@/components/features/today/focus-deck";
 import { getBoardClosed } from "@/services/api/household";
 import { dayPhase, deckFor, focusIndex } from "@/lib/today";
@@ -25,12 +32,16 @@ import { setHelperAvailability, setHelperOff } from "@/services/api/availability
 import {
   blockTicket,
   completeTicket,
+  editMyTicket,
   getFocusTasks,
   getTodayProgress,
   startTicket,
   type FocusTask,
 } from "@/services/api/tickets";
 import { acknowledgeQuickUto, getPendingQuickUtos } from "@/services/api/quick-utos";
+import { addTaskComment } from "@/services/api/ticket-comments";
+import { formatClockTime } from "@/lib/format";
+import type { TaskEdit } from "@/components/features/today/edit-task-form";
 import { enqueueSyncAction } from "@/services/sqlite-queue";
 import { uploadEvidenceImage } from "@/services/media-upload";
 import { isOffline } from "@/lib/network";
@@ -50,6 +61,9 @@ export default function TodayScreen() {
     queryFn: getMyHelperProfile,
   });
   const helperId = profileQuery.data?.id ?? null;
+  // Every house she works in, and the one she's looking at (all by default).
+  const places = useWorkplaces(profileQuery.data?.householdId ?? null);
+  const [layout, setLayout] = useTodayLayout();
 
   const manual: ManualAvailability =
     profileQuery.data?.manualStatus === "available" && profileQuery.data.manualAvailableUntil
@@ -177,8 +191,17 @@ export default function TodayScreen() {
   // marking it done without the photo she meant to attach.
   const [completeError, setCompleteError] = useState<string | null>(null);
   const completeMutation = useMutation({
-    mutationFn: async ({ ticketId, photoUri }: { ticketId: string; photoUri: string | null }) => {
-      const householdId = profileQuery.data?.householdId ?? "";
+    mutationFn: async ({
+      ticketId,
+      photoUri,
+      taskHouseholdId,
+    }: {
+      ticketId: string;
+      photoUri: string | null;
+      /** The task's own house: its photo goes in that house's folder, for its managers. */
+      taskHouseholdId: string;
+    }) => {
+      const householdId = taskHouseholdId || profileQuery.data?.householdId || "";
       if (await isOffline()) {
         await enqueueSyncAction("complete_ticket", { ticketId, householdId }, photoUri);
         return { queued: true };
@@ -254,6 +277,37 @@ export default function TodayScreen() {
     },
   });
 
+  // Her own fix to a task's time or note (O31). Online only: a time she moved
+  // while offline could land after the manager moved it too. A moved time is
+  // also posted to the task's updates, so the manager's Pass shows who moved
+  // it and from when; that note is best effort, the move itself is what counts.
+  const editMutation = useMutation({
+    mutationFn: async ({ task, edit }: { task: FocusTask; edit: TaskEdit }) => {
+      if (await isOffline()) {
+        throw new Error("Kailangan ng internet para i-save ito.");
+      }
+      await editMyTicket(task.id, edit);
+      if (new Date(edit.scheduledStart).getTime() !== new Date(task.scheduledStart).getTime()) {
+        await addTaskComment(
+          task.id,
+          `Inilipat ko sa ${whenLabel(edit.scheduledStart)} (dati ${whenLabel(task.scheduledStart)}).`,
+        ).catch((err) =>
+          console.warn("[today] Couldn't post the move note:", (err as Error).message),
+        );
+      }
+    },
+    onSuccess: () => {
+      setChosenId(null);
+      refreshToday();
+      queryClient.invalidateQueries({ queryKey: ["my-week", helperId] });
+    },
+  });
+  const editError = editMutation.isError
+    ? editMutation.error.message.startsWith("Kailangan")
+      ? editMutation.error.message
+      : "Hindi na-save. Subukan ulit."
+    : null;
+
   const ackMutation = useMutation({
     mutationFn: ({ id, ack }: { id: string; ack: "seen" | "done" }) => acknowledgeQuickUto(id, ack),
     onMutate: ({ id }) => setAckingId(id),
@@ -270,6 +324,7 @@ export default function TodayScreen() {
       onQuickUtoChange: () => queryClient.invalidateQueries({ queryKey: ["quick-utos", helperId] }),
     },
     profileQuery.data?.householdId,
+    places.otherHouseholdIds,
   );
 
   // The close replaces the next task once her day is over -- unless she has
@@ -285,7 +340,12 @@ export default function TodayScreen() {
         : null;
   const progress = progressQuery.data;
   const allDone = Boolean(progress && progress.total > 0 && progress.done === progress.total);
-  const deck = deckFor(focusTaskQuery.data ?? [], Boolean(closeReason));
+  const deck = deckFor(
+    (focusTaskQuery.data ?? []).filter(
+      (t) => places.house === "all" || t.householdId === places.house,
+    ),
+    Boolean(closeReason),
+  );
   const deckIndex = focusIndex(deck, chosenId);
   const focusTask = deckIndex >= 0 ? deck[deckIndex] : null;
 
@@ -298,7 +358,7 @@ export default function TodayScreen() {
           </View>
         ) : profileQuery.isError || !profileQuery.data ? (
           <Text style={styles.errorText}>
-            Couldn&apos;t load your shift details. Pull to refresh in a moment, po.
+            Hindi ma-load ang shift mo. Hilahin pababa para i-refresh mamaya, po.
           </Text>
         ) : (
           <>
@@ -314,7 +374,10 @@ export default function TodayScreen() {
 
             <MovedTasksBanner helperId={profileQuery.data.id} />
 
-            {focusTaskQuery.isLoading ? (
+            <HouseSwitcher places={places} allowAll />
+            <LayoutSwitch value={layout} onChange={setLayout} />
+
+            {layout !== "focus" ? null : focusTaskQuery.isLoading ? (
               <View style={styles.loading}>
                 <ActivityIndicator color={colors.pineTeal} />
               </View>
@@ -339,6 +402,13 @@ export default function TodayScreen() {
                           : "Ipinadala ito kahit off-shift ka. Kapag tinapos mo, naka-log ito bilang rest owed."}
                       </Text>
                     ) : null}
+                    <PlaceTag
+                      places={places}
+                      householdId={focusTask.householdId}
+                      from={focusTask.from}
+                      to={focusTask.to}
+                    />
+                    <RunLink ticketId={focusTask.id} />
                     <FocusDeck
                       count={deck.length}
                       index={deckIndex}
@@ -352,14 +422,21 @@ export default function TodayScreen() {
                         myUserId={profileQuery.data.userId}
                         onStart={() => startMutation.mutate(focusTask.id)}
                         onComplete={(photoUri) =>
-                          completeMutation.mutate({ ticketId: focusTask.id, photoUri })
+                          completeMutation.mutate({
+                            ticketId: focusTask.id,
+                            photoUri,
+                            taskHouseholdId: focusTask.householdId,
+                          })
                         }
                         onCantNow={(reason) =>
                           holdMutation.mutate({ ticketId: focusTask.id, reason })
                         }
                         isStarting={startMutation.isPending}
                         isCompleting={completeMutation.isPending}
+                        onEdit={(edit) => editMutation.mutateAsync({ task: focusTask, edit })}
                         isHolding={holdMutation.isPending}
+                        isEditing={editMutation.isPending}
+                        editError={editError}
                       />
                     </FocusDeck>
                     {completeError ? <Text style={styles.errorText}>{completeError}</Text> : null}
@@ -377,7 +454,11 @@ export default function TodayScreen() {
               householdId={profileQuery.data.householdId}
               myUserId={profileQuery.data.userId}
               onChanged={refreshToday}
+              places={places}
+              variant={layout === "timeline" ? "timeline" : "list"}
             />
+
+            <TeamDay places={places} helperId={profileQuery.data.id} />
 
             <PrivateScratchpad
               helperId={profileQuery.data.id}
@@ -390,12 +471,25 @@ export default function TodayScreen() {
       </ScrollView>
 
       <FloatingQuickUtosFeed
-        utosList={quickUtosQuery.data ?? []}
+        // With more than one house, say which one is asking.
+        utosList={(quickUtosQuery.data ?? []).map((u) => {
+          const from = places.multi ? places.houseName(u.householdId) : null;
+          return from ? { ...u, senderName: `${u.senderName} · ${from}` } : u;
+        })}
         onAck={(id, ack) => ackMutation.mutate({ id, ack })}
         ackingId={ackingId}
       />
     </View>
   );
+}
+
+/** "3:00 PM" today, "Oct 6, 3:00 PM" on another day: for the move note. */
+function whenLabel(iso: string): string {
+  const at = new Date(iso);
+  const time = formatClockTime(iso);
+  return toIsoDate(at) === toIsoDate(new Date())
+    ? time
+    : `${at.toLocaleDateString(undefined, { month: "short", day: "numeric" })}, ${time}`;
 }
 
 const styles = StyleSheet.create({

@@ -51,7 +51,7 @@ export function ItemForm({
     if (!name.trim()) return setError("Lagyan ng pangalan.");
     if (qtyN === null) return setError("Dami: numero lang, 0 pataas.");
     if (!unit.trim()) return setError("Lagyan ng unit (hal. kg, pcs, pack).");
-    if (kind === "pantry" && parN === null) return setError("Bilhin kapag: numero lang, 0 pataas.");
+    if (kind === "pantry" && parN === null) return setError("Laging may: numero lang, 0 pataas.");
     setError(null);
     onSubmit({
       name: name.trim(),
@@ -95,13 +95,13 @@ export function ItemForm({
         </View>
         {kind === "pantry" && (
           <View style={styles.cell}>
-            <Text style={styles.label}>Bilhin kapag</Text>
+            <Text style={styles.label}>Laging may</Text>
             <TextInput
               value={par}
               onChangeText={setPar}
               keyboardType="decimal-pad"
               style={styles.input}
-              accessibilityLabel="Bilhin kapag ganito na lang"
+              accessibilityLabel="Ilan ang dapat laging meron"
             />
           </View>
         )}

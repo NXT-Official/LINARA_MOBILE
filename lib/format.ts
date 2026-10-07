@@ -29,6 +29,13 @@ export function formatClockTime(iso: string): string {
   return formatShiftTime(`${d.getHours()}:${d.getMinutes()}`);
 }
 
+/** "2:00 PM", or "2:00 PM – 3:30 PM" when the task has a length. */
+export function formatTimeSpan(iso: string, durationMinutes: number | null | undefined): string {
+  if (!durationMinutes) return formatClockTime(iso);
+  const end = new Date(new Date(iso).getTime() + durationMinutes * 60_000).toISOString();
+  return `${formatClockTime(iso)} – ${formatClockTime(end)}`;
+}
+
 /** Matches the web reference's `fmtPeso` (../LINARA/src/features/groceries/grocery.utils.ts). */
 export function formatPeso(amount: number): string {
   return `₱${Math.round(amount).toLocaleString()}`;

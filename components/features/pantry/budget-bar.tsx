@@ -65,7 +65,9 @@ export function BudgetBar({
           )}
         </View>
         <Text style={[styles.remaining, over && styles.remainingOver]}>
-          {over ? `over by ${fmtPeso(spent - budget)}` : `${fmtPeso(budget - spent)} left`}
+          {over
+            ? `sobra ng ${fmtPeso(spent - budget)}`
+            : `${fmtPeso(budget - spent)} pa ang natitira`}
         </Text>
       </View>
       <View style={styles.track}>
@@ -112,7 +114,7 @@ const styles = StyleSheet.create({
     paddingVertical: 2,
   },
   remaining: {
-    fontSize: 11,
+    fontSize: 13,
     fontWeight: "700",
     color: colors.mutedInk,
   },

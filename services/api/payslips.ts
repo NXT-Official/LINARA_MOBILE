@@ -125,13 +125,32 @@ export async function getMyPayslips(helperId: string): Promise<Payslip[]> {
 
 /**
  * Payments her employers recorded as made outside Linara that she hasn't
- * answered yet, in any household she has worked for. The policies above
- * already limit the read to her own payslips.
+ * answered yet, in any household she has worked for. Filtered to her own
+ * helper profiles here as well as by the policies: payslips_isolation once
+ * let a helper read her coworkers' payslips, and this card asked her to
+ * confirm someone else's pay (../LINARA/KNOWN_GAPS.md C86, was O45). The
+ * filter keeps that from coming back if a policy regresses.
  */
 export async function getPaymentsAwaitingMe(): Promise<Payslip[]> {
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+  if (!user) return [];
+
+  const { data: profiles, error: profilesError } = await supabase
+    .from("helper_profiles")
+    .select("id")
+    .eq("user_id", user.id);
+  if (profilesError) {
+    throw new Error(profilesError.message);
+  }
+  const myHelperIds = ((profiles ?? []) as { id: string }[]).map((p) => p.id);
+  if (myHelperIds.length === 0) return [];
+
   const { data, error } = await supabase
     .from("payslips")
     .select("*")
+    .in("helper_id", myHelperIds)
     .eq("payout_provider", "manual")
     .eq("helper_ack", "pending")
     .order("requested_at", { ascending: false });

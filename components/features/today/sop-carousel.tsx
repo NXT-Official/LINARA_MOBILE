@@ -81,9 +81,8 @@ const styles = StyleSheet.create({
   sopTitle: {
     paddingHorizontal: 14,
     paddingTop: 12,
-    fontSize: 12,
+    fontSize: 13,
     fontWeight: "700",
-    letterSpacing: 0.3,
     color: colors.mutedInk,
   },
   slide: {

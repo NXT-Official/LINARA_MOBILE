@@ -30,7 +30,15 @@ import { ReceiptSnapCard } from "@/components/features/pantry/receipt-snap-card"
 import { ItemForm } from "@/components/features/pantry/item-form";
 import { ListFilter, matchesQuery } from "@/components/features/pantry/list-filter";
 import { PantryStarter } from "@/components/features/pantry/pantry-starter";
-import { CATEGORY_LABEL, groupByPantryCategory } from "@/lib/pantry";
+import { CATEGORY_LABEL, groupByPantryCategory, needsBuying } from "@/lib/pantry";
+import { HouseSwitcher } from "@/components/features/workplace/house-switcher";
+import { useWorkplaces } from "@/hooks/use-workplaces";
+import { useGroceryRuns } from "@/hooks/use-grocery-runs";
+import { RunCard } from "@/components/features/pantry/run-card";
+import { LeadRunCard } from "@/components/features/pantry/lead-run-card";
+import { NewRunForm } from "@/components/features/pantry/new-run-form";
+import { PastRuns } from "@/components/features/pantry/past-runs";
+import { startOfToday } from "@/lib/today";
 
 type PalengkeFilter = "all" | "to_buy" | "bought";
 type PantryFilter = "all" | "low" | PantryCategory;
@@ -47,9 +55,16 @@ const PANTRY_CHIPS: { key: PantryFilter; label: string }[] = [
 ];
 
 /**
- * Pantry & Palengke tab (roadmap Story 8). Stock monitor, active shopping
- * checklist with a budget dial, and -- when the helper has an open
- * Palengke Run ticket -- the receipt capture step that completes it.
+ * Pantry & Palengke tab (roadmap Story 8). Stock monitor, the palengke,
+ * and -- when the helper has an open Palengke Run ticket -- the receipt
+ * capture step that completes it.
+ *
+ * The palengke (../LINARA/supabase/add-grocery-runs.sql): "Mga run" are
+ * the shopping runs she's on (her own, her team's, or her task's), each
+ * with its cash, list, receipt and "Tapos na"; "Kailangan" is what's needed
+ * and not on a run yet. A pantry lead also makes draft runs from Kailangan
+ * and sends them for a manager's approval. Before that SQL is applied it's
+ * the one checklist and budget it always was.
  * She can add to and fix both lists, and search and filter them (client
  * feedback, 2026-10-02) -- if the manager has put her in charge of the
  * pantry. Otherwise she buys from the list and says what ran out
@@ -67,17 +82,28 @@ export default function PantryScreen() {
   const [pantryFilter, setPantryFilter] = useState<PantryFilter>("all");
   const [addingGrocery, setAddingGrocery] = useState(false);
   const [addingPantry, setAddingPantry] = useState(false);
+  const [creatingRun, setCreatingRun] = useState(false);
+  // Runs she saved a receipt for while the tab was open.
+  const [snappedRuns, setSnappedRuns] = useState<Set<string>>(new Set());
 
   const profileQuery = useQuery({
     queryKey: ["my-helper-profile"],
     queryFn: getMyHelperProfile,
   });
   const helperId = profileQuery.data?.id ?? null;
-  const { budget } = usePalengkeBudget(profileQuery.data?.householdId ?? null);
-  const edits = usePantryEdits(profileQuery.data?.householdId ?? null);
+  // One house's pantry: hers, or the one she picked if she works in several.
+  const places = useWorkplaces(profileQuery.data?.householdId ?? null);
+  const house = places.oneHouse;
+  const { budget } = usePalengkeBudget(house);
+  const edits = usePantryEdits(house);
+  const runs = useGroceryRuns(house);
+  const runsOn = runs.available === true;
+  const openRunIds = runsOn ? runs.open.map((r) => r.id) : null;
 
   // The manager can change this from the web at any time, and nothing pushes
-  // it here, so check again whenever she opens the tab.
+  // it here, so check again whenever she opens the tab. The same goes for the
+  // palengke: a run approved, or a line added, on the web since she last
+  // looked (tabs stay mounted, so nothing else would re-read them).
   const roleQuery = useQuery({
     queryKey: ["my-pantry-role"],
     queryFn: getMyPantryRole,
@@ -86,31 +112,38 @@ export default function PantryScreen() {
   useFocusEffect(
     useCallback(() => {
       void refetchRole();
-    }, [refetchRole]),
+      void queryClient.invalidateQueries({ queryKey: ["grocery-runs"] });
+      void queryClient.invalidateQueries({ queryKey: ["grocery-items"] });
+      void queryClient.invalidateQueries({ queryKey: ["pantry-items"] });
+    }, [refetchRole, queryClient]),
   );
   // Until it's known, show the smaller set rather than flash controls away.
   const inCharge = roleQuery.data === "lead";
 
   const pantryQuery = useQuery({
-    queryKey: ["pantry-items"],
-    queryFn: getPantryItems,
+    queryKey: ["pantry-items", house],
+    queryFn: () => getPantryItems(house as string),
+    enabled: Boolean(house),
   });
 
   const groceryQuery = useQuery({
-    queryKey: ["grocery-items"],
-    queryFn: getGroceryItems,
+    queryKey: ["grocery-items", house, openRunIds?.join(",") ?? "all"],
+    queryFn: () => getGroceryItems(house as string, openRunIds, startOfToday(new Date())),
+    // Which lines to ask for depends on whether there are runs.
+    enabled: Boolean(house) && runs.available !== null,
   });
 
   const latestReceiptQuery = useQuery({
-    queryKey: ["grocery-receipt-latest"],
-    queryFn: getLatestGroceryReceipt,
+    queryKey: ["grocery-receipt-latest", house],
+    queryFn: () => getLatestGroceryReceipt(house as string),
+    enabled: Boolean(house),
   });
   const [snapError, setSnapError] = useState<string | null>(null);
 
-  /** A receipt after buying, with or without a Palengke Run task. Online only. */
+  /** A receipt after buying, for a run or none, task or no task. Online only. */
   const snapMutation = useMutation({
-    mutationFn: async () => {
-      const householdId = profileQuery.data?.householdId;
+    mutationFn: async (runId?: string) => {
+      const householdId = house;
       if (!householdId) throw new Error("Hindi pa na-load ang household. Subukan ulit.");
       const permission = await ImagePicker.requestCameraPermissionsAsync();
       if (!permission.granted) {
@@ -125,11 +158,14 @@ export default function PantryScreen() {
         shot.assets[0].uri,
         `${householdId}/receipts/${Date.now()}.jpg`,
       );
-      await recordGroceryReceipt(householdId, uploaded.path);
+      await recordGroceryReceipt(householdId, uploaded.path, undefined, runId);
       return true;
     },
     onMutate: () => setSnapError(null),
-    onSuccess: () => queryClient.invalidateQueries({ queryKey: ["grocery-receipt-latest"] }),
+    onSuccess: (saved, runId) => {
+      if (saved && runId) setSnappedRuns((prev) => new Set(prev).add(runId));
+      return queryClient.invalidateQueries({ queryKey: ["grocery-receipt-latest"] });
+    },
     onError: (err) =>
       setSnapError(err instanceof Error ? err.message : "Hindi na-save ang resibo."),
   });
@@ -186,7 +222,12 @@ export default function PantryScreen() {
 
   const groceryItems = useMemo(() => groceryQuery.data ?? [], [groceryQuery.data]);
   const pantryItems = useMemo(() => pantryQuery.data ?? [], [pantryQuery.data]);
-  const shownGroceries = groceryItems.filter(
+  // With runs, the checklist below is Kailangan: what isn't on a run.
+  const poolItems = runsOn ? groceryItems.filter((g) => !g.runId) : groceryItems;
+  const readyRuns = runs.open.filter((r) => r.status === "ready");
+  const leadRuns = inCharge ? runs.open.filter((r) => r.status !== "ready") : [];
+  const itemsOf = (runId: string) => groceryItems.filter((g) => g.runId === runId);
+  const shownGroceries = poolItems.filter(
     (item) =>
       matchesQuery(item.name, palengkeSearch) &&
       (palengkeFilter === "all" || (palengkeFilter === "bought") === item.bought),
@@ -195,7 +236,7 @@ export default function PantryScreen() {
     (item) =>
       matchesQuery(item.name, pantrySearch) &&
       (pantryFilter === "all" ||
-        (pantryFilter === "low" ? item.qty <= item.par : item.category === pantryFilter)),
+        (pantryFilter === "low" ? needsBuying(item) : item.category === pantryFilter)),
   );
   const listedPantryIds = useMemo(
     () =>
@@ -236,7 +277,7 @@ export default function PantryScreen() {
 
     setUploading(true);
     try {
-      const householdId = profileQuery.data?.householdId ?? "unknown";
+      const householdId = house ?? "unknown";
       const storagePath = `${householdId}/receipts/${Date.now()}.jpg`;
       const uploaded = await uploadEvidenceImage(localUri, storagePath);
       setReceiptUri(uploaded.signedUrl);
@@ -261,7 +302,8 @@ export default function PantryScreen() {
 
   return (
     <ScrollView style={styles.screen} contentContainerStyle={styles.content}>
-      <Text style={styles.header}>Pantry &amp; Palengke</Text>
+      <Text style={styles.header}>Pantry at palengke</Text>
+      <HouseSwitcher places={places} />
 
       {groceryQuery.isLoading ? (
         <View style={styles.loading}>
@@ -269,22 +311,84 @@ export default function PantryScreen() {
         </View>
       ) : (
         <>
-          <BudgetBar spent={spent} budget={budget} />
+          {!runsOn && <BudgetBar spent={spent} budget={budget} />}
+
+          {runsOn && (readyRuns.length > 0 || leadRuns.length > 0) && (
+            <View style={styles.section}>
+              <Text style={styles.sectionTitle}>Mga run</Text>
+              {readyRuns.map((run) => (
+                <RunCard
+                  key={run.id}
+                  run={run}
+                  items={itemsOf(run.id)}
+                  onToggle={(item) => toggleMutation.mutate(item)}
+                  onCost={(item, cost) => costMutation.mutate({ item, cost })}
+                  onSnap={() => snapMutation.mutate(run.id)}
+                  snapping={snapMutation.isPending && snapMutation.variables === run.id}
+                  snapped={snappedRuns.has(run.id)}
+                  closing={runs.busy === run.id}
+                  onClose={(change) => runs.close(run, change)}
+                />
+              ))}
+              {leadRuns.map((run) => (
+                <LeadRunCard
+                  key={run.id}
+                  run={run}
+                  items={itemsOf(run.id)}
+                  busy={runs.busy !== null}
+                  onSubmit={() => void runs.submit(run)}
+                  onWithdraw={() => void runs.withdraw(run)}
+                  onDelete={() => void runs.remove(run)}
+                  onBackToPool={(item) => void runs.backToPool(item.id)}
+                />
+              ))}
+              {snapError && snapMutation.variables ? (
+                <Text style={styles.errorText}>{snapError}</Text>
+              ) : null}
+            </View>
+          )}
+          {runs.error ? <Text style={styles.errorText}>{runs.error}</Text> : null}
 
           <View style={styles.section}>
             <View style={styles.sectionHead}>
-              <Text style={styles.sectionTitle}>Palengke checklist</Text>
-              {inCharge && !addingGrocery && (
-                <Pressable
-                  onPress={() => setAddingGrocery(true)}
-                  style={styles.addButton}
-                  accessibilityLabel="Magdagdag sa palengke list"
-                >
-                  <Ionicons name="add" size={16} color={colors.pineTeal} />
-                  <Text style={styles.addButtonText}>Magdagdag</Text>
-                </Pressable>
-              )}
+              <Text style={styles.sectionTitle}>
+                {runsOn ? "Kailangan" : "Listahan sa palengke"}
+              </Text>
+              <View style={styles.headButtons}>
+                {inCharge && runsOn && !creatingRun && poolItems.some((g) => !g.bought) && (
+                  <Pressable
+                    onPress={() => setCreatingRun(true)}
+                    style={styles.addButton}
+                    accessibilityLabel="Gumawa ng run mula sa Kailangan"
+                  >
+                    <Ionicons name="cart-outline" size={16} color={colors.pineTeal} />
+                    <Text style={styles.addButtonText}>Gumawa ng run</Text>
+                  </Pressable>
+                )}
+                {inCharge && !addingGrocery && (
+                  <Pressable
+                    onPress={() => setAddingGrocery(true)}
+                    style={styles.addButton}
+                    accessibilityLabel="Magdagdag sa palengke list"
+                  >
+                    <Ionicons name="add" size={16} color={colors.pineTeal} />
+                    <Text style={styles.addButtonText}>Magdagdag</Text>
+                  </Pressable>
+                )}
+              </View>
             </View>
+            {inCharge && creatingRun && (
+              <NewRunForm
+                pool={poolItems}
+                saving={runs.busy === "new-run"}
+                onSubmit={(title, itemIds) =>
+                  void runs
+                    .createDraft(title, itemIds, null)
+                    .then((ok) => ok && setCreatingRun(false))
+                }
+                onCancel={() => setCreatingRun(false)}
+              />
+            )}
             {inCharge && addingGrocery && (
               <ItemForm
                 kind="grocery"
@@ -296,7 +400,7 @@ export default function PantryScreen() {
                 onCancel={() => setAddingGrocery(false)}
               />
             )}
-            {groceryItems.length > 0 && (
+            {poolItems.length > 0 && (
               <ListFilter
                 query={palengkeSearch}
                 onQuery={setPalengkeSearch}
@@ -313,7 +417,9 @@ export default function PantryScreen() {
                     ? "Walang tugma."
                     : pantryItems.length === 0
                       ? "Kapag may laman na ang pantry, dito lalabas ang mga paubos na."
-                      : "Walang laman ang palengke list ngayon."
+                      : runsOn
+                        ? "Walang kailangang bilhin ngayon."
+                        : "Walang laman ang palengke list ngayon."
                 }
                 canEdit={inCharge}
                 savingId={edits.savingId}
@@ -347,10 +453,17 @@ export default function PantryScreen() {
       {!palengkeTicket && !groceryQuery.isLoading && (
         <ReceiptSnapCard
           latest={latestReceiptQuery.data ?? null}
-          saving={snapMutation.isPending}
-          error={snapError}
-          onSnap={() => snapMutation.mutate()}
+          saving={snapMutation.isPending && !snapMutation.variables}
+          error={snapMutation.variables ? null : snapError}
+          onSnap={() => snapMutation.mutate(undefined)}
         />
+      )}
+
+      {runsOn && runs.recent.length > 0 && (
+        <View style={styles.section}>
+          <Text style={styles.sectionTitle}>Mga natapos na run</Text>
+          <PastRuns runs={runs.recent} spent={runs.recentSpent} />
+        </View>
       )}
 
       {palengkeTicket ? (
@@ -379,7 +492,7 @@ export default function PantryScreen() {
 
       <View style={styles.section}>
         <View style={styles.sectionHead}>
-          <Text style={styles.sectionTitle}>Pantry stock</Text>
+          <Text style={styles.sectionTitle}>Laman ng pantry</Text>
           {inCharge && !addingPantry && (
             <Pressable
               onPress={() => setAddingPantry(true)}
@@ -493,6 +606,12 @@ const styles = StyleSheet.create({
     alignItems: "center",
     justifyContent: "space-between",
   },
+  headButtons: {
+    flexDirection: "row",
+    flexWrap: "wrap",
+    justifyContent: "flex-end",
+    gap: 6,
+  },
   addButton: {
     flexDirection: "row",
     alignItems: "center",
@@ -509,10 +628,8 @@ const styles = StyleSheet.create({
     color: colors.pineTeal,
   },
   sectionTitle: {
-    fontSize: 12,
+    fontSize: 13,
     fontWeight: "700",
-    letterSpacing: 0.4,
-    textTransform: "uppercase",
     color: colors.mutedInk,
   },
   loading: {

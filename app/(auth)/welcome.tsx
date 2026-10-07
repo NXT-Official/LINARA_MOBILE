@@ -58,7 +58,7 @@ export default function WelcomeScreen() {
             setError(null);
           }}
           error={error}
-          placeholder="LN98A2"
+          hint="6 na letra at numero"
           autoCapitalize="characters"
           autoCorrect={false}
           maxLength={INVITE_CODE_LENGTH}
@@ -67,7 +67,7 @@ export default function WelcomeScreen() {
           onSubmitEditing={submitCode}
         />
 
-        <PrimaryButton label="Continue" onPress={submitCode} disabled={!code.trim()} />
+        <PrimaryButton label="Tuloy" onPress={submitCode} disabled={!code.trim()} />
 
         <Pressable
           onPress={() => router.replace("/(auth)/sign-in")}

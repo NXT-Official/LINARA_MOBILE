@@ -70,23 +70,23 @@ export function DigitalPayslip({
         {cutoffStart && cutoffEnd ? formatCutoffRange(cutoffStart, cutoffEnd) : intervalLabel}
       </Text>
       <Text style={styles.netPay}>{formatPeso(netEstimate)}</Text>
-      <Text style={styles.netPayHint}>Estimated take-home</Text>
+      <Text style={styles.netPayHint}>Tantiyang matatanggap mo</Text>
 
       <View style={styles.divider} />
 
       <View style={styles.lineRow}>
-        <Text style={styles.lineLabel}>Base pay</Text>
+        <Text style={styles.lineLabel}>Basic na sahod</Text>
         <Text style={styles.lineValue}>{formatPeso(basePay)}</Text>
       </View>
       <View style={styles.lineRow}>
-        <Text style={styles.lineLabel}>SSS / PhilHealth / Pag-IBIG share</Text>
+        <Text style={styles.lineLabel}>Bahagi mo sa SSS / PhilHealth / Pag-IBIG</Text>
         <Text style={[styles.lineValue, styles.deduction]}>
           − {formatPeso(employeeShareThisCutoff)}
         </Text>
       </View>
       {approvedValeTotal > 0 ? (
         <View style={styles.lineRow}>
-          <Text style={styles.lineLabel}>Vale deduction</Text>
+          <Text style={styles.lineLabel}>Bawas na vale</Text>
           <Text style={[styles.lineValue, styles.deduction]}>
             − {formatPeso(approvedValeTotal)}
           </Text>
@@ -114,10 +114,8 @@ const styles = StyleSheet.create({
     gap: 12,
   },
   eyebrow: {
-    fontSize: 11,
+    fontSize: 13,
     fontWeight: "700",
-    letterSpacing: 0.4,
-    textTransform: "uppercase",
     color: colors.terracottaGold,
   },
   netPay: {
@@ -126,7 +124,7 @@ const styles = StyleSheet.create({
     color: colors.ink,
   },
   netPayHint: {
-    fontSize: 12,
+    fontSize: 13,
     color: colors.mutedInk,
     marginTop: -8,
   },

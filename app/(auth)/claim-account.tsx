@@ -67,8 +67,8 @@ export default function ClaimAccountScreen() {
       behavior={Platform.OS === "ios" ? "padding" : undefined}
     >
       <ScrollView contentContainerStyle={styles.content} keyboardShouldPersistTaps="handled">
-        <Text style={styles.eyebrow}>Step 3 of 3</Text>
-        <Text style={styles.title}>This account is yours.</Text>
+        <Text style={styles.eyebrow}>Hakbang 3 sa 3</Text>
+        <Text style={styles.title}>Iyo ang account na ito.</Text>
         <View style={styles.introCard}>
           <Text style={styles.introText}>
             Ito ay <Text style={styles.introBold}>iyong-iyo</Text>. Makikita mo rito ang record ng
@@ -77,7 +77,7 @@ export default function ClaimAccountScreen() {
         </View>
 
         <TextField
-          label="Your email address"
+          label="Email address mo"
           value={email}
           onChangeText={setEmail}
           error={emailError}
@@ -95,7 +95,7 @@ export default function ClaimAccountScreen() {
           secureTextEntry
         />
         <TextField
-          label="Confirm password"
+          label="Ulitin ang password"
           value={confirmPassword}
           onChangeText={setConfirmPassword}
           error={confirmError}
@@ -116,13 +116,13 @@ export default function ClaimAccountScreen() {
 
         <View style={styles.actions}>
           <PrimaryButton
-            label="Back"
+            label="Bumalik"
             variant="secondary"
             style={styles.actionButton}
             onPress={() => router.back()}
           />
           <PrimaryButton
-            label="Lock & claim account"
+            label="I-claim ang account ko"
             style={styles.actionButton}
             loading={loading}
             disabled={!canSubmit}
@@ -144,10 +144,8 @@ const styles = StyleSheet.create({
     gap: 14,
   },
   eyebrow: {
-    fontSize: 11,
+    fontSize: 13,
     fontWeight: "700",
-    letterSpacing: 0.6,
-    textTransform: "uppercase",
     color: colors.terracottaGold,
   },
   title: {
@@ -170,7 +168,7 @@ const styles = StyleSheet.create({
     color: colors.pineTeal,
   },
   privacyNote: {
-    fontSize: 12,
+    fontSize: 13,
     lineHeight: 18,
     color: colors.mutedInk,
   },
