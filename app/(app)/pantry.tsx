@@ -628,10 +628,8 @@ const styles = StyleSheet.create({
     color: colors.pineTeal,
   },
   sectionTitle: {
-    fontSize: 12,
+    fontSize: 13,
     fontWeight: "700",
-    letterSpacing: 0.4,
-    textTransform: "uppercase",
     color: colors.mutedInk,
   },
   loading: {

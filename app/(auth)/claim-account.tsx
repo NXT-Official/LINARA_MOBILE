@@ -144,10 +144,8 @@ const styles = StyleSheet.create({
     gap: 14,
   },
   eyebrow: {
-    fontSize: 11,
+    fontSize: 13,
     fontWeight: "700",
-    letterSpacing: 0.6,
-    textTransform: "uppercase",
     color: colors.terracottaGold,
   },
   title: {

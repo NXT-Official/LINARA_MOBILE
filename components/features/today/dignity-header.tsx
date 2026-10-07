@@ -59,10 +59,8 @@ const styles = StyleSheet.create({
     backgroundColor: colors.pineTeal,
   },
   eyebrow: {
-    fontSize: 11,
+    fontSize: 13,
     fontWeight: "700",
-    letterSpacing: 0.6,
-    textTransform: "uppercase",
     color: "rgba(253,251,246,0.7)",
   },
   greeting: {
@@ -83,10 +81,8 @@ const styles = StyleSheet.create({
     backgroundColor: "rgba(253,251,246,0.1)",
   },
   statLabel: {
-    fontSize: 10,
+    fontSize: 13,
     fontWeight: "700",
-    letterSpacing: 0.4,
-    textTransform: "uppercase",
     color: "rgba(253,251,246,0.7)",
   },
   statValue: {
