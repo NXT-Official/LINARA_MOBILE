@@ -66,7 +66,7 @@ export function PantryStarter({
                   />
                   <Text style={styles.name}>{item.name}</Text>
                   <Text style={styles.par}>
-                    bilhin kapag {item.par} {unitFor(item.par, item.unit)}
+                    laging may {item.par} {unitFor(item.par, item.unit)}
                   </Text>
                 </Pressable>
               );

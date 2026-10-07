@@ -2,6 +2,7 @@ import { describe, expect, it } from "vitest";
 
 import {
   groupByPantryCategory,
+  needsBuying,
   rowActions,
   STARTER_ITEMS,
   STARTER_ORDER,
@@ -14,10 +15,24 @@ import {
 const PANTRY_CATEGORIES = ["Rice & grains", "Fresh", "Baby", "Cleaning", "Pantry"] as const;
 
 describe("stockState", () => {
-  it("is out at zero, low at or under the buy-more point, else ok", () => {
+  it("is out at zero, low under the keep-at-least amount, else ok", () => {
     expect(stockState({ qty: 0, par: 2 })).toBe("out");
-    expect(stockState({ qty: 2, par: 2 })).toBe("low");
+    expect(stockState({ qty: 1.5, par: 2 })).toBe("low");
+    expect(stockState({ qty: 2, par: 2 })).toBe("ok");
     expect(stockState({ qty: 3, par: 2 })).toBe("ok");
+  });
+
+  it("is enough once what was listed is bought", () => {
+    // Out of toilet roll, keep 1: "Ilista sa palengke" lists 1, and after it, it's fine.
+    expect(stockState({ qty: 0 + 1, par: 1 })).toBe("ok");
+  });
+});
+
+describe("needsBuying", () => {
+  it("is true for out and low, false at or over the amount", () => {
+    expect(needsBuying({ qty: 0, par: 0 })).toBe(true);
+    expect(needsBuying({ qty: 1, par: 2 })).toBe(true);
+    expect(needsBuying({ qty: 2, par: 2 })).toBe(false);
   });
 });
 

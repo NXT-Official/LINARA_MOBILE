@@ -30,7 +30,7 @@ import { ReceiptSnapCard } from "@/components/features/pantry/receipt-snap-card"
 import { ItemForm } from "@/components/features/pantry/item-form";
 import { ListFilter, matchesQuery } from "@/components/features/pantry/list-filter";
 import { PantryStarter } from "@/components/features/pantry/pantry-starter";
-import { CATEGORY_LABEL, groupByPantryCategory } from "@/lib/pantry";
+import { CATEGORY_LABEL, groupByPantryCategory, needsBuying } from "@/lib/pantry";
 import { HouseSwitcher } from "@/components/features/workplace/house-switcher";
 import { useWorkplaces } from "@/hooks/use-workplaces";
 import { useGroceryRuns } from "@/hooks/use-grocery-runs";
@@ -236,7 +236,7 @@ export default function PantryScreen() {
     (item) =>
       matchesQuery(item.name, pantrySearch) &&
       (pantryFilter === "all" ||
-        (pantryFilter === "low" ? item.qty <= item.par : item.category === pantryFilter)),
+        (pantryFilter === "low" ? needsBuying(item) : item.category === pantryFilter)),
   );
   const listedPantryIds = useMemo(
     () =>
