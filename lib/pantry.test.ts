@@ -1,11 +1,10 @@
 import { describe, expect, it } from "vitest";
 
 import {
+  CATEGORY_ORDER,
   groupByPantryCategory,
   needsBuying,
   rowActions,
-  STARTER_ITEMS,
-  STARTER_ORDER,
   stockState,
   unitFor,
 } from "./pantry";
@@ -94,21 +93,6 @@ describe("unitFor", () => {
   });
 });
 
-describe("STARTER_ITEMS", () => {
-  it("only uses categories the database accepts, all in STARTER_ORDER", () => {
-    for (const item of STARTER_ITEMS) {
-      expect(PANTRY_CATEGORIES).toContain(item.category);
-      expect(STARTER_ORDER).toContain(item.category);
-    }
-  });
-
-  it("starts every item stocked, with no duplicate names", () => {
-    for (const item of STARTER_ITEMS) expect(stockState(item)).toBe("ok");
-    const names = STARTER_ITEMS.map((i) => i.name.toLowerCase());
-    expect(new Set(names).size).toBe(names.length);
-  });
-});
-
 describe("groupByPantryCategory", () => {
   const pantry = [
     { id: "rice", category: "Rice & grains" as const },
@@ -130,5 +114,11 @@ describe("groupByPantryCategory", () => {
       ["Panlinis", ["Sabon"]],
       ["Iba pa", ["Ulam"]],
     ]);
+  });
+});
+
+describe("CATEGORY_ORDER", () => {
+  it("offers every shelf the database accepts, once", () => {
+    expect([...CATEGORY_ORDER].sort()).toEqual([...PANTRY_CATEGORIES].sort());
   });
 });

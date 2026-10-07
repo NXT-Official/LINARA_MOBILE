@@ -68,24 +68,6 @@ export async function addPantryItem(householdId: string, input: PantryItemInput)
   }
 }
 
-/**
- * Adds several items in one insert -- the starter list an empty pantry offers
- * (client feedback, 2026-10-02). Lands whole or not at all.
- */
-export async function addPantryItems(
-  householdId: string,
-  inputs: PantryItemInput[],
-): Promise<void> {
-  if (inputs.length === 0) return;
-  const { error } = await supabase
-    .from("pantry_items")
-    .insert(inputs.map((input) => ({ household_id: householdId, ...input })));
-
-  if (error) {
-    throw new Error(error.message);
-  }
-}
-
 /** Changes an item's stock or details. Deleting stays with the manager. */
 export async function updatePantryItem(id: string, patch: Partial<PantryItemInput>): Promise<void> {
   const { error } = await supabase

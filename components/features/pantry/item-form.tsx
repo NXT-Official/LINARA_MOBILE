@@ -2,7 +2,7 @@ import { useState } from "react";
 import { Pressable, StyleSheet, Text, TextInput, View } from "react-native";
 
 import { colors } from "@/lib/theme";
-import { CATEGORY_LABEL, STARTER_ORDER } from "@/lib/pantry";
+import { CATEGORY_LABEL, CATEGORY_ORDER } from "@/lib/pantry";
 import type { PantryCategory } from "@/services/api/pantry";
 
 export interface ItemFormValues {
@@ -119,7 +119,7 @@ export function ItemForm({
             accessibilityRole="radiogroup"
             accessibilityLabelledBy="pantry-category-label"
           >
-            {STARTER_ORDER.map((c) => (
+            {CATEGORY_ORDER.map((c) => (
               <Pressable
                 key={c}
                 onPress={() => setCategory(c)}

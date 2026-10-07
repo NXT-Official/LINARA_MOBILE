@@ -8,13 +8,7 @@ import {
   updateGroceryItem,
   type GroceryItemRow,
 } from "@/services/api/grocery";
-import {
-  addPantryItem,
-  addPantryItems,
-  updatePantryItem,
-  type PantryItemInput,
-  type PantryItemRow,
-} from "@/services/api/pantry";
+import { addPantryItem, updatePantryItem, type PantryItemRow } from "@/services/api/pantry";
 
 /** Matches the web's low-stock suggestion: enough to get back to par, at least one. */
 const restockQty = (item: PantryItemRow) =>
@@ -120,17 +114,6 @@ export function usePantryEdits(householdId: string | null) {
       "Hindi naidagdag sa pantry.",
     );
 
-  /** The starter list, in one go. */
-  const addStarter = async (items: PantryItemInput[]) =>
-    run(
-      "new-pantry",
-      async () => {
-        await addPantryItems(needHousehold(), items);
-        await refreshPantry();
-      },
-      "Hindi naidagdag sa pantry. Subukan ulit.",
-    );
-
   /**
    * "Ubos na": the count goes to zero and, unless it's already there, the
    * item goes on the palengke list -- the one thing she most often needs to
@@ -203,7 +186,6 @@ export function usePantryEdits(householdId: string | null) {
     removeGrocery,
     listPantryItem,
     addPantry,
-    addStarter,
     markOut,
     editPantry,
     stepPantry,

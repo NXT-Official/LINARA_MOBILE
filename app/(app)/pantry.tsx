@@ -29,7 +29,6 @@ import { ReceiptCaptureCard } from "@/components/features/pantry/receipt-capture
 import { ReceiptSnapCard } from "@/components/features/pantry/receipt-snap-card";
 import { ItemForm } from "@/components/features/pantry/item-form";
 import { ListFilter, matchesQuery } from "@/components/features/pantry/list-filter";
-import { PantryStarter } from "@/components/features/pantry/pantry-starter";
 import { CATEGORY_LABEL, groupByPantryCategory, needsBuying } from "@/lib/pantry";
 import { HouseSwitcher } from "@/components/features/workplace/house-switcher";
 import { useWorkplaces } from "@/hooks/use-workplaces";
@@ -547,12 +546,6 @@ export default function PantryScreen() {
             onList={edits.listPantryItem}
             onMarkOut={edits.markOut}
           />
-        ) : pantryItems.length === 0 ? (
-          <PantryStarter
-            saving={edits.savingId === "new-pantry"}
-            onAdd={(items) => void edits.addStarter(items)}
-            onAddOwn={() => setAddingPantry(true)}
-          />
         ) : (
           <PantryStockList
             items={shownPantry}
@@ -560,7 +553,10 @@ export default function PantryScreen() {
             emptyText={
               filtering(pantrySearch, pantryFilter)
                 ? "Walang tugma."
-                : "Walang laman sa pantry list."
+                : pantryItems.length === 0
+                  ? // No starter list any more (user, 2026-10-07): empty until items are added.
+                    "Wala pang laman ang pantry. Pindutin ang Magdagdag para maglagay."
+                  : "Walang laman sa pantry list."
             }
             listedIds={listedPantryIds}
             savingId={edits.savingId}
