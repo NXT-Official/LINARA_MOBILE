@@ -346,9 +346,9 @@ function CurrentRecord({ employment }: { employment: Employment }) {
           label="Tirahan"
           value={
             terms.employment === "live-in"
-              ? "Live-in"
+              ? "Stay-in"
               : terms.employment === "live-out"
-                ? "Live-out"
+                ? "Stay-out"
                 : "Hindi nakalagay"
           }
         />
