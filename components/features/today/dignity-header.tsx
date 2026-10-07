@@ -3,6 +3,7 @@ import { StyleSheet, Text, View } from "react-native";
 import { colors, fonts } from "@/lib/theme";
 import { greetingFor } from "@/lib/today";
 import { formatShiftTime, weekdayName } from "@/lib/format";
+import { firstNameOf } from "@/lib/names";
 import type { RosaAvailabilityStatus } from "@/lib/availability";
 import { RosaAvailControl } from "@/components/features/availability/rosa-avail-control";
 import type { HelperProfileSummary } from "@/services/api/helper-profile";
@@ -23,7 +24,8 @@ export function DignityHeader({
   onAvailable: (hours: number) => void;
   onOff: () => void;
 }) {
-  const firstName = profile.name.split(" ")[0];
+  // Her own name, not a title saved with it ("Kuya Marito" is Marito).
+  const firstName = firstNameOf(profile.name);
 
   return (
     <View style={styles.card}>
