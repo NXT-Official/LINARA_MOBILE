@@ -168,7 +168,7 @@ const styles = StyleSheet.create({
     color: colors.pineTeal,
   },
   privacyNote: {
-    fontSize: 12,
+    fontSize: 13,
     lineHeight: 18,
     color: colors.mutedInk,
   },

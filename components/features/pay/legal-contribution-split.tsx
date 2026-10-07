@@ -99,11 +99,11 @@ const styles = StyleSheet.create({
     marginTop: 2,
   },
   cell: {
-    fontSize: 12,
+    fontSize: 13,
     color: colors.ink,
   },
   headerCell: {
-    fontSize: 10,
+    fontSize: 13,
     fontWeight: "700",
     color: colors.mutedInk,
   },
@@ -123,9 +123,9 @@ const styles = StyleSheet.create({
     color: colors.pineTeal,
   },
   note: {
-    fontSize: 10,
+    fontSize: 13,
     fontStyle: "italic",
     color: colors.pineTeal,
-    lineHeight: 15,
+    lineHeight: 18,
   },
 });

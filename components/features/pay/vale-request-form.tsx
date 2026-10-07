@@ -146,7 +146,7 @@ const styles = StyleSheet.create({
     color: colors.ink,
   },
   rowReason: {
-    fontSize: 12,
+    fontSize: 13,
     color: colors.mutedInk,
     flexShrink: 1,
   },
@@ -160,7 +160,7 @@ const styles = StyleSheet.create({
     backgroundColor: colors.border,
   },
   badgeText: {
-    fontSize: 10,
+    fontSize: 13,
     fontWeight: "700",
     color: colors.pineTeal,
   },

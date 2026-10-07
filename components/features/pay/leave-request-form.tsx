@@ -280,7 +280,7 @@ const styles = StyleSheet.create({
     color: colors.terracottaGold,
   },
   hint: {
-    fontSize: 12,
+    fontSize: 13,
     color: colors.mutedInk,
   },
   chips: {
@@ -321,12 +321,12 @@ const styles = StyleSheet.create({
     color: colors.ink,
   },
   preview: {
-    fontSize: 12,
+    fontSize: 13,
     fontFamily: fonts.bodyBold,
     color: colors.ink,
   },
   warning: {
-    fontSize: 12,
+    fontSize: 13,
     fontFamily: fonts.bodyBold,
     color: colors.terracottaInk,
   },
@@ -351,11 +351,11 @@ const styles = StyleSheet.create({
     color: colors.ink,
   },
   rowMeta: {
-    fontSize: 11,
+    fontSize: 13,
     color: colors.mutedInk,
   },
   status: {
-    fontSize: 11,
+    fontSize: 13,
     fontFamily: fonts.bodyBold,
     color: colors.mutedInk,
   },
@@ -367,7 +367,7 @@ const styles = StyleSheet.create({
     borderColor: colors.mutedInk,
   },
   cancelText: {
-    fontSize: 11,
+    fontSize: 13,
     fontFamily: fonts.bodyBold,
     color: colors.mutedInk,
   },

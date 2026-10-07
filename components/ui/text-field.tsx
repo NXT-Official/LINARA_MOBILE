@@ -69,11 +69,11 @@ const styles = StyleSheet.create({
     borderColor: colors.terracottaGold,
   },
   error: {
-    fontSize: 12,
+    fontSize: 13,
     color: colors.terracottaGold,
   },
   hint: {
-    fontSize: 12,
+    fontSize: 13,
     color: colors.mutedInk,
   },
 });

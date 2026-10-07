@@ -236,11 +236,11 @@ const styles = StyleSheet.create({
     color: colors.terracottaGold,
   },
   hint: {
-    fontSize: 12,
+    fontSize: 13,
     color: colors.mutedInk,
   },
   preview: {
-    fontSize: 12,
+    fontSize: 13,
     fontFamily: fonts.bodyBold,
     color: colors.ink,
   },
@@ -264,15 +264,15 @@ const styles = StyleSheet.create({
     color: colors.ink,
   },
   rowMeta: {
-    fontSize: 11,
+    fontSize: 13,
     color: colors.mutedInk,
   },
   status: {
-    fontSize: 11,
+    fontSize: 13,
     fontFamily: fonts.bodyBold,
   },
   warning: {
-    fontSize: 12,
+    fontSize: 13,
     fontFamily: fonts.bodyBold,
     color: colors.terracottaGold,
   },
@@ -284,7 +284,7 @@ const styles = StyleSheet.create({
     borderColor: colors.mutedInk,
   },
   cancelText: {
-    fontSize: 11,
+    fontSize: 13,
     fontFamily: fonts.bodyBold,
     color: colors.mutedInk,
   },

@@ -126,7 +126,7 @@ const styles = StyleSheet.create({
     color: colors.ink,
   },
   receiptRetake: {
-    fontSize: 12,
+    fontSize: 13,
     fontWeight: "600",
     color: colors.pineTeal,
     textDecorationLine: "underline",
@@ -137,7 +137,7 @@ const styles = StyleSheet.create({
     gap: 8,
   },
   uploadingText: {
-    fontSize: 12,
+    fontSize: 13,
     color: colors.mutedInk,
   },
 });

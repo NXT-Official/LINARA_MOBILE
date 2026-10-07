@@ -135,13 +135,13 @@ const styles = StyleSheet.create({
     borderRadius: 4,
   },
   pillText: {
-    fontSize: 12,
+    fontSize: 13,
     fontWeight: "700",
     color: colors.cardCream,
   },
   detail: {
     marginTop: 8,
-    fontSize: 12,
+    fontSize: 13,
     color: "rgba(253,251,246,0.75)",
   },
   actions: {

@@ -106,16 +106,16 @@ const styles = StyleSheet.create({
     paddingVertical: 2,
   },
   emergencyBadgeText: {
-    fontSize: 10,
+    fontSize: 13,
     fontWeight: "700",
     color: "#C24E30",
   },
   meta: {
-    fontSize: 11,
+    fontSize: 13,
     color: colors.mutedInk,
   },
   waitingText: {
-    fontSize: 11,
+    fontSize: 13,
     fontStyle: "italic",
     color: colors.mutedInk,
   },
@@ -137,7 +137,7 @@ const styles = StyleSheet.create({
     backgroundColor: colors.sand,
   },
   secondaryButtonText: {
-    fontSize: 12,
+    fontSize: 13,
     fontWeight: "700",
     color: colors.ink,
   },
@@ -145,7 +145,7 @@ const styles = StyleSheet.create({
     backgroundColor: colors.pineTeal,
   },
   primaryButtonText: {
-    fontSize: 12,
+    fontSize: 13,
     fontWeight: "700",
     color: colors.cardCream,
   },

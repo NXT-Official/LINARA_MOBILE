@@ -190,7 +190,7 @@ const styles = StyleSheet.create({
     padding: 12,
   },
   flaggedText: {
-    fontSize: 12,
+    fontSize: 13,
     lineHeight: 18,
     color: colors.ink,
   },

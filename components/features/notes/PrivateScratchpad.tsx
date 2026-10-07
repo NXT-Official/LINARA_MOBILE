@@ -347,7 +347,7 @@ const styles = StyleSheet.create({
     alignSelf: "flex-start",
   },
   promoteText: {
-    fontSize: 12,
+    fontSize: 13,
     fontWeight: "700",
     color: colors.pineTeal,
   },
@@ -371,7 +371,7 @@ const styles = StyleSheet.create({
     backgroundColor: colors.terracottaGold,
   },
   recordHint: {
-    fontSize: 11,
+    fontSize: 13,
     color: colors.mutedInk,
     textAlign: "center",
   },

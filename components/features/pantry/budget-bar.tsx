@@ -114,7 +114,7 @@ const styles = StyleSheet.create({
     paddingVertical: 2,
   },
   remaining: {
-    fontSize: 11,
+    fontSize: 13,
     fontWeight: "700",
     color: colors.mutedInk,
   },

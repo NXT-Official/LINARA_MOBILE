@@ -281,7 +281,7 @@ const styles = StyleSheet.create({
   rowMain: { flex: 1, gap: 2 },
   taskTitle: { fontSize: 15, color: colors.ink },
   taskDone: { color: colors.mutedInk, textDecorationLine: "line-through" },
-  status: { fontSize: 12, fontWeight: "700" },
+  status: { fontSize: 13, fontWeight: "700" },
   detail: { gap: 10, paddingBottom: 14 },
   note: { fontSize: 14, lineHeight: 20, color: colors.mutedInk },
   error: { fontSize: 13, color: colors.terracottaInk, paddingBottom: 12 },

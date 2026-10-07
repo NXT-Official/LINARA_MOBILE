@@ -210,7 +210,7 @@ const styles = StyleSheet.create({
   },
   itemQty: {
     marginTop: 1,
-    fontSize: 11,
+    fontSize: 13,
     color: colors.mutedInk,
   },
   iconButton: {
@@ -230,7 +230,7 @@ const styles = StyleSheet.create({
     paddingVertical: 6,
   },
   costPeso: {
-    fontSize: 12,
+    fontSize: 13,
     color: colors.mutedInk,
   },
   costInput: {

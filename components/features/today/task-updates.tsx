@@ -119,7 +119,7 @@ const styles = StyleSheet.create({
   },
   commentHead: { flexDirection: "row", alignItems: "center", gap: 8 },
   author: { fontSize: 13, fontWeight: "700", color: colors.ink },
-  time: { flex: 1, fontSize: 12, color: colors.mutedInk },
+  time: { flex: 1, fontSize: 13, color: colors.mutedInk },
   body: { fontSize: 14, lineHeight: 20, color: colors.ink },
   error: { fontSize: 13, color: colors.terracottaInk },
 });

@@ -108,11 +108,11 @@ const styles = StyleSheet.create({
     color: colors.ink,
   },
   meta: {
-    fontSize: 11,
+    fontSize: 13,
     color: colors.mutedInk,
   },
   status: {
-    fontSize: 11,
+    fontSize: 13,
     fontFamily: fonts.bodyBold,
   },
 });

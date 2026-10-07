@@ -60,7 +60,7 @@ const styles = StyleSheet.create({
     color: colors.ink,
   },
   hint: {
-    fontSize: 11,
+    fontSize: 13,
     color: colors.mutedInk,
   },
 });

@@ -124,7 +124,7 @@ const styles = StyleSheet.create({
     color: colors.ink,
   },
   netPayHint: {
-    fontSize: 12,
+    fontSize: 13,
     color: colors.mutedInk,
     marginTop: -8,
   },

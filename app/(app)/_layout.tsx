@@ -112,6 +112,8 @@ export default function AppTabsLayout() {
           backgroundColor: colors.cardCream,
           borderTopColor: colors.border,
         },
+        // DESIGN.md's smallest size; the navigator's default label is smaller.
+        tabBarLabelStyle: { fontSize: 13 },
       }}
     >
       <Tabs.Screen
