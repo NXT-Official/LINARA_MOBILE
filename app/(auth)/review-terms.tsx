@@ -53,7 +53,7 @@ export default function ReviewTermsScreen() {
 
   return (
     <ScrollView style={styles.screen} contentContainerStyle={styles.content}>
-      <Text style={styles.eyebrow}>Step 2 of 3</Text>
+      <Text style={styles.eyebrow}>Hakbang 2 sa 3</Text>
       <Text style={styles.title}>Tingnan mo muna — ito ba ang usapan?</Text>
 
       {termsQuery.isLoading ? (
@@ -80,27 +80,27 @@ export default function ReviewTermsScreen() {
 
           <View style={styles.card}>
             <TermRow label="Pangalan" value={termsQuery.data.name} />
-            <TermRow label="Role / station" value={termsQuery.data.station} />
+            <TermRow label="Trabaho" value={termsQuery.data.station} />
             <TermRow
-              label="Shift hours"
+              label="Oras ng shift"
               value={`${formatShiftTime(termsQuery.data.shiftStart)} – ${formatShiftTime(termsQuery.data.shiftEnd)}`}
             />
             <TermRow label="Rest day" value={weekdayName(termsQuery.data.weeklyRestDay)} />
             <TermRow
-              label="Monthly wage"
+              label="Sahod kada buwan"
               value={`₱${termsQuery.data.monthlyRate.toLocaleString()}`}
             />
           </View>
 
           <PrimaryButton
-            label="Something's not right? →"
+            label="May hindi tama? →"
             variant="secondary"
             onPress={() => router.push({ pathname: "/(auth)/flag-terms", params: { code } })}
           />
 
           <View style={styles.actions}>
             <PrimaryButton
-              label="Back"
+              label="Bumalik"
               variant="secondary"
               style={styles.actionButton}
               onPress={goBack}
@@ -114,7 +114,7 @@ export default function ReviewTermsScreen() {
               />
             ) : (
               <PrimaryButton
-                label="Looks right — continue"
+                label="Tama ito — tuloy"
                 style={styles.actionButton}
                 onPress={() => router.push({ pathname: "/(auth)/claim-account", params: { code } })}
               />

@@ -33,7 +33,7 @@ export function RosaAvailControl({
   return (
     <View style={styles.container}>
       <View style={styles.headerRow}>
-        <Text style={styles.label}>Availability</Text>
+        <Text style={styles.label}>Available ka ba?</Text>
         <View style={styles.pill}>
           <View
             style={[
@@ -52,7 +52,7 @@ export function RosaAvailControl({
       </View>
 
       {status.status === "available" && status.until ? (
-        <Text style={styles.detail}>Until {formatTimeOfDay(status.until)}</Text>
+        <Text style={styles.detail}>Hanggang {formatTimeOfDay(status.until)}</Text>
       ) : null}
       {status.timeOff ? (
         <Text style={styles.detail}>Day off mo ngayon. Aprobado ng manager.</Text>
@@ -69,10 +69,10 @@ export function RosaAvailControl({
                 pressed && styles.pressed,
               ]}
             >
-              <Text style={styles.secondaryButtonText}>Switch to Off</Text>
+              <Text style={styles.secondaryButtonText}>Gawing Off</Text>
             </Pressable>
           ) : status.quiet ? (
-            <Text style={styles.detail}>Available is disabled during quiet hours.</Text>
+            <Text style={styles.detail}>Hindi puwedeng mag-Available sa oras ng pahinga.</Text>
           ) : (
             <>
               <Pressable
@@ -83,7 +83,7 @@ export function RosaAvailControl({
                   pressed && styles.pressed,
                 ]}
               >
-                <Text style={styles.primaryButtonText}>Available 1 hr</Text>
+                <Text style={styles.primaryButtonText}>Available nang 1 oras</Text>
               </Pressable>
               <Pressable
                 onPress={() => onAvailable(2)}
@@ -93,7 +93,7 @@ export function RosaAvailControl({
                   pressed && styles.pressed,
                 ]}
               >
-                <Text style={styles.primaryButtonText}>Available 2 hrs</Text>
+                <Text style={styles.primaryButtonText}>Available nang 2 oras</Text>
               </Pressable>
             </>
           )}

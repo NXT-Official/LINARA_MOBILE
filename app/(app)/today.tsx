@@ -358,7 +358,7 @@ export default function TodayScreen() {
           </View>
         ) : profileQuery.isError || !profileQuery.data ? (
           <Text style={styles.errorText}>
-            Couldn&apos;t load your shift details. Pull to refresh in a moment, po.
+            Hindi ma-load ang shift mo. Hilahin pababa para i-refresh mamaya, po.
           </Text>
         ) : (
           <>

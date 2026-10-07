@@ -117,19 +117,19 @@ export default function AppTabsLayout() {
       <Tabs.Screen
         name="today"
         options={{
-          title: "Today",
+          title: "Ngayon",
           tabBarIcon: ({ color, size }) => (
             <Ionicons name="checkmark-circle" size={size} color={color} />
           ),
-          ...lockedButton("Today"),
+          ...lockedButton("Ngayon"),
         }}
       />
       <Tabs.Screen
         name="week"
         options={{
-          title: "My Week",
+          title: "Linggo ko",
           tabBarIcon: ({ color, size }) => <Ionicons name="calendar" size={size} color={color} />,
-          ...lockedButton("My Week"),
+          ...lockedButton("Linggo ko"),
         }}
       />
       <Tabs.Screen
@@ -143,15 +143,15 @@ export default function AppTabsLayout() {
       <Tabs.Screen
         name="pay"
         options={{
-          title: "My Pay",
+          title: "Sahod ko",
           tabBarIcon: ({ color, size }) => <Ionicons name="card" size={size} color={color} />,
-          ...lockedButton("My Pay"),
+          ...lockedButton("Sahod ko"),
         }}
       />
       <Tabs.Screen
         name="record"
         options={{
-          title: "My Record",
+          title: "Record ko",
           tabBarIcon: ({ color, size }) => (
             <Ionicons name="document-text" size={size} color={color} />
           ),

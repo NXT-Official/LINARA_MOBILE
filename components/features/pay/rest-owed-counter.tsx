@@ -21,7 +21,7 @@ export function RestOwedCounter({ minutes }: { minutes: number }) {
       <View style={styles.textCol}>
         <Text style={styles.eyebrow}>Rest Owed</Text>
         <Text style={styles.value}>{formatHoursMinutes(minutes)}</Text>
-        <Text style={styles.hint}>Time-off in lieu accrued from off-shift work</Text>
+        <Text style={styles.hint}>Pahingang naipon mula sa trabaho lampas sa shift</Text>
       </View>
     </View>
   );

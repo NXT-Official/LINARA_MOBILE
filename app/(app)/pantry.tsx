@@ -302,7 +302,7 @@ export default function PantryScreen() {
 
   return (
     <ScrollView style={styles.screen} contentContainerStyle={styles.content}>
-      <Text style={styles.header}>Pantry &amp; Palengke</Text>
+      <Text style={styles.header}>Pantry at palengke</Text>
       <HouseSwitcher places={places} />
 
       {groceryQuery.isLoading ? (
@@ -351,7 +351,9 @@ export default function PantryScreen() {
 
           <View style={styles.section}>
             <View style={styles.sectionHead}>
-              <Text style={styles.sectionTitle}>{runsOn ? "Kailangan" : "Palengke checklist"}</Text>
+              <Text style={styles.sectionTitle}>
+                {runsOn ? "Kailangan" : "Listahan sa palengke"}
+              </Text>
               <View style={styles.headButtons}>
                 {inCharge && runsOn && !creatingRun && poolItems.some((g) => !g.bought) && (
                   <Pressable
@@ -490,7 +492,7 @@ export default function PantryScreen() {
 
       <View style={styles.section}>
         <View style={styles.sectionHead}>
-          <Text style={styles.sectionTitle}>Pantry stock</Text>
+          <Text style={styles.sectionTitle}>Laman ng pantry</Text>
           {inCharge && !addingPantry && (
             <Pressable
               onPress={() => setAddingPantry(true)}

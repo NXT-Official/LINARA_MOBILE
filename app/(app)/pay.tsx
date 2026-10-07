@@ -204,7 +204,7 @@ export default function PayScreen() {
 
   return (
     <ScrollView style={styles.screen} contentContainerStyle={styles.content}>
-      <Text style={styles.header}>My Pay</Text>
+      <Text style={styles.header}>Sahod ko</Text>
 
       {profileQuery.isLoading ? (
         <View style={styles.loading}>

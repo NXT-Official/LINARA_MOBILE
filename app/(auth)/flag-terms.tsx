@@ -17,9 +17,9 @@ import { PrimaryButton } from "@/components/ui/primary-button";
 
 const FLAG_CATEGORIES: { value: "wage" | "shift" | "restDay" | "station"; label: string }[] = [
   { value: "wage", label: "Sahod / wage" },
-  { value: "shift", label: "Shift hours" },
+  { value: "shift", label: "Oras ng shift" },
   { value: "restDay", label: "Rest day" },
-  { value: "station", label: "Role / station" },
+  { value: "station", label: "Trabaho" },
 ];
 
 /**
@@ -55,14 +55,14 @@ export default function FlagTermsScreen() {
       behavior={Platform.OS === "ios" ? "padding" : undefined}
     >
       <ScrollView contentContainerStyle={styles.content} keyboardShouldPersistTaps="handled">
-        <Text style={styles.eyebrow}>Flag a detail</Text>
-        <Text style={styles.title}>Something&apos;s not right?</Text>
+        <Text style={styles.eyebrow}>Sabihin ang mali</Text>
+        <Text style={styles.title}>May hindi tama?</Text>
         <Text style={styles.subtitle}>
           Alin ang mali? Sabihin mo lang — ipapaalam namin sa manager. Hindi mo pa kailangang
           pumirma.
         </Text>
 
-        <Text style={styles.label}>Which detail?</Text>
+        <Text style={styles.label}>Aling detalye?</Text>
         <View style={styles.categoryRow}>
           {FLAG_CATEGORIES.map((category) => {
             const selected = category.value === field;
@@ -100,13 +100,13 @@ export default function FlagTermsScreen() {
 
         <View style={styles.actions}>
           <PrimaryButton
-            label="Cancel"
+            label="Huwag na"
             variant="secondary"
             style={styles.actionButton}
             onPress={() => router.back()}
           />
           <PrimaryButton
-            label="Send flag to manager"
+            label="Ipadala sa manager"
             style={styles.actionButton}
             loading={loading}
             onPress={submitFlag}

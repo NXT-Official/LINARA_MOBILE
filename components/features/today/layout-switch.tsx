@@ -18,7 +18,7 @@ export function LayoutSwitch({
   onChange: (next: TodayLayout) => void;
 }) {
   return (
-    <View style={styles.wrap} accessibilityRole="tablist" accessibilityLabel="Ayos ng Today">
+    <View style={styles.wrap} accessibilityRole="tablist" accessibilityLabel="Ayos ng Ngayon">
       {OPTIONS.map((o) => {
         const on = o.key === value;
         return (

@@ -39,7 +39,7 @@ export function PayslipHistory({ payslips }: { payslips: Payslip[] }) {
 
   return (
     <View style={styles.card}>
-      <Text style={styles.eyebrow}>Payslip History</Text>
+      <Text style={styles.eyebrow}>Mga payslip</Text>
       {payslips.map((p) => (
         <View key={p.id} style={styles.row}>
           <View style={styles.rowLeft}>

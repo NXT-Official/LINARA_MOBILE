@@ -80,21 +80,21 @@ export function ValeRequestForm({
       ) : null}
       <RequestDisclosure open={open} onOpenChange={setOpen} openLabel="Humiling ng vale">
         <TextField
-          label="Amount (₱)"
+          label="Halaga (₱)"
           value={amount}
           onChangeText={setAmount}
           keyboardType="decimal-pad"
           placeholder="500"
         />
         <TextField
-          label="Reason"
+          label="Dahilan"
           value={reason}
           onChangeText={setReason}
           placeholder="Gamot para sa anak"
           multiline
         />
         <PrimaryButton
-          label="Request cash advance"
+          label="Ipadala sa manager"
           onPress={handleSubmit}
           disabled={!canSubmit}
           loading={submitting}

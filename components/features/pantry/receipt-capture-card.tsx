@@ -67,7 +67,7 @@ export function ReceiptCaptureCard({
       ) : null}
 
       <PrimaryButton
-        label="Mark Run Complete"
+        label="Tapos na ang run"
         disabled={!receiptUri}
         loading={completing}
         onPress={onComplete}

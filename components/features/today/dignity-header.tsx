@@ -27,14 +27,14 @@ export function DignityHeader({
 
   return (
     <View style={styles.card}>
-      <Text style={styles.eyebrow}>{firstName}&apos;s Station</Text>
+      <Text style={styles.eyebrow}>Station ni {firstName}</Text>
       <Text style={styles.greeting}>
         {greetingFor(new Date())}, {firstName}.
       </Text>
 
       <View style={styles.statsRow}>
         <View style={styles.statTile}>
-          <Text style={styles.statLabel}>Today&apos;s shift</Text>
+          <Text style={styles.statLabel}>Shift mo ngayon</Text>
           <Text style={styles.statValue}>
             {formatShiftTime(profile.shiftStart)} – {formatShiftTime(profile.shiftEnd)}
           </Text>

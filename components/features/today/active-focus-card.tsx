@@ -119,7 +119,7 @@ export function ActiveFocusCard({
       {task.sop ? <SopCarousel sop={task.sop} /> : null}
 
       {task.status === "todo" && (
-        <PrimaryButton label="Start Task" loading={isStarting} onPress={onStart} />
+        <PrimaryButton label="Simulan" loading={isStarting} onPress={onStart} />
       )}
       {task.status === "in_progress" && (
         <>
@@ -147,7 +147,7 @@ export function ActiveFocusCard({
           )}
           {photoError ? <Text style={styles.error}>{photoError}</Text> : null}
           <PrimaryButton
-            label={photoUri ? "Done, kasama ang litrato" : "Done"}
+            label={photoUri ? "Tapos na, kasama ang litrato" : "Tapos na"}
             loading={isCompleting}
             onPress={() => onComplete(photoUri)}
           />

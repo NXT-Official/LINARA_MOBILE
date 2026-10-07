@@ -84,7 +84,7 @@ export function StartupWait() {
       {error ? <Text style={styles.error}>{error}</Text> : null}
       <PrimaryButton label="Subukan ulit" onPress={tryAgain} disabled={signingOut} />
       <PrimaryButton
-        label={session ? "Sign out" : "Go to sign in"}
+        label={session ? "Mag-sign out" : "Bumalik sa sign in"}
         variant="secondary"
         onPress={() => void leave()}
         loading={signingOut}

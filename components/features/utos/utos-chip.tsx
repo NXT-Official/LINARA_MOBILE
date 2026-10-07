@@ -35,11 +35,11 @@ export function UtosChip({
       </View>
       <Text style={styles.meta}>
         {formatTimeOfDay(utos.createdAt)} · mula kay {utos.senderName}
-        {utos.afterHours ? " · After-hours" : ""}
+        {utos.afterHours ? " · Lampas sa oras" : ""}
       </Text>
 
       {utos.waiting ? (
-        <Text style={styles.waitingText}>Waiting — makikita mo &apos;to pagbalik mo.</Text>
+        <Text style={styles.waitingText}>Naghihintay — makikita mo &apos;to pagbalik mo.</Text>
       ) : (
         <View style={styles.actions}>
           <Pressable
@@ -51,7 +51,7 @@ export function UtosChip({
               pressed && styles.pressed,
             ]}
           >
-            <Text style={styles.secondaryButtonText}>Got it</Text>
+            <Text style={styles.secondaryButtonText}>Sige</Text>
           </Pressable>
           <Pressable
             disabled={acking}
@@ -62,7 +62,7 @@ export function UtosChip({
               pressed && styles.pressed,
             ]}
           >
-            <Text style={styles.primaryButtonText}>Done</Text>
+            <Text style={styles.primaryButtonText}>Tapos na</Text>
           </Pressable>
         </View>
       )}

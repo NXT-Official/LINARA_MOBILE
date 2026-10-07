@@ -72,7 +72,7 @@ export function EditTaskForm({
         multiline
       />
       {laterDay ? (
-        <Text style={styles.hint}>Mawawala ito sa Today at lalabas sa My Week.</Text>
+        <Text style={styles.hint}>Mawawala ito sa Ngayon at lalabas sa Linggo ko.</Text>
       ) : null}
       <Text style={styles.hint}>Makikita ito ng manager.</Text>
       {error ? <Text style={styles.error}>{error}</Text> : null}

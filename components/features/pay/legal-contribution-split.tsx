@@ -29,12 +29,12 @@ export function LegalContributionSplit({ wagePHP }: { wagePHP: number }) {
 
   return (
     <View style={styles.card}>
-      <Text style={styles.eyebrow}>Legal Contribution Split (Batas Kasambahay)</Text>
+      <Text style={styles.eyebrow}>Hatian ng kontribusyon (Batas Kasambahay)</Text>
 
       <View style={styles.headerRow}>
-        <Text style={[styles.cell, styles.headerCell, styles.labelCol]}>Contribution</Text>
+        <Text style={[styles.cell, styles.headerCell, styles.labelCol]}>Kontribusyon</Text>
         <Text style={[styles.cell, styles.headerCell, styles.amountCol]}>Employer</Text>
-        <Text style={[styles.cell, styles.headerCell, styles.amountCol]}>You</Text>
+        <Text style={[styles.cell, styles.headerCell, styles.amountCol]}>Ikaw</Text>
       </View>
 
       {rows.map((row) => (
@@ -48,7 +48,7 @@ export function LegalContributionSplit({ wagePHP }: { wagePHP: number }) {
       ))}
 
       <View style={[styles.row, styles.totalRow]}>
-        <Text style={[styles.cell, styles.labelCol, styles.totalText]}>Total</Text>
+        <Text style={[styles.cell, styles.labelCol, styles.totalText]}>Kabuuan</Text>
         <Text style={[styles.cell, styles.amountCol, styles.totalText]}>
           {formatPeso(split.totalEmployer)}
         </Text>

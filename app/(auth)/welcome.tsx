@@ -67,7 +67,7 @@ export default function WelcomeScreen() {
           onSubmitEditing={submitCode}
         />
 
-        <PrimaryButton label="Continue" onPress={submitCode} disabled={!code.trim()} />
+        <PrimaryButton label="Tuloy" onPress={submitCode} disabled={!code.trim()} />
 
         <Pressable
           onPress={() => router.replace("/(auth)/sign-in")}

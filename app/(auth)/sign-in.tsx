@@ -61,7 +61,7 @@ export default function SignInScreen() {
     >
       <ScrollView contentContainerStyle={styles.content} keyboardShouldPersistTaps="handled">
         <View style={styles.hero}>
-          <Text style={styles.title}>Welcome back</Text>
+          <Text style={styles.title}>Maligayang pagbabalik</Text>
           <Text style={styles.subtitle}>
             Para sa employer at kasambahay. Mag-sign in gamit ang email at password mo.
           </Text>
@@ -95,7 +95,7 @@ export default function SignInScreen() {
         {error ? <Text style={styles.errorText}>{error}</Text> : null}
 
         <PrimaryButton
-          label="Sign in"
+          label="Mag-sign in"
           loading={loading}
           disabled={!email.trim() || !password}
           onPress={submit}

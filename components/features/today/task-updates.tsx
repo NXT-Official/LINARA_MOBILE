@@ -60,7 +60,7 @@ export function TaskUpdates({ ticketId, myUserId }: { ticketId: string; myUserId
               </Text>
               <Text style={styles.time}>
                 {stamp(c.createdAt)}
-                {c.editedAt ? " · edited" : ""}
+                {c.editedAt ? " · binago" : ""}
               </Text>
               {c.authorId === myUserId ? (
                 <Pressable

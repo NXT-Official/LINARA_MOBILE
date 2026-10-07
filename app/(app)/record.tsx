@@ -47,8 +47,8 @@ const FLAG_FIELDS: { value: TermsFlagField; label: string }[] = [
   { value: "wage", label: "Sahod" },
   { value: "shift", label: "Oras ng shift" },
   { value: "restDay", label: "Rest day" },
-  { value: "station", label: "Role" },
-  { value: "employment", label: "Live-in / live-out" },
+  { value: "station", label: "Trabaho" },
+  { value: "employment", label: "Stay-in / stay-out" },
   { value: "other", label: "Iba pa" },
 ];
 
@@ -142,7 +142,7 @@ function JoinHouseholdCard() {
       <Text style={styles.cardTitle}>Wala kang household ngayon</Text>
       <Text style={styles.cardSub}>
         Kapag may bago kang employer, i-enter ang invite code na ibibigay nila. Makikita mo muna ang
-        terms bago ka sumali. Bubukas ulit ang Today, My Week, Pantry at My Pay pagkasali mo.
+        terms bago ka sumali. Bubukas ulit ang Ngayon, Linggo ko, Pantry at Sahod ko pagkasali mo.
       </Text>
       <TextField
         label="Invite code"
@@ -318,7 +318,7 @@ function CurrentRecord({ employment }: { employment: Employment }) {
         <Text style={styles.cardSub}>
           Ito ang record ng household tungkol sa trabaho mo. Parehong numero ang nakikita nila.
         </Text>
-        <Row label="Role" value={terms.station} />
+        <Row label="Trabaho" value={terms.station} />
         {workplaces.length > 1 ? (
           <Row
             label="Mga bahay"

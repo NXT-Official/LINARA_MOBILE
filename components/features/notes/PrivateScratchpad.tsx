@@ -155,7 +155,7 @@ export function PrivateScratchpad({
 
   return (
     <View style={styles.card}>
-      <Text style={styles.eyebrow}>Private Notes</Text>
+      <Text style={styles.eyebrow}>Sariling tala</Text>
       <Text style={styles.subtitle}>Sa&apos;yo lang &apos;to. Hindi ito makikita ng manager.</Text>
 
       {notesQuery.isLoading ? (
@@ -209,7 +209,7 @@ export function PrivateScratchpad({
                             size={16}
                             color={colors.pineTeal}
                           />
-                          <Text style={styles.promoteText}>Promote to Board</Text>
+                          <Text style={styles.promoteText}>Gawing task</Text>
                         </>
                       )}
                     </Pressable>
@@ -261,7 +261,7 @@ export function PrivateScratchpad({
 
       <View style={styles.actionsRow}>
         <PrimaryButton
-          label="Add Note"
+          label="Magdagdag ng tala"
           variant="secondary"
           style={styles.actionButton}
           loading={addTextMutation.isPending}

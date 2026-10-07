@@ -14,13 +14,17 @@ import { RequestDisclosure } from "./request-disclosure";
 /** What she can ask for. An extra paid day is the household's to give, so it's recorded, not asked. */
 const ASKABLE: { kind: LeaveKind; label: string; hint: string }[] = [
   { kind: "sil", label: "SIL", hint: "May bayad. Bawas sa SIL mo ngayong taon ng serbisyo." },
-  { kind: "in_kind", label: "Day off in kind", hint: "Bayad sa oras: galing sa rest owed mo." },
+  {
+    kind: "in_kind",
+    label: "Day off mula sa rest owed",
+    hint: "Bayad sa oras: galing sa rest owed mo.",
+  },
   { kind: "unpaid", label: "Walang bayad", hint: "Ibabawas sa sahod ng cutoff na iyon." },
 ];
 
 const KIND_LABEL: Record<LeaveKind, string> = {
   sil: "SIL",
-  in_kind: "Day off in kind",
+  in_kind: "Day off mula sa rest owed",
   unpaid: "Walang bayad",
   extra_paid: "Dagdag na bayad na day off",
 };

@@ -65,7 +65,9 @@ export function BudgetBar({
           )}
         </View>
         <Text style={[styles.remaining, over && styles.remainingOver]}>
-          {over ? `over by ${fmtPeso(spent - budget)}` : `${fmtPeso(budget - spent)} left`}
+          {over
+            ? `sobra ng ${fmtPeso(spent - budget)}`
+            : `${fmtPeso(budget - spent)} pa ang natitira`}
         </Text>
       </View>
       <View style={styles.track}>
