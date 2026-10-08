@@ -1,0 +1,26 @@
+# UAT SA-070: a folded request form keeps what was typed. Sends nothing.
+# Test helper.
+appId: com.linara.mobile
+name: SA-070 Folded forms keep what was typed
+tags: [uat, helper]
+---
+- runFlow: ../common/sign-in-staff.yaml
+- tapOn: "Sahod ko"
+- scrollUntilVisible:
+    element: "Humiling ng vale"
+- tapOn: "Humiling ng vale"
+- tapOn: "Gamot para sa anak"
+- inputText: "UAT draft"
+- hideKeyboard
+- scrollUntilVisible:
+    element: "Huwag na lang"
+- tapOn: "Huwag na lang"
+- assertNotVisible: "UAT draft"
+- scrollUntilVisible:
+    element: "Humiling ng vale"
+- tapOn: "Humiling ng vale"
+- scrollUntilVisible:
+    element: "UAT draft"
+- scrollUntilVisible:
+    element: "Huwag na lang"
+- tapOn: "Huwag na lang"

@@ -1,0 +1,24 @@
+# UAT SA-088: signing out with an action still waiting to sync is refused
+# with a warning; once online it syncs. Needs a UAT test task, not started.
+# Test helper.
+appId: com.linara.mobile
+name: SA-088 Sign out with unsynced actions
+tags: [uat, helper, changes-data, needs-setup]
+onFlowComplete:
+  - setAirplaneMode: disabled
+---
+- runFlow: ../common/sign-in-staff.yaml
+- scrollUntilVisible:
+    element: "Simulan"
+- setAirplaneMode: enabled
+- tapOn: "Simulan"
+- tapOn: "Record ko"
+- scrollUntilVisible:
+    element: "Mag-sign out"
+- tapOn: "Mag-sign out"
+- tapOn: "Mag-sign out"
+- extendedWaitUntil:
+    visible: "May .* pang hindi na-sync.*"
+    timeout: 15000
+- takeScreenshot: SA-088-warning
+- setAirplaneMode: disabled

@@ -1,0 +1,14 @@
+# UAT SA-064: unpaid cutoffs and payslip history, with method and status.
+# Read-only. Test helper (has one unpaid cutoff and four paid ones).
+appId: com.linara.mobile
+name: SA-064 Unpaid periods and payslip history
+tags: [uat, helper]
+---
+- runFlow: ../common/sign-in-staff.yaml
+- tapOn: "Sahod ko"
+- scrollUntilVisible:
+    element: "Walang naka-record na bayad.*"
+- scrollUntilVisible:
+    element: "Mga payslip"
+- assertVisible: "Nabayaran"
+- assertVisible: ".* · (GCash|Maya|Cash|Bank).*"

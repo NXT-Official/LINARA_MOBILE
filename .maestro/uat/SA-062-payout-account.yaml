@@ -1,0 +1,39 @@
+# UAT SA-062: the helper saves where to send pay, and can change it. A bad
+# number is refused first. Leaves a sandbox GCash number saved (the app has
+# no way to remove one; it is MW-103's precondition anyway). The QR part
+# needs a photo on the phone and isn't covered here. Test helper.
+appId: com.linara.mobile
+name: SA-062 Where to send pay
+tags: [uat, helper, changes-data]
+---
+- runFlow: ../common/sign-in-staff.yaml
+- tapOn: "Sahod ko"
+- tapOn: "Ilagay ang GCash o Maya ko"
+- tapOn: "GCash"
+- tapOn: "0917 123 4567"
+- inputText: "12345"
+- hideKeyboard
+# The name comes filled in with the helper's own.
+- assertVisible: "Kuya Marito"
+- assertVisible: "11 digits, nagsisimula sa 09."
+- assertVisible:
+    text: "I-save"
+    enabled: false
+# A proper 11-digit 09 number.
+- tapOn: "12345"
+- eraseText: 10
+- inputText: "09170000001"
+- hideKeyboard
+- tapOn: "I-save"
+- extendedWaitUntil:
+    visible: "Palitan"
+    timeout: 15000
+- assertVisible: "Pangalan: Kuya Marito"
+# Change it.
+- tapOn: "Palitan"
+- tapOn: "Maya"
+- tapOn: "I-save"
+- extendedWaitUntil:
+    visible: "Palitan"
+    timeout: 15000
+- takeScreenshot: SA-062-saved

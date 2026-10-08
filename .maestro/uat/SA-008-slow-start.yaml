@@ -1,0 +1,17 @@
+# UAT SA-008: no internet at launch shows "Medyo natatagalan", never an
+# endless spinner (with no connection, Ngayon says it couldn't load). Signs in, then relaunches in airplane mode. Test helper.
+appId: com.linara.mobile
+name: SA-008 Slow start
+tags: [uat, helper]
+onFlowComplete:
+  - setAirplaneMode: disabled
+---
+- runFlow: ../common/sign-in-staff.yaml
+- stopApp
+- setAirplaneMode: enabled
+- launchApp
+# With no connection at all the app gets past startup and says so on
+# Ngayon; "Medyo natatagalan" is for a slow one. Either way, no spinner.
+- extendedWaitUntil:
+    visible: "Medyo natatagalan|Hindi ma-load ang shift mo.*"
+    timeout: 25000

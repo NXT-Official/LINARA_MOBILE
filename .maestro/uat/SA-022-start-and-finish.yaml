@@ -1,0 +1,17 @@
+# UAT SA-022: start a task and finish it; the next task takes its place.
+# Needs two tasks for today (the UAT test tasks A at 11:00 and B at 12:00,
+# reset to not started). Test helper.
+appId: com.linara.mobile
+name: SA-022 Start and finish a task
+tags: [uat, helper, changes-data, needs-setup]
+---
+- runFlow: ../common/sign-in-staff.yaml
+- scrollUntilVisible:
+    element: 'UAT task A \(delete me\)'
+- tapOn: "Simulan"
+- scrollUntilVisible:
+    element: "Tapos na"
+- tapOn: "Tapos na"
+- extendedWaitUntil:
+    visible: 'UAT task B \(delete me\)'
+    timeout: 15000

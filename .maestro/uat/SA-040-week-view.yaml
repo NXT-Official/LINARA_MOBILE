@@ -1,0 +1,18 @@
+# UAT SA-040: Linggo ko shows the week by day, marks today and the rest day,
+# and moves between weeks. Read-only. Test helper (rest day Monday).
+appId: com.linara.mobile
+name: SA-040 Week view
+tags: [uat, helper]
+---
+- runFlow: ../common/sign-in-staff.yaml
+- tapOn: "Linggo ko"
+- assertVisible: "Ngayon"
+- scrollUntilVisible:
+    element: "Rest day mo. Pahinga."
+- tapOn: "Susunod na linggo"
+- assertVisible: "Bumalik sa ngayon"
+- tapOn: "Nakaraang linggo"
+- tapOn: "Nakaraang linggo"
+- tapOn: "Bumalik sa ngayon"
+- assertVisible: "Ngayon"
+- assertNotVisible: "Bumalik sa ngayon"

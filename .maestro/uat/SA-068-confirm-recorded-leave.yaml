@@ -1,0 +1,15 @@
+# UAT SA-068: leave the manager recorded asks the helper "Tama ba?"; she
+# says it isn't right. Needs leave recorded by the manager for the test
+# helper; the run cancels it afterwards.
+appId: com.linara.mobile
+name: SA-068 Confirm recorded leave
+tags: [uat, helper, changes-data, needs-setup]
+---
+- runFlow: ../common/sign-in-staff.yaml
+- tapOn: "Sahod ko"
+- scrollUntilVisible:
+    element: "Itinala ng manager.*"
+- takeScreenshot: SA-068-prompt
+- tapOn: "Hindi tama"
+- scrollUntilVisible:
+    element: "Sinabi mong hindi ito tama."

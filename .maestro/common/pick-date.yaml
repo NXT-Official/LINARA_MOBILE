@@ -1,0 +1,14 @@
+# Picks a day in Android's date dialog: -e FIELD=<field text> DAY=<1-31>
+# NEXT_MONTH=true|false (the dialog opens on the current month).
+appId: com.linara.mobile
+---
+- scrollUntilVisible:
+    element: ${FIELD}
+- tapOn: ${FIELD}
+- runFlow:
+    when:
+      true: ${NEXT_MONTH == 'true'}
+    commands:
+      - tapOn: "Next month"
+- tapOn: ${DAY}
+- tapOn: "OK"

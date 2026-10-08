@@ -1,0 +1,22 @@
+# UAT SA-051: a pantry lead adds an item to the pantry. The run removes the
+# item again afterwards. Test helper (pantry role: lead). The "runner
+# doesn't get this" half needs a runner's login.
+appId: com.linara.mobile
+name: SA-051 Lead adds a pantry item
+tags: [uat, helper, changes-data]
+---
+- runFlow: ../common/sign-in-staff.yaml
+- tapOn: "Pantry"
+- scrollUntilVisible:
+    element: "Magdagdag sa pantry"
+- tapOn: "Magdagdag sa pantry"
+- scrollUntilVisible:
+    element: 'Pangalan \(hal\. Bigas\)'
+- tapOn: 'Pangalan \(hal\. Bigas\)'
+- inputText: "UAT asin"
+- hideKeyboard
+- scrollUntilVisible:
+    element: "Idagdag"
+- tapOn: "Idagdag"
+- scrollUntilVisible:
+    element: "Ubos na ang UAT asin"

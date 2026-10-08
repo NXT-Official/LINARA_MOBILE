@@ -1,0 +1,35 @@
+# UAT SA-050: + and - change a pantry count; "Ubos na" takes it to zero and
+# puts it on the palengke list. Puts the count back and removes the line at
+# the end. Test helper (pantry item "Test 2", 1 pcs, always-have 1).
+appId: com.linara.mobile
+name: SA-050 Mark something run out
+tags: [uat, helper, changes-data]
+---
+- runFlow: ../common/sign-in-staff.yaml
+- tapOn: "Pantry"
+- scrollUntilVisible:
+    element: "Ubos na ang Test 2"
+- tapOn: "Dagdagan ang Test 2"
+- extendedWaitUntil:
+    visible: "2 pcs"
+    timeout: 10000
+- tapOn: "Bawasan ang Test 2"
+- tapOn: "Ubos na ang Test 2"
+# On the palengke list now, at the top of the screen.
+- scrollUntilVisible:
+    element: "Tanggalin ang Test 2"
+    direction: UP
+# And at zero in the pantry.
+- scrollUntilVisible:
+    element: "Dagdagan ang Test 2"
+- assertVisible: "0 pcs"
+# Put it back: one in the pantry, off the list.
+- tapOn: "Dagdagan ang Test 2"
+- scrollUntilVisible:
+    element: "Tanggalin ang Test 2"
+    direction: UP
+- tapOn: "Tanggalin ang Test 2"
+- tapOn: "Tanggalin"
+- extendedWaitUntil:
+    notVisible: "Tanggalin ang Test 2"
+    timeout: 10000

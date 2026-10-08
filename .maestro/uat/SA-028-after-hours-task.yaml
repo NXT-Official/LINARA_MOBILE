@@ -1,0 +1,13 @@
+# UAT SA-028: a task sent while the helper is off says so, and that
+# finishing it counts as rest owed. Needs an after-hours task for the test
+# helper while her day is closed (the run closes the board to stand in for
+# night); it isn't finished, so no rest owed is added.
+appId: com.linara.mobile
+name: SA-028 A task sent off shift
+tags: [uat, helper, needs-setup]
+---
+- runFlow: ../common/sign-in-staff.yaml
+- scrollUntilVisible:
+    element: 'UAT after-hours \(delete me\)'
+- assertVisible: "Ipinadala ito kahit off-shift ka. Kapag tinapos mo, naka-log ito bilang rest owed."
+- takeScreenshot: SA-028-note

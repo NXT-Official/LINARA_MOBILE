@@ -1,0 +1,20 @@
+# Signs in as the test helper from a fresh start. scripts/device-test.mjs
+# passes the account from ../LINARA/.env.e2e.
+appId: com.linara.mobile
+---
+- launchApp:
+    clearState: true
+- extendedWaitUntil:
+    visible: "Maligayang pagbabalik"
+    timeout: 30000
+- tapOn: "hal. rosa@gmail.com"
+- inputText: ${MAESTRO_STAFF_EMAIL}
+- tapOn: "••••••"
+# Pasted rather than typed, so a password's quotes and brackets reach the
+# field as they are.
+- setClipboard: ${MAESTRO_STAFF_PASSWORD}
+- pasteText
+- pressKey: Enter
+- extendedWaitUntil:
+    visible: "Sahod ko"
+    timeout: 60000

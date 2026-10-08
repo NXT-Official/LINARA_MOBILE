@@ -1,0 +1,16 @@
+# UAT SA-030: a task the manager moved shows "May binago sa schedule mo"
+# until "Nakita ko". Needs a moved UAT test task (reschedule_notice set, as
+# the web's reschedule does).
+appId: com.linara.mobile
+name: SA-030 Schedule changes banner
+tags: [uat, helper, changes-data, needs-setup]
+---
+- runFlow: ../common/sign-in-staff.yaml
+- scrollUntilVisible:
+    element: "May binago sa schedule mo"
+- assertVisible: ".*Inilipat ni Naaxtech Linara.*"
+- takeScreenshot: SA-030-banner
+- tapOn: "Nakita ko"
+- extendedWaitUntil:
+    notVisible: "May binago sa schedule mo"
+    timeout: 15000

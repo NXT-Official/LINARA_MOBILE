@@ -1,0 +1,19 @@
+# Sets a time in Android's time dialog by typing it: FIELD=<field text>
+# HOUR=<1-12> MINUTE=<00-59> AMPM=AM|PM.
+appId: com.linara.mobile
+---
+- scrollUntilVisible:
+    element: ${FIELD}
+- tapOn: ${FIELD}
+# AM/PM first, while the dialog is still on the clock face.
+- tapOn: ${AMPM}
+- tapOn: "Switch to text input mode for the time input."
+- tapOn:
+    id: "android:id/input_hour"
+- eraseText: 2
+- inputText: ${HOUR}
+- tapOn:
+    id: "android:id/input_minute"
+- eraseText: 2
+- inputText: ${MINUTE}
+- tapOn: "OK"

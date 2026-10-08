@@ -1,0 +1,23 @@
+# UAT SA-060 (dispute path): the manager recorded a cash payment; the
+# helper answers "Hindi ko natanggap" with a note. The run then has the
+# manager withdraw the record, so the cutoff is unpaid again. Needs a
+# recorded, unanswered payment for the test helper.
+appId: com.linara.mobile
+name: SA-060 Answer Natanggap mo ba (dispute)
+tags: [uat, helper, changes-data, needs-setup]
+---
+- runFlow: ../common/sign-in-staff.yaml
+- tapOn: "Record ko"
+- scrollUntilVisible:
+    element: "Hindi ko natanggap"
+- takeScreenshot: SA-060-prompt
+- tapOn: "Hindi ko natanggap"
+- tapOn: 'Ano ang nangyari\? \(optional\)'
+- inputText: "UAT: hindi pa dumating"
+- hideKeyboard
+- scrollUntilVisible:
+    element: "Sabihin sa employer"
+- tapOn: "Sabihin sa employer"
+- extendedWaitUntil:
+    notVisible: "Hindi ko natanggap"
+    timeout: 15000

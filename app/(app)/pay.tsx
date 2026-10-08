@@ -217,7 +217,7 @@ export default function PayScreen() {
           <PaymentConfirmations />
           <PayoutAccountCard defaultName={profileQuery.data.name} />
           <DigitalPayslip
-            monthlyRate={profileQuery.data.monthlyRate}
+            monthlyRate={currentPeriod?.monthlyRate ?? profileQuery.data.monthlyRate}
             paydayInterval={profileQuery.data.paydayInterval}
             approvedValeTotal={approvedValeTotal}
             cutoffStart={currentPeriod?.workedStart ?? cutoffQuery.data?.cutoffStart}

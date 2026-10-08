@@ -1,0 +1,30 @@
+# UAT SA-036: finish a task with no connection; it syncs when the phone is
+# back online. Needs the UAT test tasks, not started. Test helper.
+appId: com.linara.mobile
+name: SA-036 Finish tasks offline
+tags: [uat, helper, changes-data, needs-setup]
+onFlowComplete:
+  - setAirplaneMode: disabled
+---
+- runFlow: ../common/sign-in-staff.yaml
+- scrollUntilVisible:
+    element: "Simulan"
+- setAirplaneMode: enabled
+- tapOn: "Simulan"
+- scrollUntilVisible:
+    element: "Tapos na"
+- tapOn: "Tapos na"
+- extendedWaitUntil:
+    visible: 'UAT task B \(delete me\)'
+    timeout: 15000
+- takeScreenshot: SA-036-offline-done
+- setAirplaneMode: disabled
+# Give the queue a moment to send it.
+- extendedWaitUntil:
+    visible: "Station ni .*"
+    timeout: 20000
+- swipe:
+    start: 50%, 30%
+    end: 50%, 80%
+    duration: 600
+- waitForAnimationToEnd

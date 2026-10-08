@@ -1,0 +1,10 @@
+# UAT SA-029: with the day's tasks done or on hold, Ngayon shows the day's
+# summary. Needs the UAT test tasks finished/held; the run resets them.
+appId: com.linara.mobile
+name: SA-029 End-of-day summary
+tags: [uat, helper, needs-setup]
+---
+- runFlow: ../common/sign-in-staff.yaml
+- scrollUntilVisible:
+    element: ".*of 2.*tapos.*"
+- takeScreenshot: SA-029-summary

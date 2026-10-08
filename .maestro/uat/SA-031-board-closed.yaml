@@ -1,0 +1,10 @@
+# UAT SA-031: after the manager ends the day, Ngayon reads as closed for the
+# night. Needs the household's board closed; the run reopens it.
+appId: com.linara.mobile
+name: SA-031 Board closed
+tags: [uat, helper, needs-setup]
+---
+- runFlow: ../common/sign-in-staff.yaml
+- scrollUntilVisible:
+    element: "Sarado na ang board para ngayong gabi.*"
+- takeScreenshot: SA-031-closed

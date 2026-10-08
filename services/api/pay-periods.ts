@@ -16,6 +16,10 @@ export interface PayPeriod {
   isFinal: boolean;
   /** The payment that settled it, of either kind; null while unpaid. */
   payslipId: string | null;
+  /** Her wage for this period, the one in effect on its first day
+   * (../LINARA/supabase/add-wage-history.sql). Null before that migration;
+   * her profile's wage then. A raise set for the next cutoff isn't in it. */
+  monthlyRate: number | null;
 }
 
 export async function getMyPayPeriods(helperId: string): Promise<PayPeriod[]> {
@@ -33,6 +37,7 @@ export async function getMyPayPeriods(helperId: string): Promise<PayPeriod[]> {
     isCurrent: Boolean(r.is_current),
     isFinal: Boolean(r.is_final),
     payslipId: (r.payslip_id as string | null) ?? null,
+    monthlyRate: r.monthly_rate == null ? null : Number(r.monthly_rate),
   }));
 }
 

@@ -1,0 +1,20 @@
+# UAT SA-024: change a task's note from the phone. Needs a UAT test task.
+# The reset script clears the note again. Test helper.
+appId: com.linara.mobile
+name: SA-024 Fix own task's time or note
+tags: [uat, helper, changes-data, needs-setup]
+---
+- runFlow: ../common/sign-in-staff.yaml
+- scrollUntilVisible:
+    element: "Ayusin ang oras o note"
+- tapOn: "Ayusin ang oras o note"
+- scrollUntilVisible:
+    element: "Hal. Gagawin pagkatapos mananghalian"
+- tapOn: "Hal. Gagawin pagkatapos mananghalian"
+- inputText: "UAT note mula sa phone"
+- hideKeyboard
+- scrollUntilVisible:
+    element: "I-save"
+- tapOn: "I-save"
+- scrollUntilVisible:
+    element: ".*UAT note mula sa phone.*"

@@ -1,0 +1,32 @@
+# UAT SA-052: add, edit and remove a palengke-list line (removing asks
+# first). The line is removed again, so nothing stays. Test helper.
+appId: com.linara.mobile
+name: SA-052 Add, edit, remove palengke items
+tags: [uat, helper, changes-data]
+---
+- runFlow: ../common/sign-in-staff.yaml
+- tapOn: "Pantry"
+- tapOn: "Magdagdag sa palengke list"
+- tapOn: 'Bibilhin \(hal\. Kamatis\)'
+- inputText: "UAT kalamansi"
+- hideKeyboard
+- tapOn: "Idagdag"
+- scrollUntilVisible:
+    element: "UAT kalamansi"
+- tapOn:
+    text: "UAT kalamansi"
+    index: 0
+- tapOn:
+    text: "Pangalan"
+- eraseText: 20
+- inputText: "UAT dayap"
+- hideKeyboard
+- tapOn: "I-save"
+- scrollUntilVisible:
+    element: "UAT dayap"
+- tapOn: "Tanggalin ang UAT dayap"
+- assertVisible: "Tanggalin ang UAT dayap?"
+- tapOn: "Tanggalin"
+- extendedWaitUntil:
+    notVisible: "UAT dayap"
+    timeout: 15000

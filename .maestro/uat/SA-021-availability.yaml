@@ -1,0 +1,16 @@
+# UAT SA-021: set availability for an hour, then back to Off. (The quiet-
+# hours refusal shows before 5 a.m.: "Hindi puwedeng mag-Available sa oras
+# ng pahinga.") Test helper, outside quiet hours.
+appId: com.linara.mobile
+name: SA-021 Set availability
+tags: [uat, helper, changes-data]
+---
+- runFlow: ../common/sign-in-staff.yaml
+- tapOn: "Available nang 1 oras"
+- extendedWaitUntil:
+    visible: "Hanggang .*"
+    timeout: 15000
+- tapOn: "Gawing Off"
+- extendedWaitUntil:
+    visible: "Available nang 1 oras"
+    timeout: 15000

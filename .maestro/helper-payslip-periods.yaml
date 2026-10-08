@@ -1,0 +1,33 @@
+# QA LMM-A3 (../LINARA/KNOWN_GAPS.md C96): Sahod ko says which period each
+# share of contributions covers, so the cutoff deduction and the monthly
+# table don't read as two different amounts for the same thing. Read-only.
+# Run: npm run test:device -- .maestro/helper-payslip-periods.yaml
+# (scripts/device-test.mjs passes the test helper from ../LINARA/.env.e2e)
+appId: com.linara.mobile
+name: Helper payslip says each period
+tags:
+  - helper
+---
+- launchApp:
+    clearState: true
+- extendedWaitUntil:
+    visible: "Maligayang pagbabalik"
+    timeout: 30000
+- tapOn: "hal. rosa@gmail.com"
+- inputText: ${MAESTRO_STAFF_EMAIL}
+- tapOn: "••••••"
+# Pasted rather than typed, so a password's quotes and brackets reach the
+# field as they are.
+- setClipboard: ${MAESTRO_STAFF_PASSWORD}
+- pasteText
+- pressKey: Enter
+- extendedWaitUntil:
+    visible: "Sahod ko"
+    timeout: 60000
+- tapOn: "Sahod ko"
+- scrollUntilVisible:
+    element: ".*\\(ngayong cutoff\\).*"
+    timeout: 20000
+- scrollUntilVisible:
+    element: ".*kada buwan.*"
+    timeout: 20000
