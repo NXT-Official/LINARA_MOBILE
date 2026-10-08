@@ -1,0 +1,17 @@
+# UAT SA-055: a task linked to an approved run says "May listahan" on Ngayon
+# and opens Pantry on that run. Needs a run ("UAT run") whose ticket_id is a
+# task for today for the test helper.
+appId: com.linara.mobile
+name: SA-055 Run link on a task
+tags: [uat, helper, needs-setup]
+---
+- runFlow: ../common/sign-in-staff.yaml
+- scrollUntilVisible:
+    element: 'UAT palengke \(delete me\)'
+- scrollUntilVisible:
+    element: "May listahan: UAT run. Buksan sa Pantry."
+- tapOn: "May listahan: UAT run. Buksan sa Pantry."
+- extendedWaitUntil:
+    visible: "Pantry at palengke"
+    timeout: 15000
+- assertVisible: "UAT run"

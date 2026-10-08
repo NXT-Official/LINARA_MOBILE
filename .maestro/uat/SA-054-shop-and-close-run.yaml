@@ -1,0 +1,48 @@
+# UAT SA-054: shop an approved run and close it: tick what was bought with
+# its cost, snap the receipt (the emulator's camera), give back the change,
+# close; unbought lines go back to Kailangan. Needs an approved ("ready")
+# run with cash for the test helper whose lines include ITEM, plus one more
+# line left unbought. env: RUN (title), ITEM, COST, CHANGE.
+appId: com.linara.mobile
+name: SA-054 Shop and close a run
+tags: [uat, helper, changes-data, needs-setup]
+env:
+  RUN: UAT run 2
+  ITEM: UAT bawang
+  COST: "60"
+  CHANGE: "440"
+---
+- runFlow: ../common/sign-in-staff.yaml
+- tapOn: "Pantry"
+- scrollUntilVisible:
+    element: ${RUN}
+# The second match is the item's "bought" box (the first is its row).
+- tapOn:
+    text: ${ITEM}
+    index: 1
+- tapOn: "—"
+- inputText: ${COST}
+# The cost saves on Enter or when the field loses focus.
+- pressKey: Enter
+- extendedWaitUntil:
+    visible: ".* pa ang natitira"
+    timeout: 10000
+- tapOn: "Kunan ang resibo"
+- tapOn: "Shutter"
+- tapOn: "Done"
+- extendedWaitUntil:
+    visible: "Kunan ulit ang resibo"
+    timeout: 30000
+- tapOn:
+    text: "Tapos na"
+    rightOf: "Kunan ulit ang resibo"
+- assertVisible: ".*nagastos = .*"
+- assertVisible: "Ibabalik sa Kailangan ang 1 na hindi nabili."
+# The change field comes pre-filled; replace what's there.
+- tapOn: "Sukli na ibinalik"
+- eraseText: 12
+- inputText: ${CHANGE}
+- hideKeyboard
+- tapOn: "Isara ang run"
+- scrollUntilVisible:
+    element: "Mga natapos na run"
