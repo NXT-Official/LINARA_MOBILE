@@ -19,8 +19,7 @@ tags:
 # field as they are.
 - setClipboard: ${MAESTRO_MANAGER_PASSWORD}
 - pasteText
-- hideKeyboard
-- tapOn: "Mag-sign in"
+- pressKey: Enter
 # The dashboard, in the WebView, on The Pass.
 - extendedWaitUntil:
     visible: "New task"

@@ -1,0 +1,19 @@
+# UAT SA-023: "Hindi ko magagawa ngayon" puts the task on hold with a reason
+# the manager sees. Needs a UAT test task; the reset script takes it off
+# hold again. Test helper.
+appId: com.linara.mobile
+name: SA-023 Can't do it now
+tags: [uat, helper, changes-data, needs-setup]
+---
+- runFlow: ../common/sign-in-staff.yaml
+- scrollUntilVisible:
+    element: "Hindi ko magagawa ngayon"
+- tapOn: "Hindi ko magagawa ngayon"
+- scrollUntilVisible:
+    element: "Kulang ang gamit"
+- tapOn: "Kulang ang gamit"
+- scrollUntilVisible:
+    element: "Ipaalam sa manager"
+- tapOn: "Ipaalam sa manager"
+- waitForAnimationToEnd
+- takeScreenshot: SA-023-after

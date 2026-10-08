@@ -1,0 +1,26 @@
+# UAT SA-001 (Linara-UAT.xlsx): the invite code screen. Signed out, no account.
+appId: com.linara.mobile
+name: SA-001 Invite code screen
+tags: [uat, signed-out]
+---
+- launchApp:
+    clearState: true
+- extendedWaitUntil:
+    visible: "Maligayang pagbabalik"
+    timeout: 30000
+- tapOn: "Wala pang account? Gumawa ng account"
+- tapOn: "Kasambahay ako"
+- assertVisible: "6 na letra at numero"
+- assertVisible:
+    text: "Tuloy"
+    enabled: false
+- tapOn: "Invite code"
+# Pasted rather than typed: fast typing races the field's upper-casing.
+- setClipboard: "ABCDE"
+- pasteText
+- hideKeyboard
+- assertVisible:
+    text: "Tuloy"
+    enabled: true
+- tapOn: "Tuloy"
+- assertVisible: "Kailangan 6 characters ang invite code, po."

@@ -1,0 +1,32 @@
+# UAT SA-002: a valid invite code shows the terms as the employer entered
+# them. Needs a pending invite (code in INVITE_CODE, default UATK7P: "UAT
+# Invite (delete me)", House, 8:00 AM-5:00 PM, rest day Sunday, P8,000).
+# Creates no account.
+appId: com.linara.mobile
+name: SA-002 See the terms before joining
+tags: [uat, signed-out, needs-setup]
+env:
+  INVITE_CODE: UATK7P
+---
+- launchApp:
+    clearState: true
+- extendedWaitUntil:
+    visible: "Maligayang pagbabalik"
+    timeout: 30000
+- tapOn: "Wala pang account? Gumawa ng account"
+- tapOn: "Kasambahay ako"
+- tapOn: "Invite code"
+# Pasted rather than typed: fast typing races the field's upper-casing.
+- setClipboard: ${INVITE_CODE}
+- pasteText
+- hideKeyboard
+- tapOn: "Tuloy"
+- extendedWaitUntil:
+    visible: "Hakbang 2 sa 3"
+    timeout: 20000
+- assertVisible: 'UAT Invite \(delete me\)'
+- assertVisible: "House"
+- assertVisible: ".*8:00 AM.*5:00 PM.*"
+- assertVisible: ".*(Linggo|Sunday).*"
+- assertVisible: ".*8,000.*"
+- takeScreenshot: SA-002-terms

@@ -1,0 +1,33 @@
+# UAT SA-026: post an update on a task, then delete it (own updates only).
+# Needs a UAT test task still to do. Test helper.
+appId: com.linara.mobile
+name: SA-026 Task updates
+tags: [uat, helper, changes-data, needs-setup]
+---
+- runFlow: ../common/sign-in-staff.yaml
+# Updates live in Listahan: tapping a task's row opens them.
+- scrollUntilVisible:
+    element: "Listahan"
+- tapOn: "Listahan"
+- scrollUntilVisible:
+    element: "Gagawin"
+- tapOn: "Gagawin"
+- scrollUntilVisible:
+    element: "Hal. Naubos na ang sabon, bumili ako"
+- tapOn: "Hal. Naubos na ang sabon, bumili ako"
+- inputText: "UAT update"
+- hideKeyboard
+- scrollUntilVisible:
+    element: "Ipadala ang update"
+- tapOn: "Ipadala ang update"
+- scrollUntilVisible:
+    element: "UAT update"
+- tapOn: "Burahin ang update"
+- runFlow:
+    when:
+      visible: "Burahin"
+    commands:
+      - tapOn: "Burahin"
+- extendedWaitUntil:
+    notVisible: "UAT update"
+    timeout: 15000

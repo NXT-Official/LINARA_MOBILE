@@ -1,0 +1,31 @@
+# UAT SA-032: typed private notes are saved, edited and deleted (after a
+# confirmation). The note is deleted again, so nothing stays. Test helper.
+appId: com.linara.mobile
+name: SA-032 Typed private notes
+tags: [uat, helper, changes-data]
+---
+- runFlow: ../common/sign-in-staff.yaml
+- scrollUntilVisible:
+    element: "Sariling tala"
+- assertVisible: "Sa'yo lang 'to. Hindi ito makikita ng manager."
+- tapOn: "Isulat ang gustong tandaan..."
+- inputText: "UAT tala 1"
+- hideKeyboard
+- scrollUntilVisible:
+    element: "Magdagdag ng tala"
+- tapOn: "Magdagdag ng tala"
+- scrollUntilVisible:
+    element: "UAT tala 1"
+- tapOn: "Ayusin ang tala"
+- eraseText: 20
+- inputText: "UAT tala 2"
+- hideKeyboard
+- tapOn: "I-save"
+- scrollUntilVisible:
+    element: "UAT tala 2"
+- tapOn: "Burahin ang tala"
+- assertVisible: "Burahin ang tala?"
+- tapOn: "Burahin"
+- extendedWaitUntil:
+    notVisible: "UAT tala 2"
+    timeout: 15000

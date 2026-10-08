@@ -1,0 +1,15 @@
+# UAT SA-061: a coworker's recorded payment (Ate Marites has one waiting for
+# her answer) never asks this helper "Natanggap mo ba". Read-only. Test helper.
+appId: com.linara.mobile
+name: SA-061 Only own payments
+tags: [uat, helper]
+---
+- runFlow: ../common/sign-in-staff.yaml
+- tapOn: "Sahod ko"
+- assertNotVisible: "Natanggap mo ba.*"
+- scrollUntilVisible:
+    element: "Mga payslip"
+- assertNotVisible: "Oo, natanggap ko"
+- tapOn: "Record ko"
+- assertNotVisible: "Natanggap mo ba.*"
+- assertNotVisible: "Oo, natanggap ko"

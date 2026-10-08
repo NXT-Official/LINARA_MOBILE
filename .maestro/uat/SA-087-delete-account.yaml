@@ -1,0 +1,34 @@
+# UAT SA-087: asking to delete the account explains the 30 days and what
+# stays with the household. A helper who is still employed is told the
+# employer must end it first; if the request goes through instead, it is
+# taken back at once ("Huwag nang burahin"). Test helper.
+appId: com.linara.mobile
+name: SA-087 Ask to delete the account
+tags: [uat, helper, changes-data]
+---
+- runFlow: ../common/sign-in-staff.yaml
+- tapOn: "Record ko"
+- scrollUntilVisible:
+    element: "Burahin ang account ko"
+- tapOn: "Burahin ang account ko"
+- scrollUntilVisible:
+    element: ".*sa loob ng 30 araw.*"
+- scrollUntilVisible:
+    element: ".*hindi bababa sa tatlong taon.*"
+- scrollUntilVisible:
+    element: ".*kailangan munang tapusin ng employer mo.*"
+- scrollUntilVisible:
+    element: "Burahin ang account ko"
+- tapOn:
+    text: "Burahin ang account ko"
+    index: 0
+- waitForAnimationToEnd
+- takeScreenshot: SA-087-after-ask
+- runFlow:
+    when:
+      visible: "Huwag nang burahin"
+    commands:
+      - tapOn: "Huwag nang burahin"
+      - extendedWaitUntil:
+          notVisible: "Huwag nang burahin"
+          timeout: 15000

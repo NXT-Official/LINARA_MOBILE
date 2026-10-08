@@ -1,0 +1,36 @@
+# UAT SA-025: the three layouts show the same tasks; in Listahan a task can
+# be ticked done and put back. Needs the two UAT test tasks (A done, as
+# SA-022 leaves them). Test helper.
+appId: com.linara.mobile
+name: SA-025 Isa-isa, Listahan, Oras
+tags: [uat, helper, changes-data, needs-setup]
+---
+- runFlow: ../common/sign-in-staff.yaml
+- scrollUntilVisible:
+    element: "Listahan"
+- tapOn: "Listahan"
+- scrollUntilVisible:
+    element: 'UAT task B \(delete me\)'
+- assertVisible: 'UAT task A \(delete me\)'
+- takeScreenshot: SA-025-listahan
+# Tick B done, then put it back. The checkbox is named after the task.
+- tapOn:
+    text: 'UAT task B \(delete me\)'
+    index: 0
+- extendedWaitUntil:
+    visible: "2 sa 2 tapos na.*"
+    timeout: 15000
+- tapOn:
+    text: 'UAT task B \(delete me\)'
+    index: 0
+- extendedWaitUntil:
+    visible: "1 sa 2 tapos na.*"
+    timeout: 15000
+- tapOn: "Oras"
+- scrollUntilVisible:
+    element: 'UAT task B \(delete me\)'
+- assertVisible: 'UAT task A \(delete me\)'
+- takeScreenshot: SA-025-oras
+- tapOn: "Isa-isa"
+- scrollUntilVisible:
+    element: "Focus ngayon"

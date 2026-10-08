@@ -20,8 +20,7 @@ tags:
 # field as they are.
 - setClipboard: ${MAESTRO_STAFF_PASSWORD}
 - pasteText
-- hideKeyboard
-- tapOn: "Mag-sign in"
+- pressKey: Enter
 - extendedWaitUntil:
     visible: "Sahod ko"
     timeout: 60000

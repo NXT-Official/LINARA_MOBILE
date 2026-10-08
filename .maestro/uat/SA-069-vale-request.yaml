@@ -1,0 +1,23 @@
+# UAT SA-069: ask for a cash advance; it waits for the manager. The run
+# then has the manager decline it (so it never comes off pay) and checks the
+# helper sees that: open Sahod ko again after the decision. Test helper.
+appId: com.linara.mobile
+name: SA-069 Ask for a cash advance
+tags: [uat, helper, changes-data]
+---
+- runFlow: ../common/sign-in-staff.yaml
+- tapOn: "Sahod ko"
+- scrollUntilVisible:
+    element: "Humiling ng vale"
+- tapOn: "Humiling ng vale"
+- tapOn: "500"
+- inputText: "300"
+- hideKeyboard
+- tapOn: "Gamot para sa anak"
+- inputText: "UAT vale, ide-decline"
+- hideKeyboard
+- scrollUntilVisible:
+    element: "Ipadala sa manager"
+- tapOn: "Ipadala sa manager"
+- scrollUntilVisible:
+    element: "Waiting"

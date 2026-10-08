@@ -1,0 +1,22 @@
+# UAT SA-003: a code that doesn't exist shows no terms. Signed out, no account.
+appId: com.linara.mobile
+name: SA-003 Unknown or used code
+tags: [uat, signed-out]
+---
+- launchApp:
+    clearState: true
+- extendedWaitUntil:
+    visible: "Maligayang pagbabalik"
+    timeout: 30000
+- tapOn: "Wala pang account? Gumawa ng account"
+- tapOn: "Kasambahay ako"
+- tapOn: "Invite code"
+# Pasted rather than typed: fast typing races the field's upper-casing.
+- setClipboard: "ZZZZZ9"
+- pasteText
+- hideKeyboard
+- tapOn: "Tuloy"
+- extendedWaitUntil:
+    visible: "Hindi namin nahanap ang code na iyan, o na-claim na ito.*"
+    timeout: 20000
+- assertNotVisible: "Tama ito.*"

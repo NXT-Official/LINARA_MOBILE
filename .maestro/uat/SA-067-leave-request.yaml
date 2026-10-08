@@ -1,0 +1,47 @@
+# UAT SA-067: ask for leave. The day count leaves out the rest day; SIL the
+# helper doesn't have yet is said so; a sent request waits (with Kanselahin) and is cancelled
+# again here, so nothing stays. Test helper (rest day Monday, SIL starts
+# after a year of service).
+appId: com.linara.mobile
+name: SA-067 Ask for leave
+tags: [uat, helper, changes-data]
+---
+- runFlow: ../common/sign-in-staff.yaml
+# The coming Saturday to the Tuesday after it: four days, one of them the
+# Monday rest day.
+- evalScript: ${(function () { var t = new Date(); var a = new Date(); a.setDate(a.getDate() + 1); while (a.getDay() !== 6) a.setDate(a.getDate() + 1); var b = new Date(a); b.setDate(b.getDate() + 3); output.first = String(a.getDate()); output.firstNext = String(a.getMonth() !== t.getMonth()); output.last = String(b.getDate()); output.lastNext = String(b.getMonth() !== t.getMonth()); })()}
+- tapOn: "Sahod ko"
+- scrollUntilVisible:
+    element: "Humiling ng leave"
+- tapOn: "Humiling ng leave"
+# SIL first: the helper has none yet.
+- scrollUntilVisible:
+    element: "SIL"
+- tapOn: "SIL"
+- takeScreenshot: SA-067-sil
+- tapOn: "Walang bayad"
+- assertVisible: "Ibabawas sa sahod ng cutoff na iyon."
+- tapOn: "Bakasyon"
+- runFlow:
+    file: ../common/pick-date.yaml
+    env:
+      FIELD: "Pumili ng petsa"
+      DAY: ${output.first}
+      NEXT_MONTH: ${output.firstNext}
+- runFlow:
+    file: ../common/pick-date.yaml
+    env:
+      FIELD: "Kung isang araw lang, iwanang blangko"
+      DAY: ${output.last}
+      NEXT_MONTH: ${output.lastNext}
+- scrollUntilVisible:
+    element: "3 araw.*"
+- tapOn: "Ipadala sa manager"
+# A pending request is the row with Kanselahin.
+- scrollUntilVisible:
+    element: "Walang bayad · .* · 3 araw"
+- takeScreenshot: SA-067-sent
+- tapOn: "Kanselahin ang leave sa .*"
+- extendedWaitUntil:
+    notVisible: "Kanselahin ang leave sa .*"
+    timeout: 15000

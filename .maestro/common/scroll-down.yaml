@@ -1,0 +1,8 @@
+# Scrolls the current screen down by most of a screen.
+appId: com.linara.mobile
+---
+- swipe:
+    start: 50%, 80%
+    end: 50%, 25%
+    duration: 600
+- waitForAnimationToEnd

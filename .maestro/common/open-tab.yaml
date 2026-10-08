@@ -1,0 +1,5 @@
+# Opens one of the helper's tabs (already signed in): -e TAB="Sahod ko".
+appId: com.linara.mobile
+---
+- tapOn: ${TAB}
+- waitForAnimationToEnd

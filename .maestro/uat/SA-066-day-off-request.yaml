@@ -1,0 +1,83 @@
+# UAT SA-066 (and SA-041's pending mark): ask for a day off from rest owed.
+# Past days can't be picked; more than the balance can't be sent; a sent
+# request waits with Kanselahin and in Linggo ko, and is cancelled again here,
+# so nothing is left behind. Test helper (has 3h 12m rest owed, rest day
+# Monday).
+appId: com.linara.mobile
+name: SA-066 Ask for a day off from rest owed
+tags: [uat, helper, changes-data]
+---
+- runFlow: ../common/sign-in-staff.yaml
+# Tomorrow, or the day after if tomorrow is the Monday rest day.
+- evalScript: ${(function () { var t = new Date(); var d = new Date(); d.setDate(d.getDate() + 1); if (d.getDay() === 1) d.setDate(d.getDate() + 1); output.day = String(d.getDate()); output.nextMonth = String(d.getMonth() !== t.getMonth()); output.yesterday = String(new Date(Date.now() - 86400000).getDate()); })()}
+- tapOn: "Sahod ko"
+- scrollUntilVisible:
+    element: "Humiling ng day off"
+- tapOn: "Humiling ng day off"
+- scrollUntilVisible:
+    element: "Pumili ng petsa"
+# A past day can't be chosen: the dialog keeps today.
+- tapOn: "Pumili ng petsa"
+- runFlow:
+    when:
+      true: ${output.yesterday != '31' && output.yesterday != '30'}
+    commands:
+      - tapOn: ${output.yesterday}
+- tapOn: "CANCEL"
+- runFlow:
+    file: ../common/pick-date.yaml
+    env:
+      FIELD: "Pumili ng petsa"
+      DAY: ${output.day}
+      NEXT_MONTH: ${output.nextMonth}
+- runFlow:
+    file: ../common/set-time.yaml
+    env:
+      FIELD: "Anong oras magsisimula?"
+      HOUR: "6"
+      MINUTE: "00"
+      AMPM: "AM"
+- runFlow:
+    file: ../common/set-time.yaml
+    env:
+      FIELD: "Anong oras matatapos?"
+      HOUR: "11"
+      MINUTE: "00"
+      AMPM: "AM"
+# Five hours: more than the balance.
+- scrollUntilVisible:
+    element: ".*sobra sa natitira mong oras.*"
+- assertVisible:
+    text: "Ipadala sa manager"
+    enabled: false
+# One hour instead.
+- runFlow:
+    file: ../common/set-time.yaml
+    env:
+      FIELD: "6:00.*"
+      HOUR: "10"
+      MINUTE: "00"
+      AMPM: "AM"
+- assertNotVisible: ".*sobra sa natitira mong oras.*"
+- tapOn:
+    text: "Ipadala sa manager"
+    enabled: true
+# A pending request is the one row with Kanselahin; the card adds
+# "(1h naghihintay)".
+- scrollUntilVisible:
+    element: '.*naghihintay\).*'
+- assertVisible: "Kanselahin"
+- takeScreenshot: SA-066-sent
+# It shows in Linggo ko as waiting.
+- tapOn: "Linggo ko"
+- scrollUntilVisible:
+    element: ".*naghihintay pa.*"
+- takeScreenshot: SA-066-week
+# Cancel, so nothing stays behind.
+- tapOn: "Sahod ko"
+- scrollUntilVisible:
+    element: "Kanselahin"
+- tapOn: "Kanselahin"
+- extendedWaitUntil:
+    notVisible: "Kanselahin"
+    timeout: 15000

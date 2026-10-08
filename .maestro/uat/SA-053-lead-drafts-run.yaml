@@ -1,0 +1,44 @@
+# UAT SA-053: a pantry lead drafts a run from Kailangan, sends it for
+# approval, takes it back, and deletes the draft; its lines return to
+# Kailangan. Test helper (pantry lead; Kailangan has bok choy, Rice
+# Crackers, toilet roll, Kamatis).
+appId: com.linara.mobile
+name: SA-053 Lead drafts a run
+tags: [uat, helper, changes-data]
+---
+- runFlow: ../common/sign-in-staff.yaml
+- tapOn: "Pantry"
+- tapOn: "Gumawa ng run mula sa Kailangan"
+- tapOn: "Palengke"
+- eraseText: 20
+- inputText: "UAT run"
+- hideKeyboard
+# Every Kailangan line comes pre-selected; the run takes them all. (Tapping
+# a line's name would hit its "bought" box in the list below instead.)
+- assertVisible: "Mga bibilhin · 4"
+- tapOn: "Gawin ang draft"
+- extendedWaitUntil:
+    visible: "UAT run"
+    timeout: 15000
+- assertVisible: "4 item.*"
+- scrollUntilVisible:
+    element: "Ipa-approve"
+- tapOn: "Ipa-approve"
+- scrollUntilVisible:
+    element: "Bawiin"
+- takeScreenshot: SA-053-waiting
+- tapOn: "Bawiin"
+- scrollUntilVisible:
+    element: "Burahin"
+- tapOn: "Burahin"
+- runFlow:
+    when:
+      visible: "Burahin"
+    commands:
+      - tapOn: "Burahin"
+- extendedWaitUntil:
+    notVisible: "UAT run"
+    timeout: 15000
+- scrollUntilVisible:
+    element: "Kamatis"
+- assertVisible: "bok choy"

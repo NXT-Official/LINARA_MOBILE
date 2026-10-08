@@ -1,0 +1,11 @@
+# UAT SA-041: the month view opens and reads. The pending-request mark is
+# checked in SA-066, which makes a request and cancels it. Test helper.
+appId: com.linara.mobile
+name: SA-041 Month view
+tags: [uat, helper]
+---
+- runFlow: ../common/sign-in-staff.yaml
+- tapOn: "Linggo ko"
+- tapOn: "Buwan"
+- waitForAnimationToEnd
+- takeScreenshot: SA-041-month

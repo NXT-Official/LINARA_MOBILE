@@ -1,0 +1,37 @@
+# UAT SA-084: give notice, then withdraw it, so nothing stays. Test helper.
+appId: com.linara.mobile
+name: SA-084 Give and withdraw notice
+tags: [uat, helper, changes-data]
+---
+- runFlow: ../common/sign-in-staff.yaml
+# Two weeks from today, in the date dialog.
+- evalScript: ${(function () { var t = new Date(); var d = new Date(); d.setDate(d.getDate() + 14); output.day = String(d.getDate()); output.nextMonth = String(d.getMonth() !== t.getMonth()); })()}
+- tapOn: "Record ko"
+- scrollUntilVisible:
+    element: 'Aalis ka na ba\? Magbigay ng abiso'
+- tapOn: 'Aalis ka na ba\? Magbigay ng abiso'
+- runFlow:
+    file: ../common/pick-date.yaml
+    env:
+      FIELD: "Pumili"
+      DAY: ${output.day}
+      NEXT_MONTH: ${output.nextMonth}
+- scrollUntilVisible:
+    element: 'Mensahe \(optional\)'
+- tapOn: 'Mensahe \(optional\)'
+- inputText: "UAT test, babawiin"
+- hideKeyboard
+- scrollUntilVisible:
+    element: "Ipadala sa manager"
+- tapOn: "Ipadala sa manager"
+- scrollUntilVisible:
+    element: "Nagbigay ka ng abiso"
+- takeScreenshot: SA-084-given
+- scrollUntilVisible:
+    element: "Bawiin ang abiso"
+- tapOn: "Bawiin ang abiso"
+- extendedWaitUntil:
+    notVisible: "Nagbigay ka ng abiso"
+    timeout: 15000
+- scrollUntilVisible:
+    element: 'Aalis ka na ba\? Magbigay ng abiso'

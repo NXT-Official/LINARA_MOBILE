@@ -1,0 +1,38 @@
+# UAT SA-004: on the terms screen, say a detail is wrong; the manager sees
+# the flag, and the helper can still go on. Needs the same pending invite as
+# SA-002. Creates no account; the run deletes the invite and its flag.
+appId: com.linara.mobile
+name: SA-004 Say a term is wrong
+tags: [uat, signed-out, changes-data, needs-setup]
+env:
+  INVITE_CODE: UATK7P
+---
+- launchApp:
+    clearState: true
+- extendedWaitUntil:
+    visible: "Maligayang pagbabalik"
+    timeout: 30000
+- tapOn: "Wala pang account? Gumawa ng account"
+- tapOn: "Kasambahay ako"
+- tapOn: "Invite code"
+# Pasted rather than typed: fast typing races the field's upper-casing.
+- setClipboard: ${INVITE_CODE}
+- pasteText
+- hideKeyboard
+- tapOn: "Tuloy"
+- extendedWaitUntil:
+    visible: "Hakbang 2 sa 3"
+    timeout: 20000
+- scrollUntilVisible:
+    element: 'May hindi tama\? →'
+- tapOn: 'May hindi tama\? →'
+- assertVisible: 'Aling detalye\?'
+- tapOn: "Sahod / wage"
+- tapOn: 'Hal\. Ang usapan namin.*'
+- inputText: "UAT: 8,500 ang usapan"
+- hideKeyboard
+- scrollUntilVisible:
+    element: "Ipadala sa manager"
+- tapOn: "Ipadala sa manager"
+- waitForAnimationToEnd
+- takeScreenshot: SA-004-after

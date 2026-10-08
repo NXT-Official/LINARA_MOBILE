@@ -1,0 +1,20 @@
+# Signs in as the test manager from a fresh start, onto The Pass in the
+# dashboard WebView. scripts/device-test.mjs passes the account.
+appId: com.linara.mobile
+---
+- launchApp:
+    clearState: true
+- extendedWaitUntil:
+    visible: "Maligayang pagbabalik"
+    timeout: 30000
+- tapOn: "hal. rosa@gmail.com"
+- inputText: ${MAESTRO_MANAGER_EMAIL}
+- tapOn: "••••••"
+# Pasted rather than typed, so a password's quotes and brackets reach the
+# field as they are.
+- setClipboard: ${MAESTRO_MANAGER_PASSWORD}
+- pasteText
+- pressKey: Enter
+- extendedWaitUntil:
+    visible: "New task"
+    timeout: 60000

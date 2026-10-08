@@ -1,0 +1,22 @@
+# UAT SA-081: from Record ko, tell the manager a term on file is wrong.
+# The run deletes the flag afterwards. Test helper.
+appId: com.linara.mobile
+name: SA-081 Say a term is wrong (Record ko)
+tags: [uat, helper, changes-data]
+---
+- runFlow: ../common/sign-in-staff.yaml
+- tapOn: "Record ko"
+- scrollUntilVisible:
+    element: 'May mali\? Sabihin sa manager'
+- tapOn: 'May mali\? Sabihin sa manager'
+- assertVisible: 'Alin ang mali\?'
+- tapOn: "Sahod"
+- tapOn: 'Hal\. .*ang napag-usapan'
+- inputText: "UAT: P12,500 ang usapan"
+- hideKeyboard
+- scrollUntilVisible:
+    element: "Ipadala sa manager"
+- tapOn: "Ipadala sa manager"
+- extendedWaitUntil:
+    visible: "Naipadala. Makikita ito ng manager sa Pass nila."
+    timeout: 15000

@@ -1,0 +1,26 @@
+# UAT SA-027: answer quick utos: "Sige" marks one seen, "Tapos na" clears
+# another; an after-hours one says "· Lampas sa oras". Needs two utos from
+# the manager for the test helper ("UAT utos isa", and "UAT utos dalawa"
+# sent after hours); the run deletes them afterwards.
+appId: com.linara.mobile
+name: SA-027 Answer a quick utos
+tags: [uat, helper, changes-data, needs-setup]
+---
+- runFlow: ../common/sign-in-staff.yaml
+- scrollUntilVisible:
+    element: ".*UAT utos dalawa.*"
+- assertVisible: ".*Lampas sa oras.*"
+- takeScreenshot: SA-027-utos
+- tapOn:
+    text: "Sige"
+    index: 0
+- extendedWaitUntil:
+    notVisible: ".*UAT utos dalawa.*"
+    timeout: 15000
+# The utos's own "Tapos na" (the focus card's sits underneath the stack).
+- tapOn:
+    text: "Tapos na"
+    rightOf: "Sige"
+- extendedWaitUntil:
+    notVisible: ".*UAT utos isa.*"
+    timeout: 15000

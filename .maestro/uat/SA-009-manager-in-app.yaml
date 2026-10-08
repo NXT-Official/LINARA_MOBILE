@@ -1,0 +1,15 @@
+# UAT SA-009: a manager who signs in to the app gets the dashboard, and can
+# log out from it (with the confirmation from QA LMM-A5). Test manager.
+appId: com.linara.mobile
+name: SA-009 Manager signs into the app
+tags: [uat, manager]
+---
+- runFlow: ../common/sign-in-manager.yaml
+- tapOn: "Log out"
+- assertVisible: "Log out?"
+- tapOn:
+    text: "Log out"
+    index: 1
+- extendedWaitUntil:
+    visible: "Maligayang pagbabalik"
+    timeout: 20000
