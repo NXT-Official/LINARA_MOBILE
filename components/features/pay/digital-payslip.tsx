@@ -79,7 +79,11 @@ export function DigitalPayslip({
         <Text style={styles.lineValue}>{formatPeso(basePay)}</Text>
       </View>
       <View style={styles.lineRow}>
-        <Text style={styles.lineLabel}>Bahagi mo sa SSS / PhilHealth / Pag-IBIG</Text>
+        {/* Ngayong cutoff: the table below is per month, and both are her
+            share, so each says its period (QA LMM-A3). */}
+        <Text style={styles.lineLabel}>
+          Bahagi mo sa SSS / PhilHealth / Pag-IBIG (ngayong cutoff)
+        </Text>
         <Text style={[styles.lineValue, styles.deduction]}>
           − {formatPeso(employeeShareThisCutoff)}
         </Text>

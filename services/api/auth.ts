@@ -10,10 +10,14 @@ export type AccountKind = "helper" | "manager";
 const MANAGER_USER_TYPES = ["primary_manager", "co_manager", "remote_admin"];
 
 /**
- * The signed-in account's kind, from `user_profiles.user_type`. Null when it
- * has no profile row yet: a claim that failed after sign-up, or a manager who
- * hasn't set up a household. Both keep the helper tabs' behavior; a manager
- * finishes setup from the dashboard's own sign-in (app/manager.tsx?signup=1).
+ * The signed-in account's kind, from `user_profiles.user_type`.
+ *
+ * With no profile row yet, it's a manager when the web sign-up marked the
+ * account `signed_up_as: "manager"` (../LINARA/src/features/people/people.auth.ts):
+ * they confirmed their email but haven't set up a household, and the
+ * dashboard opens on "Finish setting up" for them (QA LMM-A1). Otherwise
+ * null: a kasambahay whose invite-code claim failed after sign-up, or an
+ * employer who signed up before that mark existed.
  */
 export async function getAccountKind(): Promise<AccountKind | null> {
   const { data: auth } = await supabase.auth.getUser();
@@ -27,6 +31,7 @@ export async function getAccountKind(): Promise<AccountKind | null> {
   const userType = (data as { user_type?: string } | null)?.user_type;
   if (userType === "helper") return "helper";
   if (userType && MANAGER_USER_TYPES.includes(userType)) return "manager";
+  if (!userType && auth.user.user_metadata?.signed_up_as === "manager") return "manager";
   return null;
 }
 
@@ -39,7 +44,8 @@ export async function getAccountKind(): Promise<AccountKind | null> {
  * The check is the account's type, not a current employment: a helper whose
  * household ended her employment can still sign in to read and download her
  * record, and join a new household (../LINARA/KNOWN_GAPS.md O4). An account
- * with no profile at all is signed straight back out.
+ * with no profile is signed straight back out, unless it signed up as an
+ * employer (getAccountKind).
  */
 export async function signIn(email: string, password: string): Promise<AccountKind> {
   const { error } = await supabase.auth.signInWithPassword({ email: email.trim(), password });
@@ -53,11 +59,20 @@ export async function signIn(email: string, password: string): Promise<AccountKi
     throw new Error(error.message);
   }
 
-  const kind = await getAccountKind().catch(() => null);
+  // A failed check (offline, a server error) isn't "no account": say so.
+  let kind: AccountKind | null;
+  try {
+    kind = await getAccountKind();
+  } catch {
+    await supabase.auth.signOut();
+    throw new Error(
+      "Hindi ma-check ang account mo ngayon. Tingnan ang internet, tapos subukan ulit.",
+    );
+  }
   if (!kind) {
     await supabase.auth.signOut();
     throw new Error(
-      'Walang account na naka-link sa email na ito. Managers: piliin ang "New manager? Set up your household" sa ibaba.',
+      `Hindi pa tapos ang setup ng account na ito. Employer: mag-log in sa ${MANAGER_DASHBOARD_URL.replace(/^https?:\/\//, "")} para tapusin ang household setup. Kasambahay: gamitin ang invite code mo sa "Wala pang account? Gumawa ng account" ➔ "Kasambahay ako".`,
     );
   }
   return kind;
