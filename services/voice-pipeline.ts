@@ -3,7 +3,8 @@ import { encode } from "base64-arraybuffer";
 
 import { supabase } from "@/services/supabase";
 
-type Station = "Yaya" | "Cook" | "Laundry" | "Driver" | "House";
+/** A station name: each household keeps its own list (../LINARA/supabase/add-household-stations.sql). */
+type Station = string;
 
 export interface VoiceTaskPromotion {
   cleanTitle: string;
