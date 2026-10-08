@@ -1,5 +1,13 @@
 import { useCallback, useEffect, useRef, useState } from "react";
-import { ActivityIndicator, BackHandler, Linking, StyleSheet, Text, View } from "react-native";
+import {
+  ActivityIndicator,
+  Alert,
+  BackHandler,
+  Linking,
+  StyleSheet,
+  Text,
+  View,
+} from "react-native";
 import { Redirect, router, useLocalSearchParams } from "expo-router";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { WebView, type WebViewMessageEvent, type WebViewNavigation } from "react-native-webview";
@@ -24,7 +32,33 @@ const HOUSEHOLD_ID_KEY = "linara_manager_household_id";
 type BridgeMessage =
   | { type: "session"; accessToken: string | null; refreshToken: string | null }
   | { type: "signed-out" }
-  | { type: "session-lost" };
+  | { type: "session-lost" }
+  | { type: "back"; handled: boolean }
+  // From ../LINARA/src/lib/mobile-app.ts: the signed-out sign-up page's
+  // "log in", "I work in a household" and the like (QA LMM-A6).
+  | {
+      type: "open-screen";
+      screen: "sign-in" | "create-account" | "kasambahay" | "forgot-password";
+      notice?: "confirm-email";
+    };
+
+/**
+ * Runs on hardware Back. An open modal, sheet, menu or dropdown on the
+ * dashboard adds no page history, so Back used to go past it: to the page
+ * behind, or out of the app with whatever was typed (QA LMM-A4). Escape
+ * closes every one of them (../LINARA/src/components/shared/modal.tsx and
+ * Radix's), so Back sends Escape when one is open, then says whether it did.
+ */
+const BACK_SCRIPT = `(function () {
+  var open = document.querySelector('[role="dialog"], [role="alertdialog"], [role="menu"], [role="listbox"]');
+  if (open) document.dispatchEvent(new KeyboardEvent("keydown", { key: "Escape", bubbles: true, cancelable: true }));
+  if (window.ReactNativeWebView) window.ReactNativeWebView.postMessage(JSON.stringify({ type: "back", handled: !!open }));
+})();
+true;`;
+
+// A page that doesn't answer Back by then (still loading, say) gets the
+// ordinary Back instead.
+const BACK_ANSWER_MS = 600;
 
 function tokensOf(session: Session | null) {
   return session
@@ -138,7 +172,7 @@ export default function ManagerDashboardScreen() {
 
 function startFor(session: Session | null) {
   return {
-    // No session only comes from "New manager? Set up your household".
+    // No session only comes from create-account.tsx's "Employer ako".
     url: `${MANAGER_DASHBOARD_URL}${session ? "/manager/pass" : "/login?mode=signup"}`,
     script: bootScript(session),
   };
@@ -153,6 +187,7 @@ function Dashboard({ session }: { session: Session | null }) {
   const signingOutRef = useRef(false);
   const [loadFailed, setLoadFailed] = useState(false);
   const [webKey, setWebKey] = useState(0);
+  const backTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   // Fixed for the life of each WebView: later sessions reach it by injection.
   const [start, setStart] = useState(() => startFor(session));
@@ -174,14 +209,32 @@ function Dashboard({ session }: { session: Session | null }) {
     }
   }, [session, pushSession]);
 
+  // Back with nothing open on the page: the page before, else the screen
+  // before (the sign-up chooser), else out of the app.
+  const ordinaryBack = useCallback(() => {
+    if (canGoBackRef.current) webRef.current?.goBack();
+    else if (router.canGoBack()) router.back();
+    else BackHandler.exitApp();
+  }, []);
+
+  // The page decides first (BACK_SCRIPT), and answers with a "back" message.
   useEffect(() => {
+    if (loadFailed) return;
     const subscription = BackHandler.addEventListener("hardwareBackPress", () => {
-      if (!canGoBackRef.current) return false;
-      webRef.current?.goBack();
+      if (backTimerRef.current) return true;
+      backTimerRef.current = setTimeout(() => {
+        backTimerRef.current = null;
+        ordinaryBack();
+      }, BACK_ANSWER_MS);
+      webRef.current?.injectJavaScript(BACK_SCRIPT);
       return true;
     });
-    return () => subscription.remove();
-  }, []);
+    return () => {
+      subscription.remove();
+      if (backTimerRef.current) clearTimeout(backTimerRef.current);
+      backTimerRef.current = null;
+    };
+  }, [loadFailed, ordinaryBack]);
 
   const signOut = useCallback(async () => {
     if (signingOutRef.current) return;
@@ -223,6 +276,33 @@ function Dashboard({ session }: { session: Session | null }) {
         return;
       }
 
+      if (message.type === "back") {
+        if (!backTimerRef.current) return;
+        clearTimeout(backTimerRef.current);
+        backTimerRef.current = null;
+        if (!message.handled) ordinaryBack();
+        return;
+      }
+
+      if (message.type === "open-screen") {
+        // Only the signed-out sign-up page sends these.
+        if (session) return;
+        if (message.notice === "confirm-email") {
+          Alert.alert(
+            "Tingnan ang email mo",
+            "Nagpadala kami ng confirmation link. Buksan iyon, tapos mag-sign in dito gamit ang email at password mo.",
+          );
+        }
+        // Back to the screen if it's behind this one, else in place of it.
+        if (message.screen === "sign-in") router.dismissTo("/(auth)/sign-in");
+        else if (message.screen === "create-account") router.dismissTo("/(auth)/create-account");
+        else if (message.screen === "kasambahay") router.dismissTo("/(auth)/welcome");
+        else router.dismissTo("/(auth)/forgot-password");
+        return;
+      }
+
+      if (message.type !== "session-lost") return;
+
       // session-lost: the page couldn't use the token it had. One fresh try
       // per screen visit; after that, the retry screen instead of a loop.
       const { data } = await supabase.auth.getSession();
@@ -237,7 +317,7 @@ function Dashboard({ session }: { session: Session | null }) {
       recoveriesRef.current += 1;
       pushSession(data.session, `${MANAGER_DASHBOARD_URL}/manager/pass`);
     },
-    [session?.access_token, signOut, pushSession],
+    [session, signOut, pushSession, ordinaryBack],
   );
 
   // Keep the dashboard in the app; anything else (a help link, say) opens outside it.

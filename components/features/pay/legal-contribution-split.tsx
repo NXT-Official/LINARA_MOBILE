@@ -29,7 +29,7 @@ export function LegalContributionSplit({ wagePHP }: { wagePHP: number }) {
 
   return (
     <View style={styles.card}>
-      <Text style={styles.eyebrow}>Hatian ng kontribusyon (Batas Kasambahay)</Text>
+      <Text style={styles.eyebrow}>Hatian ng kontribusyon kada buwan (Batas Kasambahay)</Text>
 
       <View style={styles.headerRow}>
         <Text style={[styles.cell, styles.headerCell, styles.labelCol]}>Kontribusyon</Text>
