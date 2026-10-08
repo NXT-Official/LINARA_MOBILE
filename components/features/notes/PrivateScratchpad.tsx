@@ -21,7 +21,8 @@ import { promoteVoiceTask, transcribeAudio } from "@/services/voice-pipeline";
 import { enqueueSyncAction } from "@/services/sqlite-queue";
 import { isOffline } from "@/lib/network";
 
-type Station = "Yaya" | "Cook" | "Laundry" | "Driver" | "House";
+/** A station name: each household keeps its own list (../LINARA/supabase/add-household-stations.sql). */
+type Station = string;
 
 /** Maps a VoiceTaskPromotion's relative date + time back to a concrete ISO instant. */
 function computeScheduledStart(targetDateOffset: number, targetTime: string): string {

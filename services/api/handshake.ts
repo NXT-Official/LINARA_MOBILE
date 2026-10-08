@@ -18,7 +18,8 @@ interface PendingInviteRow {
   id: string;
   household_id: string;
   name: string;
-  station: "Yaya" | "Cook" | "Laundry" | "Driver" | "House";
+  /** One of the household's own stations (../LINARA/supabase/add-household-stations.sql). */
+  station: string;
   monthly_rate: number;
   shift_start: string;
   shift_end: string;

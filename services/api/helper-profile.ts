@@ -5,7 +5,8 @@ export interface HelperProfileSummary {
   userId: string;
   householdId: string;
   name: string;
-  station: "Yaya" | "Cook" | "Laundry" | "Driver" | "House";
+  /** One of the household's own stations (../LINARA/supabase/add-household-stations.sql). */
+  station: string;
   shiftStart: string;
   shiftEnd: string;
   /** Protected mid-shift break; both null when the household hasn't set one.
