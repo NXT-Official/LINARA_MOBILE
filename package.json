@@ -60,6 +60,7 @@
     "test:watch": "vitest",
     "qa": "node scripts/qa.mjs",
     "qa:fast": "node scripts/qa.mjs --fast",
+    "test:device": "node scripts/device-test.mjs",
     "format": "prettier --write .",
     "typecheck": "tsc --noEmit",
     "prepare": "node scripts/install-hooks.mjs"

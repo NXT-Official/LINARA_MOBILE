@@ -1,0 +1,37 @@
+# QA LMM-A4 (../LINARA/KNOWN_GAPS.md C96): on the manager dashboard, Android
+# Back closes an open form instead of closing the app. Saves nothing.
+# Run: npm run test:device -- .maestro/manager-back-closes-modal.yaml
+# (scripts/device-test.mjs passes the test manager from ../LINARA/.env.e2e)
+appId: com.linara.mobile
+name: Manager Back closes an open form
+tags:
+  - manager
+---
+- launchApp:
+    clearState: true
+- extendedWaitUntil:
+    visible: "Maligayang pagbabalik"
+    timeout: 30000
+- tapOn: "hal. rosa@gmail.com"
+- inputText: ${MAESTRO_MANAGER_EMAIL}
+- tapOn: "••••••"
+# Pasted rather than typed, so a password's quotes and brackets reach the
+# field as they are.
+- setClipboard: ${MAESTRO_MANAGER_PASSWORD}
+- pasteText
+- hideKeyboard
+- tapOn: "Mag-sign in"
+# The dashboard, in the WebView, on The Pass.
+- extendedWaitUntil:
+    visible: "New task"
+    timeout: 60000
+- tapOn: "New task"
+- extendedWaitUntil:
+    visible: "Add to board"
+    timeout: 10000
+- pressKey: back
+# Closed in place: still on The Pass, the app still open.
+- extendedWaitUntil:
+    notVisible: "Add to board"
+    timeout: 5000
+- assertVisible: "New task"

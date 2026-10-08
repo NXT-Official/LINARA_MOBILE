@@ -1,0 +1,26 @@
+# QA LMM-A6 (../LINARA/KNOWN_GAPS.md C96): inside the app, the web sign-up's
+# "log in" link goes back to the app's own sign-in, not the web's.
+# Signed out; needs no account. Run: npm run test:device -- .maestro/employer-signup-stays-in-app.yaml
+appId: com.linara.mobile
+name: Employer sign-up stays in the app
+tags:
+  - signed-out
+---
+- launchApp:
+    clearState: true
+- extendedWaitUntil:
+    visible: "Maligayang pagbabalik"
+    timeout: 30000
+- tapOn: "Wala pang account? Gumawa ng account"
+- assertVisible: "Alin ka sa dalawa?"
+- tapOn: "Employer ako"
+# The dashboard's sign-up, in the WebView: account only, no name (QA LMM-A2).
+- extendedWaitUntil:
+    visible: "Set up your household"
+    timeout: 30000
+- assertNotVisible: "Your name"
+- tapOn: "Already have an account? Log in"
+- extendedWaitUntil:
+    visible: "Maligayang pagbabalik"
+    timeout: 15000
+- assertNotVisible: "Welcome back"
