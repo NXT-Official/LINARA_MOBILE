@@ -17,5 +17,7 @@ tags: [uat, helper]
 # No way to send the request from here.
 - assertNotVisible: "Bakit\\? \\(optional\\)"
 - takeScreenshot: SA-087-employed
+- scrollUntilVisible:
+    element: "Sige"
 - tapOn: "Sige"
 - assertNotVisible: "Huwag nang burahin"
