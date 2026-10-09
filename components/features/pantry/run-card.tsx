@@ -2,6 +2,7 @@ import { useState } from "react";
 import { StyleSheet, Text, TextInput, View } from "react-native";
 
 import { colors, fonts } from "@/lib/theme";
+import { parseAmount } from "@/lib/money";
 import { formatPeso } from "@/lib/format";
 import { PrimaryButton } from "@/components/ui/primary-button";
 import type { GroceryItemRow, GroceryRun } from "@/services/api/grocery";
@@ -59,8 +60,8 @@ export function RunCard({
 
   const finish = async () => {
     const t = change.trim();
-    const n = t === "" ? null : Number(t.replace(/[,₱\s]/g, ""));
-    if (n !== null && (!Number.isFinite(n) || n < 0)) {
+    const n = t === "" ? null : parseAmount(t);
+    if (t !== "" && n === null) {
       setChangeError("Ilagay ang sukli bilang halaga, o iwanang blangko.");
       return;
     }

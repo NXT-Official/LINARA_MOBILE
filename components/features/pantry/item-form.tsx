@@ -2,6 +2,7 @@ import { useState } from "react";
 import { Pressable, StyleSheet, Text, TextInput, View } from "react-native";
 
 import { colors } from "@/lib/theme";
+import { parseAmount } from "@/lib/money";
 import { CATEGORY_LABEL, CATEGORY_ORDER } from "@/lib/pantry";
 import type { PantryCategory } from "@/services/api/pantry";
 
@@ -13,11 +14,6 @@ export interface ItemFormValues {
   par?: number;
   category?: PantryCategory;
 }
-
-const toNumber = (s: string): number | null => {
-  const n = parseFloat(s);
-  return Number.isFinite(n) && n >= 0 ? n : null;
-};
 
 /**
  * Add or edit one item, inline in its list. "grocery" asks for name and
@@ -46,8 +42,8 @@ export function ItemForm({
   const [error, setError] = useState<string | null>(null);
 
   const submit = () => {
-    const qtyN = toNumber(qty);
-    const parN = toNumber(par);
+    const qtyN = parseAmount(qty);
+    const parN = parseAmount(par);
     if (!name.trim()) return setError("Lagyan ng pangalan.");
     if (qtyN === null) return setError("Dami: numero lang, 0 pataas.");
     if (!unit.trim()) return setError("Lagyan ng unit (hal. kg, pcs, pack).");

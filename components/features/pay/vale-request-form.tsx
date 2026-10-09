@@ -3,6 +3,7 @@ import { StyleSheet, Text, View } from "react-native";
 
 import { colors } from "@/lib/theme";
 import { formatPeso } from "@/lib/format";
+import { parseAmount } from "@/lib/money";
 import { TextField } from "@/components/ui/text-field";
 import { PrimaryButton } from "@/components/ui/primary-button";
 import type { ValeRequest } from "@/services/api/vales";
@@ -35,11 +36,13 @@ export function ValeRequestForm({
   const [reason, setReason] = useState("");
   const [open, setOpen] = useState(false);
 
-  const parsedAmount = parseFloat(amount);
-  const canSubmit = Number.isFinite(parsedAmount) && parsedAmount > 0 && reason.trim().length > 0;
+  const parsedAmount = parseAmount(amount);
+  const amountError =
+    amount.trim() !== "" && parsedAmount === null ? "Ilagay ang halaga, hal. 1,500." : null;
+  const canSubmit = parsedAmount !== null && parsedAmount > 0 && reason.trim().length > 0;
 
   const handleSubmit = () => {
-    if (!canSubmit) return;
+    if (!canSubmit || parsedAmount === null) return;
     onSubmit(parsedAmount, reason.trim());
     setAmount("");
     setReason("");
@@ -85,6 +88,7 @@ export function ValeRequestForm({
           onChangeText={setAmount}
           keyboardType="decimal-pad"
           placeholder="500"
+          error={amountError}
         />
         <TextField
           label="Dahilan"
