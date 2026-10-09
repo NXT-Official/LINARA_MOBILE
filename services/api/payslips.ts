@@ -114,6 +114,8 @@ export async function getMyPayslips(helperId: string): Promise<Payslip[]> {
     .from("payslips")
     .select("*")
     .eq("helper_id", helperId)
+    // Newest cutoff first, however late one was paid (../LINARA/KNOWN_GAPS.md O55).
+    .order("cutoff_end", { ascending: false })
     .order("requested_at", { ascending: false });
 
   if (error) {

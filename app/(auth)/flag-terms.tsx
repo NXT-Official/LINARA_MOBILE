@@ -16,7 +16,7 @@ import { flagDiscrepancy } from "@/services/api/handshake";
 import { PrimaryButton } from "@/components/ui/primary-button";
 
 const FLAG_CATEGORIES: { value: "wage" | "shift" | "restDay" | "station"; label: string }[] = [
-  { value: "wage", label: "Sahod / wage" },
+  { value: "wage", label: "Sahod" },
   { value: "shift", label: "Oras ng shift" },
   { value: "restDay", label: "Rest day" },
   { value: "station", label: "Trabaho" },

@@ -3,6 +3,7 @@ import { Pressable, StyleSheet, Text, View } from "react-native";
 
 import { colors, fonts } from "@/lib/theme";
 import { formatHoursMinutes } from "@/lib/format";
+import { leaveDatesLabel, requestsToList } from "@/lib/leave";
 import { DateTimeField } from "@/components/ui/date-time-field";
 import { TextField } from "@/components/ui/text-field";
 import { PrimaryButton } from "@/components/ui/primary-button";
@@ -106,11 +107,11 @@ export function RestOffRequestForm({
     setOpen(false);
   };
 
-  const recent = requests.slice(0, 4);
+  const recent = requestsToList(requests);
 
   return (
     <View style={styles.card}>
-      <Text style={styles.eyebrow}>Day off</Text>
+      <Text style={styles.eyebrow}>Mga day off</Text>
       <Text style={styles.hint}>
         {formatHoursMinutes(uncommitted)} ang pwede mong hilingin
         {pendingMinutes > 0 ? ` (${formatHoursMinutes(pendingMinutes)} naghihintay)` : ""}.
@@ -121,7 +122,7 @@ export function RestOffRequestForm({
             <View key={r.id} style={styles.row}>
               <View style={styles.rowLeft}>
                 <Text style={styles.rowTitle}>
-                  {r.restDate} · {formatHoursMinutes(r.minutes)}
+                  {leaveDatesLabel(r.restDate, r.restDate)} · {formatHoursMinutes(r.minutes)}
                 </Text>
                 {r.declineReason ? (
                   <Text style={styles.rowMeta}>{r.declineReason}</Text>

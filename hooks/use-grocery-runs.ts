@@ -88,7 +88,21 @@ export function useGroceryRuns(householdId: string | null) {
       step(run.id, () => setRunStatus(run.id, "draft"), "Hindi nabawi."),
     remove: (run: GroceryRun) => step(run.id, () => deleteRun(run.id), "Hindi nabura."),
     close: (run: GroceryRun, change: number | null) =>
-      step(run.id, () => setRunStatus(run.id, "done", change), "Hindi natapos ang run."),
+      step(
+        run.id,
+        async () => {
+          await setRunStatus(run.id, "done", change);
+          // Closing finishes the task carrying the run, if any
+          // (../LINARA/supabase/add-run-closes-task.sql), so it leaves Ngayon
+          // and stops asking for a receipt of its own.
+          if (run.ticketId) {
+            for (const key of ["palengke-ticket", "focus-task", "today-progress", "today-tasks"]) {
+              void queryClient.invalidateQueries({ queryKey: [key] });
+            }
+          }
+        },
+        "Hindi natapos ang run.",
+      ),
     backToPool: (itemId: string) =>
       step(itemId, () => moveGroceryItems([itemId], null), "Hindi naibalik."),
   };

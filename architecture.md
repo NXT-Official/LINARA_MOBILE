@@ -98,7 +98,7 @@ LINARA_MOBILE/
 │   ├── ui/                      ← Native design primitives (Buttons, Inputs, Cards)
 │   └── features/
 │       ├── tasks/               ← ActiveTaskCard, SOPCarousel, BlockReasonModal
-│       ├── utos/                ← FloatingQuickUtosFeed, UtosChip
+│       ├── utos/                ← QuickUtosFeed, UtosChip
 │       └── notes/               ← PrivateScratchpad, VoiceRecorderButton
 ├── hooks/
 │   ├── use-offline-sync.ts      ← Evaluates network states and triggers SQLite queue drains

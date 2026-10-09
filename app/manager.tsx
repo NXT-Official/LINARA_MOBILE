@@ -17,6 +17,7 @@ import { MANAGER_DASHBOARD_URL } from "@/lib/env";
 import { colors } from "@/lib/theme";
 import { useSession } from "@/lib/session-context";
 import { queryClient } from "@/lib/query-client";
+import { clearSavedRecord } from "@/lib/query-persist";
 import { supabase } from "@/services/supabase";
 import { signOutHelper } from "@/services/api/auth";
 import { PrimaryButton } from "@/components/ui/primary-button";
@@ -245,6 +246,7 @@ function Dashboard({ session }: { session: Session | null }) {
       console.warn("[manager] Sign-out incomplete:", err);
       await supabase.auth.signOut();
       queryClient.clear();
+      await clearSavedRecord();
     }
     router.replace("/(auth)/sign-in");
   }, []);

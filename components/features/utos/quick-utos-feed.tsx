@@ -4,11 +4,12 @@ import type { QuickUtoItem } from "@/services/api/quick-utos";
 import { UtosChip } from "@/components/features/utos/utos-chip";
 
 /**
- * Floating stack of ephemeral Quick Utos banners (roadmap Story 7, step 5 /
- * plan.md 3.2). Absolutely positioned over the Today tab's content so a new
- * ping surfaces immediately without shifting the focus card layout.
+ * The Quick Utos waiting for an answer (roadmap Story 7, step 5 / plan.md
+ * 3.2), stacked at the top of Ngayon above the focus card. They used to float
+ * over the bottom of the screen, which covered the task's own "Tapos na"
+ * until every utos was answered (KNOWN_GAPS.md O52).
  */
-export function FloatingQuickUtosFeed({
+export function QuickUtosFeed({
   utosList,
   onAck,
   ackingId,
@@ -22,7 +23,7 @@ export function FloatingQuickUtosFeed({
   }
 
   return (
-    <View style={styles.container} pointerEvents="box-none">
+    <View style={styles.container}>
       {utosList.map((utos) => (
         <UtosChip key={utos.id} utos={utos} onAck={onAck} acking={ackingId === utos.id} />
       ))}
@@ -32,10 +33,6 @@ export function FloatingQuickUtosFeed({
 
 const styles = StyleSheet.create({
   container: {
-    position: "absolute",
-    left: 16,
-    right: 16,
-    bottom: 16,
     gap: 10,
   },
 });

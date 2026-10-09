@@ -14,7 +14,7 @@ const REST_LINE: Record<CloseReason, string> = {
 };
 
 /**
- * The close (concept doc §6): "Great work today -- 8 of 8 done", then rest.
+ * The close (concept doc §6): "Ang galing mo ngayon -- 8 sa 8, tapos!", then rest.
  * Replaces the focus card once the board is closed, on her rest day, overnight,
  * or after her shift -- the app keeping her rest instead of offering the next
  * task. Only says what the counts support.
@@ -35,8 +35,8 @@ export function DayCloseCard({
     total === 0
       ? "Walang task ngayon."
       : done === total
-        ? `Great work today — ${done} of ${total}, tapos!`
-        : `${done} of ${total} tapos ngayon.`;
+        ? `Ang galing mo ngayon — ${done} sa ${total}, tapos!`
+        : `${done} sa ${total} ang tapos ngayon.`;
 
   return (
     <View style={styles.card} accessibilityRole="summary">

@@ -212,8 +212,27 @@ export async function createDraftRun(
     .select("id")
     .single();
   if (error || !data) throw new Error(error?.message ?? "Hindi nagawa ang run.");
-  if (itemIds.length) await moveGroceryItems(itemIds, data.id as string);
-  return data.id as string;
+  const runId = data.id as string;
+  if (!itemIds.length) return runId;
+  // Only lines still to buy and still in Kailangan: one ticked bought or put on
+  // another run meanwhile stays where it is, instead of failing the move and
+  // leaving an empty draft (KNOWN_GAPS.md O53).
+  const { data: moved, error: moveError } = await supabase
+    .from("grocery_items")
+    .update({ run_id: runId })
+    .in("id", itemIds)
+    .eq("bought", false)
+    .is("run_id", null)
+    .select("id");
+  if (moveError || !moved?.length) {
+    await supabase.from("grocery_runs").delete().eq("id", runId);
+    throw new Error(
+      moveError
+        ? "Hindi nailagay sa run ang mga bibilhin. Subukan ulit."
+        : "Nabili na o nasa ibang run na ang mga pinili mo. Pumili ulit.",
+    );
+  }
+  return runId;
 }
 
 /** Moves a run along: ask for approval (pending), take it back (draft), close it (done). */

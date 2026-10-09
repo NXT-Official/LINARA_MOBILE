@@ -13,9 +13,8 @@ import { computeStatutorySplit, LegalContributionSplit } from "./legal-contribut
  * `SpendAndPayday` Pay Dial. Once a manager runs "Pay Now" (LINARA's Money
  * tab) for this cutoff, the confirmed payout shows up in
  * `PayslipHistory` below instead (see payslip-history.tsx and
- * ../LINARA/KNOWN_GAPS.md's Closed Gap for #9) -- this card never reflects
- * payout status itself, only the live estimate for whatever cutoff hasn't
- * been paid yet.
+ * ../LINARA/KNOWN_GAPS.md's Closed Gap for #9) -- this card stays the live
+ * estimate, and only says when this cutoff has been paid (`paid`).
  */
 export function DigitalPayslip({
   monthlyRate,
@@ -25,6 +24,7 @@ export function DigitalPayslip({
   cutoffEnd,
   workedShare = 1,
   unpaidLeave,
+  paid = false,
 }: {
   monthlyRate: number;
   paydayInterval: "semi_monthly" | "monthly";
@@ -42,6 +42,9 @@ export function DigitalPayslip({
   workedShare?: number;
   /** What the payout will take for unpaid leave this cutoff (getUnpaidLeaveDue). */
   unpaidLeave?: { days: number; deduction: number };
+  /** A payslip for this cutoff has gone through: say so instead of "estimate"
+   * (../LINARA/KNOWN_GAPS.md O55). Its exact figures are in PayslipHistory. */
+  paid?: boolean;
 }) {
   // The arithmetic lives in lib/net-pay.ts so it can be unit-tested without
   // rendering React Native, and so the rule this app displays is stated in one
@@ -70,7 +73,11 @@ export function DigitalPayslip({
         {cutoffStart && cutoffEnd ? formatCutoffRange(cutoffStart, cutoffEnd) : intervalLabel}
       </Text>
       <Text style={styles.netPay}>{formatPeso(netEstimate)}</Text>
-      <Text style={styles.netPayHint}>Tantiyang matatanggap mo</Text>
+      <Text style={styles.netPayHint}>
+        {paid
+          ? "Nabayaran na. Nasa Mga payslip sa ibaba ang eksaktong natanggap mo."
+          : "Tantiyang matatanggap mo"}
+      </Text>
 
       <View style={styles.divider} />
 

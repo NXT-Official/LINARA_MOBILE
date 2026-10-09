@@ -2,12 +2,15 @@
 # its cost, snap the receipt (the emulator's camera), give back the change,
 # close; unbought lines go back to Kailangan. Needs an approved ("ready")
 # run with cash for the test helper whose lines include ITEM, plus one more
-# line left unbought. env: RUN (title), ITEM, COST, CHANGE.
+# line left unbought, and linked to an open task of the test helper's with
+# "palengke" in its title (closing the run finishes it: no second receipt).
+# env: RUN (title), ITEM, COST, CHANGE: edit them here (a flow's own env wins
+# over maestro -e).
 appId: com.linara.mobile
 name: SA-054 Shop and close a run
 tags: [uat, helper, changes-data, needs-setup]
 env:
-  RUN: UAT run 2
+  RUN: UAT run 4
   ITEM: UAT bawang
   COST: "60"
   CHANGE: "440"
@@ -38,7 +41,18 @@ env:
     rightOf: "Kunan ulit ang resibo"
 - assertVisible: ".*nagastos = .*"
 - assertVisible: "Ibabalik sa Kailangan ang 1 na hindi nabili."
-# The change field comes pre-filled; replace what's there.
+# The change field follows the spend: cash less the cost typed on the card
+# (O51: it used to keep the full cash).
+- assertVisible:
+    text: ${CHANGE}
+    below: ".*nagastos = .*"
+# More change than cash is refused.
+- tapOn: "Sukli na ibinalik"
+- eraseText: 12
+- inputText: "500${CHANGE}"
+- hideKeyboard
+- tapOn: "Isara ang run"
+- assertVisible: "Hindi puwedeng mas malaki ang sukli sa perang ibinigay .*"
 - tapOn: "Sukli na ibinalik"
 - eraseText: 12
 - inputText: ${CHANGE}
@@ -46,3 +60,6 @@ env:
 - tapOn: "Isara ang run"
 - scrollUntilVisible:
     element: "Mga natapos na run"
+# The task carrying the run was finished with it: no "Palengke Run" card
+# asking for the receipt again (O55).
+- assertNotVisible: "Palengke Run"

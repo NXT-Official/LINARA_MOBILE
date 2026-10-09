@@ -1,0 +1,28 @@
+# Record ko opens with no internet, from the copy kept on the phone
+# (lib/query-persist.ts; ../LINARA/KNOWN_GAPS.md O55). Opens it online once so
+# it's saved, then restarts the app in airplane mode. Airplane mode goes off
+# again however the flow ends. Test helper.
+appId: com.linara.mobile
+name: Record ko offline
+tags: [helper]
+onFlowComplete:
+  - setAirplaneMode: disabled
+---
+- runFlow: common/sign-in-staff.yaml
+- tapOn: "Record ko"
+- scrollUntilVisible:
+    element: "I-download ang record ko \\(PDF\\)"
+# Give the save a moment (it's throttled to once a second).
+- waitForAnimationToEnd:
+    timeout: 3000
+- stopApp
+- setAirplaneMode: enabled
+- launchApp
+- extendedWaitUntil:
+    visible: "Record ko"
+    timeout: 60000
+- tapOn: "Record ko"
+- scrollUntilVisible:
+    element: "I-download ang record ko \\(PDF\\)"
+    timeout: 30000
+- takeScreenshot: record-offline

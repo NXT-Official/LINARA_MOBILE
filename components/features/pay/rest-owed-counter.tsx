@@ -19,7 +19,7 @@ export function RestOwedCounter({ minutes }: { minutes: number }) {
         <Ionicons name="time-outline" size={20} color={colors.pineTeal} />
       </View>
       <View style={styles.textCol}>
-        <Text style={styles.eyebrow}>Rest Owed</Text>
+        <Text style={styles.eyebrow}>Rest owed mo</Text>
         <Text style={styles.value}>{formatHoursMinutes(minutes)}</Text>
         <Text style={styles.hint}>Pahingang naipon mula sa trabaho lampas sa shift</Text>
       </View>

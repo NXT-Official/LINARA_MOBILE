@@ -192,7 +192,7 @@ This 10-story roadmap coordinates the bootstrapping, layout development, feature
 - **Objective:** Set up real-time floating banners for short-order tasks.
 - **Tasks:**
   1. Implement a WebSocket channel listener connecting to `public.quick_utos` for the active helper.
-  2. Build floating, lightweight alert banners that appear at the bottom of the layout when a new utos is dispatched.
+  2. Build floating, lightweight alert banners that appear at the bottom of the layout when a new utos is dispatched. (Built 2026-10-09 as a stack at the top of Ngayon, above the focus card, so they never cover its buttons: KNOWN_GAPS.md O52.)
   3. Create an instantaneous `"Got It"` action button that sets `ack_state` to `done`.
 - **Definition of Done:** A task sent from the manager's web console triggers an immediate floating banner on the mobile screen, which vanishes instantly upon acknowledgment.
 

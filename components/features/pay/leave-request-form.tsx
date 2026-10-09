@@ -3,7 +3,7 @@ import { Pressable, StyleSheet, Text, View } from "react-native";
 
 import { colors, fonts } from "@/lib/theme";
 import { formatHoursMinutes } from "@/lib/format";
-import { canCancelLeave, countLeaveDays, leaveDatesLabel } from "@/lib/leave";
+import { canCancelLeave, countLeaveDays, leaveDatesLabel, requestsToList } from "@/lib/leave";
 import { DateTimeField } from "@/components/ui/date-time-field";
 import { TextField } from "@/components/ui/text-field";
 import { PrimaryButton } from "@/components/ui/primary-button";
@@ -86,7 +86,7 @@ export function LeaveRequestForm({
   /** The row a cancel or answer is in flight for. */
   busyId: string | null;
 }) {
-  const [kind, setKind] = useState<LeaveKind>("sil");
+  const [pickedKind, setKind] = useState<LeaveKind | null>(null);
   const [reason, setReason] = useState<LeaveReason>("vacation");
   const [startDate, setStartDate] = useState("");
   const [endDate, setEndDate] = useState("");
@@ -95,11 +95,14 @@ export function LeaveRequestForm({
 
   const days = countLeaveDays(startDate, endDate || startDate, weeklyRestDay);
   const silLeft = sil?.days ?? 0;
+  // SIL is the default only when she has some; otherwise she picks, so an
+  // unpaid day is never one she didn't choose (../LINARA/KNOWN_GAPS.md O55).
+  const kind = pickedKind ?? (silLeft > 0 ? "sil" : null);
   const tooMuch = kind === "sil" && days > silLeft;
-  const canSubmit = days > 0 && !tooMuch && !submitting;
+  const canSubmit = kind !== null && days > 0 && !tooMuch && !submitting;
 
   const handleSubmit = () => {
-    if (!canSubmit) return;
+    if (!canSubmit || kind === null) return;
     onSubmit(kind, reason, startDate, endDate || startDate, note.trim() || undefined);
     setStartDate("");
     setEndDate("");
@@ -108,11 +111,11 @@ export function LeaveRequestForm({
   };
 
   const toConfirm = leave.filter((l) => l.helperAck === "pending");
-  const recent = leave.filter((l) => l.helperAck !== "pending").slice(0, 4);
+  const recent = requestsToList(leave.filter((l) => l.helperAck !== "pending"));
 
   return (
     <View style={styles.card}>
-      <Text style={styles.eyebrow}>Leave</Text>
+      <Text style={styles.eyebrow}>Mga leave</Text>
       <Text style={styles.hint}>
         {sil?.yearEnd
           ? `SIL: ${silLeft} araw pa hanggang ${leaveDatesLabel(sil.yearEnd, sil.yearEnd)}.`
@@ -187,7 +190,9 @@ export function LeaveRequestForm({
             />
           ))}
         </View>
-        <Text style={styles.hint}>{ASKABLE.find((a) => a.kind === kind)?.hint}</Text>
+        <Text style={styles.hint}>
+          {ASKABLE.find((a) => a.kind === kind)?.hint ?? "Pumili kung anong klaseng leave."}
+        </Text>
 
         <View style={styles.chips} accessibilityRole="radiogroup">
           {REASONS.map((r) => (

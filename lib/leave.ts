@@ -44,3 +44,21 @@ export function leaveDatesLabel(start: string, end: string): string {
 /** Does this leave cover this YYYY-MM-DD? */
 export const leaveCovers = (leave: { startDate: string; endDate: string }, iso: string) =>
   leave.startDate <= iso && iso <= leave.endDate;
+
+/**
+ * The few requests a card lists: waiting ones first (she can still cancel
+ * them), then the rest, newest first as given. Ones she cancelled aren't
+ * shown at all (../LINARA/KNOWN_GAPS.md O55, the user's choice 2026-10-09):
+ * kept, they piled up and once pushed a waiting request, with its
+ * Kanselahin, off the card (Maestro SA-066).
+ */
+export function requestsToList<T extends { status: string }>(requests: T[], max = 4): T[] {
+  return requests
+    .filter((r) => r.status !== "cancelled")
+    .map((r, i) => ({ r, i }))
+    .sort(
+      (a, b) => Number(b.r.status === "pending") - Number(a.r.status === "pending") || a.i - b.i,
+    )
+    .slice(0, max)
+    .map(({ r }) => r);
+}

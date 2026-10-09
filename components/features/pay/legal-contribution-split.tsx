@@ -59,6 +59,9 @@ export function LegalContributionSplit({ wagePHP }: { wagePHP: number }) {
         </Text>
       </View>
 
+      <Text style={styles.note}>
+        Ayon sa 2026 na rates ng SSS, PhilHealth at Pag-IBIG. Kasama sa SSS ng employer ang EC.
+      </Text>
       {isUnder5k ? (
         <Text style={styles.note}>
           Dahil ang buwanang sweldo ay mas mababa sa ₱5,000, ang Employer ay obligadong magbayad ng

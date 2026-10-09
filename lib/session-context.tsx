@@ -1,6 +1,7 @@
 import { createContext, useCallback, useContext, useEffect, useState, type ReactNode } from "react";
 import type { Session } from "@supabase/supabase-js";
 
+import { clearSavedRecord } from "@/lib/query-persist";
 import { supabase } from "@/services/supabase";
 
 interface SessionContextValue {
@@ -47,7 +48,9 @@ export function SessionProvider({ children }: { children: ReactNode }) {
   useEffect(() => {
     reload();
 
-    const { data: subscription } = supabase.auth.onAuthStateChange((_event, nextSession) => {
+    const { data: subscription } = supabase.auth.onAuthStateChange((event, nextSession) => {
+      // However she was signed out, her saved Record ko goes with her.
+      if (event === "SIGNED_OUT") void clearSavedRecord();
       setSession(nextSession);
       setIsLoading(false);
     });

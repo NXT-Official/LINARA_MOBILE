@@ -13,6 +13,8 @@ tags: [uat, helper, changes-data]
 - tapOn: "500"
 - inputText: "300"
 - hideKeyboard
+- scrollUntilVisible:
+    element: "Gamot para sa anak"
 - tapOn: "Gamot para sa anak"
 - inputText: "UAT vale, ide-decline"
 - hideKeyboard
@@ -20,4 +22,4 @@ tags: [uat, helper, changes-data]
     element: "Ipadala sa manager"
 - tapOn: "Ipadala sa manager"
 - scrollUntilVisible:
-    element: "Waiting"
+    element: "Hinihintay"

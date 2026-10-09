@@ -1,0 +1,27 @@
+# Signing in with no internet says so in Taglish, not the phone's raw
+# "fetch failed: java.net.UnknownHostException ..." (../LINARA/KNOWN_GAPS.md
+# O54). Turns airplane mode on after the sign-in screen loads, and off again
+# however the flow ends. Test helper.
+appId: com.linara.mobile
+name: Sign in offline
+tags: [helper]
+onFlowComplete:
+  - setAirplaneMode: disabled
+---
+- launchApp:
+    clearState: true
+- extendedWaitUntil:
+    visible: "Maligayang pagbabalik"
+    timeout: 30000
+- setAirplaneMode: enabled
+- tapOn: "hal. rosa@gmail.com"
+- inputText: ${MAESTRO_STAFF_EMAIL}
+- tapOn: "••••••"
+- setClipboard: ${MAESTRO_STAFF_PASSWORD}
+- pasteText
+- pressKey: Enter
+- extendedWaitUntil:
+    visible: "Walang internet. Kumonekta muna, tapos subukan ulit."
+    timeout: 30000
+- assertNotVisible: ".*UnknownHost.*"
+- takeScreenshot: sign-in-offline

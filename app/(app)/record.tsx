@@ -105,14 +105,21 @@ export default function RecordScreen() {
         <View style={styles.loading}>
           <ActivityIndicator color={colors.pineTeal} />
         </View>
-      ) : employmentsQuery.isError ? (
+      ) : employmentsQuery.isError && !employmentsQuery.data ? (
         <Text style={styles.errorText}>Hindi ma-load ang record mo. Subukan ulit mamaya.</Text>
       ) : (
         <>
+          {/* A failed refresh over the copy kept on the phone (lib/query-persist.ts). */}
+          {employmentsQuery.isError ? (
+            <Text style={styles.savedNote}>
+              Walang internet. Ito ang record mo noong{" "}
+              {shortDate(new Date(employmentsQuery.dataUpdatedAt))}.
+            </Text>
+          ) : null}
           <PaymentConfirmations />
           {current ? <CurrentRecord employment={current} /> : <JoinHouseholdCard />}
           {past.length > 0 ? <PastEmployments past={past} /> : null}
-          <PrivacyAccountCard />
+          <PrivacyAccountCard employed={current !== null} />
         </>
       )}
       {/* Here as well as My Pay: My Record is the one tab that always opens,
@@ -598,6 +605,7 @@ const styles = StyleSheet.create({
   content: { padding: 16, gap: 12 },
   header: { fontFamily: fonts.displayBold, fontSize: 22, color: colors.ink },
   sub: { fontSize: 14, lineHeight: 20, color: colors.mutedInk },
+  savedNote: { fontSize: 13, lineHeight: 18, color: colors.terracottaInk },
   loading: { paddingVertical: 40, alignItems: "center" },
   errorText: { fontSize: 14, color: colors.ink, textAlign: "center", paddingVertical: 24 },
   card: {
