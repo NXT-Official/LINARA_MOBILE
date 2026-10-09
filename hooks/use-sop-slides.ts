@@ -1,6 +1,7 @@
 import { useEffect, useMemo, useState } from "react";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 
+import { AI_ENABLED } from "@/lib/ai";
 import { buildSopSlides, type SopSlide } from "@/lib/sop";
 import { simplifySop } from "@/services/voice-pipeline";
 import type { FocusTaskSop } from "@/services/api/tickets";
@@ -19,14 +20,25 @@ interface SimplifiedResult {
  * `description` fallback otherwise or on any failure. Never blocks the
  * carousel -- the sync fallback renders immediately while a simplification
  * resolves in the background, matching the offline-resilience pattern in
- * ../LINARA_MOBILE/architecture.md Section 10.
+ * ../LINARA_MOBILE/architecture.md Section 10. With AI off (lib/ai.ts), the
+ * saved steps are shown as they are.
  */
 export function useSopSlides(sop: FocusTaskSop): SopSlide[] {
-  const fallbackSlides = useMemo(() => buildSopSlides(sop), [sop]);
+  const fallbackSlides = useMemo(
+    () =>
+      !AI_ENABLED && sop.steps.length > 0
+        ? sop.steps.map((text, index) => ({
+            key: `${sop.id}-${index}`,
+            imageUrl: index === 0 ? sop.standardImageUrl : null,
+            text,
+          }))
+        : buildSopSlides(sop),
+    [sop],
+  );
   const [simplified, setSimplified] = useState<SimplifiedResult | null>(null);
 
   useEffect(() => {
-    if (sop.steps.length === 0) {
+    if (!AI_ENABLED || sop.steps.length === 0) {
       return;
     }
 
