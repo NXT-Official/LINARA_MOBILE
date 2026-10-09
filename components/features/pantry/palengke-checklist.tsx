@@ -3,6 +3,7 @@ import { Alert, Pressable, StyleSheet, Text, TextInput, View } from "react-nativ
 import { Ionicons } from "@expo/vector-icons";
 
 import { colors } from "@/lib/theme";
+import { parseAmount } from "@/lib/money";
 import type { GroceryItemRow } from "@/services/api/grocery";
 
 import { ItemForm, type ItemFormValues } from "./item-form";
@@ -28,8 +29,11 @@ function CostField({
       onCost(null);
       return;
     }
-    const parsed = parseFloat(draft);
-    if (!Number.isNaN(parsed) && parsed >= 0) onCost(parsed);
+    const parsed = parseAmount(draft);
+    if (parsed !== null) onCost(parsed);
+    // Not an amount: back to what's saved, so the field never shows a cost
+    // that isn't the one kept.
+    else setDraft(item.actualCost != null ? String(item.actualCost) : "");
   };
 
   return (

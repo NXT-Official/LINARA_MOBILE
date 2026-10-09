@@ -2,6 +2,7 @@ import { useState } from "react";
 import { Pressable, StyleSheet, Text, TextInput, View } from "react-native";
 
 import { colors } from "@/lib/theme";
+import { parseAmount } from "@/lib/money";
 
 function fmtPeso(amount: number): string {
   return `₱${Math.round(amount).toLocaleString()}`;
@@ -32,8 +33,8 @@ export function BudgetBar({
   const over = spent > budget;
 
   const commit = () => {
-    const parsed = parseFloat(draft);
-    if (!Number.isNaN(parsed)) {
+    const parsed = parseAmount(draft);
+    if (parsed !== null) {
       onChangeBudget?.(parsed);
     } else {
       setDraft(String(budget));
