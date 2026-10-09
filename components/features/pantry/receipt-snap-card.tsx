@@ -15,16 +15,20 @@ const when = (iso: string) =>
 /**
  * A receipt after buying, any time (client feedback, 2026-10-02: receipt
  * attachment didn't work, because the only button was inside a Palengke Run
- * task that usually didn't exist). Saved to grocery_receipts; the manager
- * sees it on the web's palengke list.
+ * task that usually didn't exist). Saved to grocery_receipts with no run; the
+ * manager sees it in the web's grocery History, under "Bought outside a run".
+ * A run's receipt is taken on its run card, so with a run open this says so.
  */
 export function ReceiptSnapCard({
   latest,
   saving,
   error,
+  runOpen,
   onSnap,
 }: {
   latest: GroceryReceipt | null;
+  /** A run is open: its receipt belongs on its run card, not here. */
+  runOpen?: boolean;
   saving: boolean;
   error: string | null;
   onSnap: () => void;
@@ -33,7 +37,9 @@ export function ReceiptSnapCard({
     <View style={styles.card}>
       <Text style={styles.title}>Resibo</Text>
       <Text style={styles.sub}>
-        Pagkatapos mamili, kunan ng larawan ang resibo. Makikita ito ng manager.
+        {runOpen
+          ? "Para sa run? Kunan sa card ng run sa itaas. Dito ang resibo ng binili nang walang run."
+          : "Pagkatapos mamili, kunan ng larawan ang resibo. Makikita ito ng manager."}
       </Text>
       {latest && (
         <View style={styles.latest}>

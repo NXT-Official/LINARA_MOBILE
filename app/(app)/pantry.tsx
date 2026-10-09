@@ -454,6 +454,7 @@ export default function PantryScreen() {
           latest={latestReceiptQuery.data ?? null}
           saving={snapMutation.isPending && !snapMutation.variables}
           error={snapMutation.variables ? null : snapError}
+          runOpen={runsOn && readyRuns.length > 0}
           onSnap={() => snapMutation.mutate(undefined)}
         />
       )}
