@@ -224,6 +224,12 @@ export default function PayScreen() {
             cutoffEnd={cutoffQuery.data?.cutoffEnd}
             workedShare={workedShare}
             unpaidLeave={unpaidLeaveQuery.data}
+            paid={(payslipsQuery.data ?? []).some(
+              (p) =>
+                p.kind === "regular" &&
+                p.payoutStatus === "succeeded" &&
+                p.cutoffEnd === cutoffQuery.data?.cutoffEnd,
+            )}
           />
           <UnpaidPeriods periods={periodsQuery.data ?? []} />
 

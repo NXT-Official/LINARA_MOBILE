@@ -6,5 +6,5 @@ tags: [uat, helper, needs-setup]
 ---
 - runFlow: ../common/sign-in-staff.yaml
 - scrollUntilVisible:
-    element: ".*of 2.*tapos.*"
+    element: ".*sa 2.*tapos.*"
 - takeScreenshot: SA-029-summary

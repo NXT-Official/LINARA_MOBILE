@@ -21,7 +21,7 @@ import { useWorkplaces } from "@/hooks/use-workplaces";
 import { FocusDeck } from "@/components/features/today/focus-deck";
 import { getBoardClosed } from "@/services/api/household";
 import { dayPhase, deckFor, focusIndex } from "@/lib/today";
-import { FloatingQuickUtosFeed } from "@/components/features/utos/floating-quick-utos-feed";
+import { QuickUtosFeed } from "@/components/features/utos/quick-utos-feed";
 import { PrivateScratchpad } from "@/components/features/notes/PrivateScratchpad";
 import { getMyHelperProfile } from "@/services/api/helper-profile";
 import { getMyRestOffRequests } from "@/services/api/rest-off";
@@ -48,7 +48,7 @@ import { isOffline } from "@/lib/network";
 
 /**
  * Today tab (roadmap Story 7). Hosts the Dignity Header (Story 5), the
- * Active Focus Card with its swipable SOP deck, and the floating Quick
+ * Active Focus Card with its swipable SOP deck, and the Quick
  * Utos feed, all kept live via useRealtimeSubscription's postgres_changes
  * listeners invalidating the relevant query.
  */
@@ -374,6 +374,16 @@ export default function TodayScreen() {
 
             <MovedTasksBanner helperId={profileQuery.data.id} />
 
+            <QuickUtosFeed
+              // With more than one house, say which one is asking.
+              utosList={(quickUtosQuery.data ?? []).map((u) => {
+                const from = places.multi ? places.houseName(u.householdId) : null;
+                return from ? { ...u, senderName: `${u.senderName} · ${from}` } : u;
+              })}
+              onAck={(id, ack) => ackMutation.mutate({ id, ack })}
+              ackingId={ackingId}
+            />
+
             <HouseSwitcher places={places} allowAll />
             <LayoutSwitch value={layout} onChange={setLayout} />
 
@@ -469,16 +479,6 @@ export default function TodayScreen() {
           </>
         )}
       </ScrollView>
-
-      <FloatingQuickUtosFeed
-        // With more than one house, say which one is asking.
-        utosList={(quickUtosQuery.data ?? []).map((u) => {
-          const from = places.multi ? places.houseName(u.householdId) : null;
-          return from ? { ...u, senderName: `${u.senderName} · ${from}` } : u;
-        })}
-        onAck={(id, ack) => ackMutation.mutate({ id, ack })}
-        ackingId={ackingId}
-      />
     </View>
   );
 }

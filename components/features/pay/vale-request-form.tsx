@@ -10,9 +10,9 @@ import type { ValeRequest } from "@/services/api/vales";
 import { RequestDisclosure } from "./request-disclosure";
 
 const STATUS_LABEL: Record<ValeRequest["status"], string> = {
-  pending: "Waiting",
-  approved: "Approved",
-  declined: "Declined",
+  pending: "Hinihintay",
+  approved: "Aprubado",
+  declined: "Hindi pumayag",
 };
 
 /**
@@ -50,7 +50,7 @@ export function ValeRequestForm({
 
   return (
     <View style={styles.card}>
-      <Text style={styles.eyebrow}>Vale (cash advance)</Text>
+      <Text style={styles.eyebrow}>Mga vale</Text>
 
       {openRequests.length > 0 ? (
         <View style={styles.list}>

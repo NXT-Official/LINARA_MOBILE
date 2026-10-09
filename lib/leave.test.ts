@@ -1,6 +1,12 @@
 import { describe, expect, it } from "vitest";
 
-import { canCancelLeave, countLeaveDays, leaveCovers, leaveDatesLabel } from "./leave";
+import {
+  canCancelLeave,
+  countLeaveDays,
+  leaveCovers,
+  leaveDatesLabel,
+  requestsToList,
+} from "./leave";
 
 describe("countLeaveDays", () => {
   it("counts every day but her rest day", () => {
@@ -45,5 +51,18 @@ describe("labels and coverage", () => {
     expect(leaveCovers(l, "2026-10-05")).toBe(true);
     expect(leaveCovers(l, "2026-10-07")).toBe(true);
     expect(leaveCovers(l, "2026-10-08")).toBe(false);
+  });
+});
+
+describe("requestsToList", () => {
+  it("keeps a waiting request on the card ahead of cancelled ones for the same day", () => {
+    const rows = [
+      { id: "a", status: "cancelled" },
+      { id: "b", status: "cancelled" },
+      { id: "c", status: "approved" },
+      { id: "d", status: "cancelled" },
+      { id: "e", status: "pending" },
+    ];
+    expect(requestsToList(rows).map((r) => r.id)).toEqual(["e", "c", "a", "b"]);
   });
 });

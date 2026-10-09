@@ -8,7 +8,7 @@ function formatTimeOfDay(iso: string): string {
 }
 
 /**
- * A single floating Quick Utos banner (roadmap Story 7, step 5). Mirrors
+ * A single Quick Utos banner (roadmap Story 7, step 5). Mirrors
  * the web reference's UtosChip ack buttons ("Got it" -> seen, "Done" ->
  * done), but has no acked/checkmark state of its own -- the parent feed
  * drops the row entirely once acked, matching this screen's "vanish when

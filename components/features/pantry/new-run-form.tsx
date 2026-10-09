@@ -34,11 +34,15 @@ export function NewRunForm({
       return next;
     });
 
+  // A line ticked bought since the form opened drops out of the list, and out
+  // of what's sent (KNOWN_GAPS.md O53).
+  const chosen = toBuy.filter((g) => picked.has(g.id)).map((g) => g.id);
+
   const submit = () => {
     if (!title.trim()) return setError("Lagyan ng pangalan ang run.");
-    if (picked.size === 0) return setError("Pumili ng kahit isang bibilhin.");
+    if (chosen.length === 0) return setError("Pumili ng kahit isang bibilhin.");
     setError(null);
-    onSubmit(title.trim(), [...picked]);
+    onSubmit(title.trim(), chosen);
   };
 
   return (
@@ -51,7 +55,7 @@ export function NewRunForm({
         accessibilityLabel="Pangalan ng run"
         style={styles.input}
       />
-      <Text style={styles.label}>Mga bibilhin · {picked.size}</Text>
+      <Text style={styles.label}>Mga bibilhin · {chosen.length}</Text>
       <View style={styles.list}>
         {toBuy.map((g) => {
           const on = picked.has(g.id);

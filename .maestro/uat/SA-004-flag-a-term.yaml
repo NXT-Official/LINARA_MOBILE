@@ -27,7 +27,7 @@ env:
     element: 'May hindi tama\? →'
 - tapOn: 'May hindi tama\? →'
 - assertVisible: 'Aling detalye\?'
-- tapOn: "Sahod / wage"
+- tapOn: "Sahod"
 - tapOn: 'Hal\. Ang usapan namin.*'
 - inputText: "UAT: 8,500 ang usapan"
 - hideKeyboard

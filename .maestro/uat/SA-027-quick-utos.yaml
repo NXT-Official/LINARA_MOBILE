@@ -17,7 +17,7 @@ tags: [uat, helper, changes-data, needs-setup]
 - extendedWaitUntil:
     notVisible: ".*UAT utos dalawa.*"
     timeout: 15000
-# The utos's own "Tapos na" (the focus card's sits underneath the stack).
+# The utos's own "Tapos na", not the focus card's below it.
 - tapOn:
     text: "Tapos na"
     rightOf: "Sige"

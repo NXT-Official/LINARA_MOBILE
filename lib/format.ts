@@ -1,16 +1,11 @@
-const WEEKDAY_NAMES = [
-  "Sunday",
-  "Monday",
-  "Tuesday",
-  "Wednesday",
-  "Thursday",
-  "Friday",
-  "Saturday",
-] as const;
+import { DAY_NAMES } from "./week";
 
-/** `weekly_rest_day` is 0-6 (Sunday = 0), matching helper_profiles' CHECK constraint. */
+/**
+ * `weekly_rest_day` is 0-6 (Sunday = 0), matching helper_profiles' CHECK
+ * constraint. In Filipino, like Linggo ko and Record ko (KNOWN_GAPS.md O54).
+ */
 export function weekdayName(weeklyRestDay: number): string {
-  return WEEKDAY_NAMES[weeklyRestDay] ?? "—";
+  return DAY_NAMES[weeklyRestDay] ?? "—";
 }
 
 /** Formats a Postgres TIME string ("HH:MM:SS") as "6:00 AM". */

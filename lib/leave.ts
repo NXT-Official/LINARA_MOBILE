@@ -44,3 +44,19 @@ export function leaveDatesLabel(start: string, end: string): string {
 /** Does this leave cover this YYYY-MM-DD? */
 export const leaveCovers = (leave: { startDate: string; endDate: string }, iso: string) =>
   leave.startDate <= iso && iso <= leave.endDate;
+
+const STANDING: Record<string, number> = { pending: 0, approved: 1, declined: 2, cancelled: 3 };
+
+/**
+ * The few requests a card lists: waiting ones first (she can still cancel
+ * them), cancelled ones last, otherwise in the order given (newest first).
+ * Sorting by date alone let old cancelled requests for the same day push a
+ * waiting one off the card, with its Kanselahin (Maestro SA-066, 2026-10-09).
+ */
+export function requestsToList<T extends { status: string }>(requests: T[], max = 4): T[] {
+  return requests
+    .map((r, i) => ({ r, i }))
+    .sort((a, b) => (STANDING[a.r.status] ?? 1) - (STANDING[b.r.status] ?? 1) || a.i - b.i)
+    .slice(0, max)
+    .map(({ r }) => r);
+}

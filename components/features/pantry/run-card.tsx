@@ -49,9 +49,10 @@ export function RunCard({
   const [finishing, setFinishing] = useState(false);
   const spent = items.reduce((s, g) => s + (g.bought ? (g.actualCost ?? 0) : 0), 0);
   const expected = run.cashGiven === null ? null : Math.max(0, run.cashGiven - spent);
-  const [change, setChange] = useState(
-    expected === null ? "" : String(Math.round(expected * 100) / 100),
-  );
+  // What she typed. Until she types, the field follows the expected change,
+  // so costs entered after it opened still count (KNOWN_GAPS.md O51).
+  const [typed, setTyped] = useState<string | null>(null);
+  const change = typed ?? (expected === null ? "" : String(Math.round(expected * 100) / 100));
   const [changeError, setChangeError] = useState<string | null>(null);
   const unbought = items.filter((g) => !g.bought).length;
   const bought = items.length - unbought;
@@ -61,6 +62,12 @@ export function RunCard({
     const n = t === "" ? null : Number(t.replace(/[,₱\s]/g, ""));
     if (n !== null && (!Number.isFinite(n) || n < 0)) {
       setChangeError("Ilagay ang sukli bilang halaga, o iwanang blangko.");
+      return;
+    }
+    if (n !== null && run.cashGiven !== null && n > run.cashGiven) {
+      setChangeError(
+        `Hindi puwedeng mas malaki ang sukli sa perang ibinigay (${formatPeso(run.cashGiven)}).`,
+      );
       return;
     }
     setChangeError(null);
@@ -109,7 +116,9 @@ export function RunCard({
             <Text style={styles.peso}>₱</Text>
             <TextInput
               value={change}
-              onChangeText={setChange}
+              onChangeText={setTyped}
+              // Typing replaces the suggested amount instead of adding to it.
+              selectTextOnFocus
               keyboardType="decimal-pad"
               accessibilityLabel="Sukli na ibinalik"
               style={styles.changeInput}
@@ -138,7 +147,11 @@ export function RunCard({
           />
           <PrimaryButton
             label="Tapos na"
-            onPress={() => setFinishing(true)}
+            onPress={() => {
+              setTyped(null);
+              setChangeError(null);
+              setFinishing(true);
+            }}
             style={styles.action}
           />
         </View>

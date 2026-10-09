@@ -1,3 +1,5 @@
+import { isAuthRetryableFetchError } from "@supabase/supabase-js";
+
 import { MANAGER_DASHBOARD_URL } from "@/lib/env";
 import { unregisterForPush } from "@/lib/notifications";
 import { queryClient } from "@/lib/query-client";
@@ -8,6 +10,18 @@ import { supabase } from "@/services/supabase";
 export type AccountKind = "helper" | "manager";
 
 const MANAGER_USER_TYPES = ["primary_manager", "co_manager", "remote_admin"];
+
+/**
+ * When Auth can't be reached: no connection (status 0), or the server is down
+ * for a moment. Its own message is the raw network error ("fetch failed:
+ * java.net.UnknownHostException: ..."), KNOWN_GAPS.md O54.
+ */
+const unreachable = (error: { status?: number }) =>
+  new Error(
+    error.status === 0
+      ? "Walang internet. Kumonekta muna, tapos subukan ulit."
+      : "Hindi maabot ang Linara ngayon. Subukan ulit mamaya.",
+  );
 
 /**
  * The signed-in account's kind, from `user_profiles.user_type`.
@@ -56,6 +70,7 @@ export async function signIn(email: string, password: string): Promise<AccountKi
     if (error.code === "email_not_confirmed") {
       throw new Error("Hindi pa na-confirm ang email mo. Buksan muna ang link sa inbox mo.");
     }
+    if (isAuthRetryableFetchError(error)) throw unreachable(error);
     throw new Error(error.message);
   }
 
@@ -99,6 +114,7 @@ export async function requestPasswordReset(email: string): Promise<void> {
         "Kakapadala lang namin ng link. Maghintay ng isang minuto bago humingi ulit.",
       );
     }
+    if (isAuthRetryableFetchError(error)) throw unreachable(error);
     throw new Error(error.message);
   }
 }
