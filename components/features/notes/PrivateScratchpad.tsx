@@ -3,6 +3,7 @@ import { ActivityIndicator, Alert, Pressable, StyleSheet, Text, View } from "rea
 import { Ionicons } from "@expo/vector-icons";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 
+import { AI_ENABLED } from "@/lib/ai";
 import { colors } from "@/lib/theme";
 import { TextField } from "@/components/ui/text-field";
 import { PrimaryButton } from "@/components/ui/primary-button";
@@ -37,7 +38,8 @@ function computeScheduledStart(targetDateOffset: number, targetTime: string): st
  * Private Notes Scratchpad (roadmap Story 9 / plan.md Section 3.2). Fully
  * isolated behind `helper_notes_privacy` RLS -- no manager code path can
  * read these rows. Typed and voice notes both land here; "Promote to Board"
- * is what turns one into a real, shared `tickets` row.
+ * is what turns one into a real, shared `tickets` row. Voice notes and
+ * "Gawing task" both need AI, so they're hidden while it's off (lib/ai.ts).
  */
 export function PrivateScratchpad({
   helperId,
@@ -196,24 +198,28 @@ export function PrivateScratchpad({
                 <>
                   <Text style={styles.noteText}>{note.text}</Text>
                   <View style={styles.noteActions}>
-                    <Pressable
-                      onPress={() => promoteMutation.mutate(note)}
-                      disabled={promotingId === note.id}
-                      style={styles.promoteButton}
-                    >
-                      {promotingId === note.id ? (
-                        <ActivityIndicator size="small" color={colors.pineTeal} />
-                      ) : (
-                        <>
-                          <Ionicons
-                            name="arrow-up-circle-outline"
-                            size={16}
-                            color={colors.pineTeal}
-                          />
-                          <Text style={styles.promoteText}>Gawing task</Text>
-                        </>
-                      )}
-                    </Pressable>
+                    {AI_ENABLED ? (
+                      <Pressable
+                        onPress={() => promoteMutation.mutate(note)}
+                        disabled={promotingId === note.id}
+                        style={styles.promoteButton}
+                      >
+                        {promotingId === note.id ? (
+                          <ActivityIndicator size="small" color={colors.pineTeal} />
+                        ) : (
+                          <>
+                            <Ionicons
+                              name="arrow-up-circle-outline"
+                              size={16}
+                              color={colors.pineTeal}
+                            />
+                            <Text style={styles.promoteText}>Gawing task</Text>
+                          </>
+                        )}
+                      </Pressable>
+                    ) : (
+                      <View />
+                    )}
                     {/* A note still waiting to sync has no row to change yet. */}
                     {note.id.startsWith("pending-") ? null : (
                       <View style={styles.iconActions}>
@@ -270,23 +276,27 @@ export function PrivateScratchpad({
           onPress={() => addTextMutation.mutate(draft.trim())}
         />
 
-        <Pressable
-          onPressIn={() => startRecording().catch(() => {})}
-          onPressOut={handleReleaseRecord}
-          style={[styles.recordButton, isRecording && styles.recordButtonActive]}
-        >
-          {addVoiceMutation.isPending ? (
-            <ActivityIndicator color={colors.cardCream} />
-          ) : (
-            <Ionicons
-              name={isRecording ? "mic" : "mic-outline"}
-              size={22}
-              color={colors.cardCream}
-            />
-          )}
-        </Pressable>
+        {AI_ENABLED && (
+          <Pressable
+            onPressIn={() => startRecording().catch(() => {})}
+            onPressOut={handleReleaseRecord}
+            style={[styles.recordButton, isRecording && styles.recordButtonActive]}
+          >
+            {addVoiceMutation.isPending ? (
+              <ActivityIndicator color={colors.cardCream} />
+            ) : (
+              <Ionicons
+                name={isRecording ? "mic" : "mic-outline"}
+                size={22}
+                color={colors.cardCream}
+              />
+            )}
+          </Pressable>
+        )}
       </View>
-      <Text style={styles.recordHint}>Hawakan ang mic para mag-record ng voice note.</Text>
+      {AI_ENABLED && (
+        <Text style={styles.recordHint}>Hawakan ang mic para mag-record ng voice note.</Text>
+      )}
     </View>
   );
 }
