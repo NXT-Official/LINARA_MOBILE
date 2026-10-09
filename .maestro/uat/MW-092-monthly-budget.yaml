@@ -1,0 +1,57 @@
+# UAT MW-092 (Manager (web) tab), in the app's manager WebView: set the
+# house's monthly budget below this month's spend and see "over by"; put it
+# back. Needs some spend this month and a ₱5,000 house budget to restore
+# (env BUDGET). "Nothing bought in <month> yet" needs a month with no spend
+# and no house budget, so it isn't covered here. Test manager.
+appId: com.linara.mobile
+name: MW-092 Monthly budget
+tags: [uat, manager, changes-data]
+env:
+  BUDGET: "5000"
+---
+- runFlow: ../common/sign-in-manager.yaml
+- tapOn: "Pantry"
+- extendedWaitUntil:
+    visible: "Budgets"
+    timeout: 20000
+- assertVisible: '₱[\d,]+ left'
+
+# Below this month's spend: over.
+- tapOn: "Budgets"
+- extendedWaitUntil:
+    visible: "Monthly budgets"
+    timeout: 10000
+- waitForAnimationToEnd
+# A tap lands mid-number, so select it and type over.
+- longPressOn:
+    text: '\d+'
+    above: "Cleaning Crew"
+- inputText: "100"
+- runFlow: ../common/settle.yaml
+- tapOn: "Save"
+- extendedWaitUntil:
+    notVisible: "Monthly budgets"
+    timeout: 15000
+- extendedWaitUntil:
+    visible: 'over by ₱[\d,]+'
+    timeout: 10000
+# "/ " and the amount are separate text nodes.
+- assertVisible: "₱100"
+- takeScreenshot: MW-092-over
+
+# Back to the house's budget.
+- tapOn: "Budgets"
+- extendedWaitUntil:
+    visible: "Monthly budgets"
+    timeout: 10000
+- waitForAnimationToEnd
+- longPressOn:
+    text: '\d+'
+    above: "Cleaning Crew"
+- inputText: ${BUDGET}
+- runFlow: ../common/settle.yaml
+- tapOn: "Save"
+- extendedWaitUntil:
+    visible: '₱[\d,]+ left'
+    timeout: 15000
+- assertVisible: "₱5,000"

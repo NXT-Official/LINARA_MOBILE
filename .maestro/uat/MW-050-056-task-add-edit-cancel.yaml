@@ -1,0 +1,173 @@
+# UAT MW-050, MW-051, MW-052 (length and note) and MW-056 (Manager (web)
+# tab), in the app's manager WebView, with the helper's side in the app:
+# add a task on Saturday (DAY/DAY_LABEL) from the plan: the default time is
+# the start of Kuya Marito's shift (9:00, no warning); 11 PM warns it's
+# outside his shift; set 10 AM, 1 hr and a house-standard note; it shows on
+# the plan and in the helper's Linggo ko; edit it to 2 PM with a new note;
+# cancel it (it stays, struck through, with who cancelled). Leaves the
+# cancelled task. Test manager and test helper (Kuya Marito, 9 AM-10 PM).
+appId: com.linara.mobile
+name: MW-050-056 Task add, edit, cancel
+tags: [uat, manager, helper, changes-data]
+env:
+  DAY_LABEL: Sat10
+  TITLE: UAT walis 2
+---
+- runFlow: ../common/sign-in-manager.yaml
+- tapOn: "Schedule"
+- extendedWaitUntil:
+    visible: "Plan view"
+    timeout: 20000
+
+# MW-050: from the plan's day.
+- scrollUntilVisible:
+    element: ${DAY_LABEL}
+    centerElement: true
+- tapOn:
+    text: "Add task"
+    below: ${DAY_LABEL}
+- extendedWaitUntil:
+    visible: "New task"
+    timeout: 10000
+- waitForAnimationToEnd
+- assertVisible: "Assign to: Kuya Marito.*"
+- assertVisible: "09:00"
+- assertNotVisible: ".*outside .*shift.*"
+- tapOn: "Title"
+- inputText: ${TITLE}
+- runFlow: ../common/settle.yaml
+
+# MW-051: outside his shift warns.
+- runFlow:
+    file: ../common/set-web-time.yaml
+    env:
+      FIELD: "09:00"
+      HOUR: "11"
+      MINUTE: "00"
+      AMPM: PM
+- extendedWaitUntil:
+    visible: "That's outside Marito's shift.*"
+    timeout: 5000
+- takeScreenshot: MW-051-outside-shift
+- runFlow:
+    file: ../common/set-web-time.yaml
+    env:
+      FIELD: "23:00"
+      HOUR: "10"
+      MINUTE: "00"
+      AMPM: AM
+- assertNotVisible: ".*outside .*shift.*"
+
+# MW-052: length and house-standard note.
+- tapOn: "Not set"
+- tapOn: "1 hr"
+- tapOn: 'House-standard note \(optional\)'
+- inputText: "UAT note one"
+- runFlow: ../common/settle.yaml
+- scrollUntilVisible:
+    element: "Add to board"
+    centerElement: true
+- tapOn: "Add to board"
+- extendedWaitUntil:
+    notVisible: "New task"
+    timeout: 15000
+- scrollUntilVisible:
+    element: ".*10:00 AM . 11:00 AM ${TITLE}.*"
+    centerElement: true
+- takeScreenshot: MW-050-on-plan
+
+# The helper sees it in Linggo ko.
+- runFlow: ../common/sign-in-staff.yaml
+- tapOn: "Linggo ko"
+- scrollUntilVisible:
+    element: ".*${TITLE}.*"
+    centerElement: true
+- takeScreenshot: MW-050-helper-week
+
+# MW-056: edit time and note, then cancel.
+- runFlow: ../common/sign-in-manager.yaml
+- tapOn: "Schedule"
+- extendedWaitUntil:
+    visible: "Plan view"
+    timeout: 20000
+- scrollUntilVisible:
+    element: ".*${TITLE}.*"
+    centerElement: true
+- tapOn: ".*${TITLE}.*"
+- extendedWaitUntil:
+    visible: "Edit task"
+    timeout: 10000
+- waitForAnimationToEnd
+- runFlow:
+    file: ../common/set-web-time.yaml
+    env:
+      FIELD: "10:00"
+      HOUR: "2"
+      MINUTE: "00"
+      AMPM: PM
+- scrollUntilVisible:
+    element: "UAT note one"
+    centerElement: true
+# The note is left-aligned, so a tap puts the cursor after the text.
+- tapOn: "UAT note one"
+- eraseText: 20
+- inputText: "UAT note two"
+- runFlow: ../common/settle.yaml
+- scrollUntilVisible:
+    element: "Save"
+    centerElement: true
+- tapOn: "Save"
+- extendedWaitUntil:
+    notVisible: "Edit task"
+    timeout: 15000
+- scrollUntilVisible:
+    element: ".*2:00 PM . 3:00 PM ${TITLE}.*"
+    centerElement: true
+# The new time reaches the helper's phone.
+- runFlow: ../common/sign-in-staff.yaml
+- tapOn: "Linggo ko"
+- scrollUntilVisible:
+    element: ${TITLE}
+    centerElement: true
+- assertVisible:
+    text: "2:00 PM"
+    leftOf: ${TITLE}
+
+- runFlow: ../common/sign-in-manager.yaml
+- tapOn: "Schedule"
+- extendedWaitUntil:
+    visible: "Plan view"
+    timeout: 20000
+- scrollUntilVisible:
+    element: ".*${TITLE}.*"
+    centerElement: true
+- tapOn: ".*${TITLE}.*"
+- extendedWaitUntil:
+    visible: "Edit task"
+    timeout: 10000
+- assertVisible: ".*UAT note two.*"
+- scrollUntilVisible:
+    element: "Cancel task"
+    centerElement: true
+- tapOn: "Cancel task"
+- tapOn: "Yes, cancel it"
+- extendedWaitUntil:
+    notVisible: "Edit task"
+    timeout: 15000
+# Struck through on the plan, with who cancelled it.
+- scrollUntilVisible:
+    element: ".*Cancelled ${TITLE} By Naaxtech Linara.*"
+    centerElement: true
+- tapOn: ".*${TITLE}.*"
+- extendedWaitUntil:
+    visible: "Cancelled task"
+    timeout: 10000
+- assertVisible: "Restore"
+- takeScreenshot: MW-056-cancelled
+# Gone from the helper's phone.
+- runFlow: ../common/sign-in-staff.yaml
+- tapOn: "Linggo ko"
+- extendedWaitUntil:
+    visible: "Sabado, .*"
+    timeout: 10000
+- assertNotVisible: ${TITLE}

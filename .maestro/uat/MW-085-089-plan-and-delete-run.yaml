@@ -1,0 +1,86 @@
+# UAT MW-085 and MW-089 (Manager (web) tab), in the app's manager WebView:
+# plan a run from Needed (lines, shopper, cash), save it as a draft, see it
+# under Runs with those lines gone from Needed; then delete the draft and
+# see its lines come back. Nothing stays. Needs Kamatis and Tofu on Needed
+# and Kuya Marito active. Test manager.
+appId: com.linara.mobile
+name: MW-085-089 Plan and delete a run
+tags: [uat, manager, changes-data]
+---
+- runFlow: ../common/sign-in-manager.yaml
+- tapOn: "Pantry"
+- extendedWaitUntil:
+    visible: 'Needed \d+'
+    timeout: 20000
+- copyTextFrom: 'Needed \d+'
+- evalScript: ${output.neededBefore = maestro.copiedText}
+
+# MW-085: plan a run.
+- scrollUntilVisible:
+    element: "Plan a run"
+    centerElement: true
+- tapOn: "Plan a run"
+- extendedWaitUntil:
+    visible: "New run"
+    timeout: 10000
+- tapOn: "Kamatis 5 pcs"
+- tapOn: "Tofu 2 pcs"
+- assertVisible: "2"
+- scrollUntilVisible:
+    element: "Name"
+    centerElement: true
+- tapOn: "Name"
+- inputText: "UAT run 5"
+- runFlow: ../common/settle.yaml
+# The shopper picker is a search box whose list opens under the keyboard:
+# type the name and Enter picks it (and closes the keyboard, so no settle:
+# hideKeyboard with no keyboard up is Back, which closes the sheet).
+- tapOn: 'Add someone to this run.*'
+- inputText: "Marito"
+- pressKey: Enter
+- extendedWaitUntil:
+    visible: "Take Kuya Marito off this run"
+    timeout: 10000
+- scrollUntilVisible:
+    element: 'Cash given \(₱\)'
+    centerElement: true
+- tapOn: 'Cash given \(₱\)'
+- inputText: "200"
+- runFlow: ../common/settle.yaml
+- tapOn: "Save draft"
+- extendedWaitUntil:
+    notVisible: "New run"
+    timeout: 15000
+# Its lines left Needed.
+- runFlow: ../common/scroll-to-top.yaml
+- scrollUntilVisible:
+    element: 'Needed \d+'
+    centerElement: true
+- assertNotVisible: "Edit Kamatis"
+- assertNotVisible: "Edit Tofu"
+- tapOn: 'Runs \d+.*'
+- extendedWaitUntil:
+    visible: ".*UAT run 5.*"
+    timeout: 10000
+- takeScreenshot: MW-085-run-listed
+- tapOn: ".*UAT run 5.*"
+- extendedWaitUntil:
+    visible: "On this run · 2"
+    timeout: 10000
+- assertVisible: ".*Kamatis.*"
+- assertVisible: ".*Tofu.*"
+
+# MW-089: delete the draft; its lines go back to Needed.
+- scrollUntilVisible:
+    element: "Delete"
+    centerElement: true
+- tapOn: "Delete"
+- extendedWaitUntil:
+    notVisible: "On this run · 2"
+    timeout: 15000
+- tapOn: 'Needed \d+'
+- extendedWaitUntil:
+    visible: "Edit Kamatis"
+    timeout: 10000
+- assertVisible: "Edit Tofu"
+- assertVisible: ${output.neededBefore}

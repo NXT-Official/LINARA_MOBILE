@@ -1,0 +1,75 @@
+# UAT MW-054 and MW-055 (Manager (web) tab), in the app's manager WebView:
+# switch Week / By person / List / Month and step weeks; search a task from
+# another week (SEARCH, on SEARCH_WEEK), "Show in week" jumps there; the
+# Cancelled chip narrows the plan and the phone's Filter button reads
+# "Filter · on". Read-only. Test manager.
+appId: com.linara.mobile
+name: MW-054-055 Plan views and search
+tags: [uat, manager]
+env:
+  SEARCH: Secure windows
+  SEARCH_WEEK: Sep 28 – Oct 4
+---
+- runFlow: ../common/sign-in-manager.yaml
+- tapOn: "Schedule"
+- extendedWaitUntil:
+    visible: "Plan view"
+    timeout: 20000
+- copyTextFrom: '\w{3} \d+ – \w{3} \d+'
+- evalScript: ${output.thisWeek = maestro.copiedText}
+
+# MW-054: views.
+- tapOn: "By person"
+- extendedWaitUntil:
+    visible: ".*Marito.*"
+    timeout: 10000
+- takeScreenshot: MW-054-by-person
+- tapOn: "List"
+- waitForAnimationToEnd
+- takeScreenshot: MW-054-list
+- tapOn: "Month"
+- extendedWaitUntil:
+    visible: "Next month"
+    timeout: 10000
+- takeScreenshot: MW-054-month
+- tapOn: "Week"
+- extendedWaitUntil:
+    visible: "Next week"
+    timeout: 10000
+- tapOn: "Next week"
+- extendedWaitUntil:
+    notVisible: ${output.thisWeek}
+    timeout: 10000
+- tapOn: "Previous week"
+- tapOn: "Previous week"
+- tapOn: "Today"
+- extendedWaitUntil:
+    visible: ${output.thisWeek}
+    timeout: 10000
+
+# MW-055: search finds a task on any date; Show in week jumps there.
+- tapOn: "Filter"
+- tapOn: "Search tasks on every date"
+- inputText: ${SEARCH}
+- runFlow: ../common/settle.yaml
+- extendedWaitUntil:
+    visible: ".*${SEARCH}.*"
+    timeout: 10000
+- takeScreenshot: MW-055-search
+- tapOn: "Show in week"
+- extendedWaitUntil:
+    visible: ${SEARCH_WEEK}
+    timeout: 10000
+- assertVisible: ".*${SEARCH}.*"
+- tapOn: "Today"
+# The Cancelled chip narrows the plan; the Filter button says it's on.
+- tapOn:
+    text: "Cancelled"
+    below: "Search tasks on every date"
+- waitForAnimationToEnd
+- assertVisible: "Filter · on"
+- takeScreenshot: MW-055-cancelled-filter
+- tapOn:
+    text: "All"
+    below: "Search tasks on every date"
+- assertVisible: "Filter"

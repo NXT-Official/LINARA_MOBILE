@@ -1,0 +1,7 @@
+# Closes the keyboard and waits for the screen to stop moving. In the
+# manager WebView the keyboard shifts sheets, and the accessibility tree
+# lags behind, so a tap straight after typing can land on the old spot.
+appId: com.linara.mobile
+---
+- hideKeyboard
+- waitForAnimationToEnd

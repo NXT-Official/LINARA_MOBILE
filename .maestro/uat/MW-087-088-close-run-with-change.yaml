@@ -1,0 +1,134 @@
+# UAT MW-087 and MW-088 (Manager (web) tab), in the app's manager WebView:
+# make a one-line run (UAT sili) with ₱50 and send it to shop; tick the line
+# bought with no cost (MW-088: "1 bought line has no cost yet", no "Use");
+# add its cost, take "Use ₱30" (MW-087), raise the cash to ₱60 and the
+# change to ₱40, close; History shows ₱20 / ₱60, balanced. Leaves a closed
+# run (closed runs can't be deleted). Test manager, Kuya Marito active.
+appId: com.linara.mobile
+name: MW-087-088 Close a run with change
+tags: [uat, manager, changes-data]
+env:
+  RUN: UAT run 6
+---
+- runFlow: ../common/sign-in-manager.yaml
+- tapOn: "Pantry"
+- extendedWaitUntil:
+    visible: 'Needed.*'
+    timeout: 20000
+
+# A line to buy.
+- scrollUntilVisible:
+    element: "Qty"
+- tapOn:
+    text: "Add item"
+    below: 'Needed.*'
+- waitForAnimationToEnd
+- inputText: "UAT sili"
+# Enter adds it; the Add button can sit below the fold.
+- pressKey: Enter
+- runFlow: ../common/settle.yaml
+- extendedWaitUntil:
+    visible: "Edit UAT sili"
+    timeout: 15000
+
+# A run with just that line, ₱50, sent to shop.
+- runFlow: ../common/scroll-to-top.yaml
+- scrollUntilVisible:
+    element: "Plan a run"
+    centerElement: true
+- tapOn: "Plan a run"
+- extendedWaitUntil:
+    visible: "New run"
+    timeout: 10000
+# The pick list scrolls on its own; filter it so the line is in view.
+- tapOn: "Find an item in Needed"
+- inputText: "UAT sili"
+- runFlow: ../common/settle.yaml
+- tapOn: "UAT sili 1 pc"
+- assertVisible: "1"
+- scrollUntilVisible:
+    element: "Name"
+    centerElement: true
+- tapOn: "Name"
+- inputText: ${RUN}
+- runFlow: ../common/settle.yaml
+# The shopper picker is a search box whose list opens under the keyboard:
+# type the name and Enter picks it (and closes the keyboard, so no settle:
+# hideKeyboard with no keyboard up is Back, which closes the sheet).
+- tapOn: 'Add someone to this run.*'
+- inputText: "Marito"
+- pressKey: Enter
+- extendedWaitUntil:
+    visible: "Take Kuya Marito off this run"
+    timeout: 10000
+- scrollUntilVisible:
+    element: 'Cash given \(₱\)'
+    centerElement: true
+- tapOn: 'Cash given \(₱\)'
+- inputText: "50"
+- runFlow: ../common/settle.yaml
+- tapOn: "Send to shop"
+- extendedWaitUntil:
+    notVisible: "New run"
+    timeout: 15000
+- runFlow: ../common/scroll-to-top.yaml
+- scrollUntilVisible:
+    element: 'Runs \d+.*'
+    centerElement: true
+- tapOn: 'Runs \d+.*'
+- tapOn: ".*${RUN} Ready to shop.*"
+- extendedWaitUntil:
+    visible: "Ready to shop"
+    timeout: 10000
+
+# MW-088: bought with no cost.
+- tapOn: "Bought UAT sili"
+- extendedWaitUntil:
+    visible: "1 bought line has no cost yet.*"
+    timeout: 10000
+- assertNotVisible: "Use ₱.*"
+- assertNotVisible: ".*not accounted for.*"
+- takeScreenshot: MW-088-no-cost
+
+# MW-087: add the cost, use the expected change, edit the cash, close.
+- tapOn: "What UAT sili cost"
+- inputText: "20"
+# Enter saves the cost and closes the keyboard (no settle: see the shopper).
+- pressKey: Enter
+- waitForAnimationToEnd
+- scrollUntilVisible:
+    element: "Use ₱30"
+    centerElement: true
+- assertVisible: "Expected back:.*"
+- tapOn: "Use ₱30"
+- extendedWaitUntil:
+    visible: "It balances."
+    timeout: 10000
+# A tap lands mid-number in these centred fields, so select it and type over.
+- longPressOn: "Cash given"
+- inputText: "60"
+- runFlow: ../common/settle.yaml
+- assertVisible: "₱10 not accounted for."
+- longPressOn: "Change returned"
+- inputText: "40"
+- runFlow: ../common/settle.yaml
+- assertVisible: "It balances."
+- takeScreenshot: MW-087-balanced
+- scrollUntilVisible:
+    element: "Close run"
+    centerElement: true
+- tapOn: "Close run"
+- extendedWaitUntil:
+    notVisible: "Close run"
+    timeout: 15000
+- runFlow: ../common/scroll-to-top.yaml
+- scrollUntilVisible:
+    element: "History"
+    centerElement: true
+- tapOn: "History"
+- extendedWaitUntil:
+    visible: ".*${RUN}.*"
+    timeout: 10000
+# The History row is one text node.
+- assertVisible: ".*${RUN} .*₱20 / ₱60 Balanced"
+- takeScreenshot: MW-087-history

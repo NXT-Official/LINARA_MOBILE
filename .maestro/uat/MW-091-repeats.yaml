@@ -1,0 +1,83 @@
+# UAT MW-091 (Manager (web) tab), in the app's manager WebView: save a
+# repeat with one item, start a draft run from it (the item is on it),
+# delete the draft and the repeat, and remove the item the draft put back on
+# Needed. Nothing stays. Test manager.
+appId: com.linara.mobile
+name: MW-091 Repeats
+tags: [uat, manager, changes-data]
+---
+- runFlow: ../common/sign-in-manager.yaml
+- tapOn: "Pantry"
+- extendedWaitUntil:
+    visible: "Repeats"
+    timeout: 20000
+- scrollUntilVisible:
+    element: "Repeats"
+    centerElement: true
+- tapOn: "Repeats"
+- tapOn: "New repeat"
+- extendedWaitUntil:
+    visible: "Add an item"
+    timeout: 10000
+- waitForAnimationToEnd
+- tapOn: "Name"
+- inputText: "UAT repeat"
+- runFlow: ../common/settle.yaml
+- scrollUntilVisible:
+    element: "Add an item"
+    centerElement: true
+- tapOn: "Add an item"
+- inputText: "UAT luya"
+# Enter adds the line and keeps the field (and the keyboard) up.
+- pressKey: Enter
+- runFlow: ../common/settle.yaml
+- assertVisible: "UAT luya"
+- tapOn: "Save"
+- extendedWaitUntil:
+    visible: "Edit UAT repeat"
+    timeout: 15000
+- takeScreenshot: MW-091-saved
+
+# Start a draft from it.
+- tapOn:
+    text: ".*Start"
+    below: "Edit UAT repeat"
+    index: 0
+- extendedWaitUntil:
+    visible: "Draft"
+    timeout: 15000
+- assertVisible: ".*UAT luya.*"
+- takeScreenshot: MW-091-draft
+# Delete the draft (its line goes to Needed).
+- scrollUntilVisible:
+    element: "Delete"
+    centerElement: true
+- tapOn: "Delete"
+- extendedWaitUntil:
+    notVisible: "Draft"
+    timeout: 15000
+
+# Delete the repeat.
+- runFlow: ../common/scroll-to-top.yaml
+- scrollUntilVisible:
+    element: "Repeats"
+    centerElement: true
+- tapOn: "Repeats"
+- tapOn: "Edit UAT repeat"
+- scrollUntilVisible:
+    element: "Delete"
+    centerElement: true
+- tapOn: "Delete"
+- extendedWaitUntil:
+    notVisible: "Edit UAT repeat"
+    timeout: 15000
+
+# And the line the draft left on Needed.
+- tapOn: 'Needed.*'
+- scrollUntilVisible:
+    element: "Remove UAT luya"
+    centerElement: true
+- tapOn: "Remove UAT luya"
+- extendedWaitUntil:
+    notVisible: "Remove UAT luya"
+    timeout: 15000

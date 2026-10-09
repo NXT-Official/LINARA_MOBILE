@@ -1,0 +1,13 @@
+# Swipes the screen back to the top. In the manager WebView an element
+# scrolled out of view stays in the tree with clipped bounds, so
+# scrollUntilVisible with direction UP can stop short.
+appId: com.linara.mobile
+---
+- repeat:
+    times: 4
+    commands:
+      - swipe:
+          start: 50%, 30%
+          end: 50%, 90%
+          duration: 300
+- waitForAnimationToEnd

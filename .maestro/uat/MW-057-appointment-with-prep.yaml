@@ -1,0 +1,104 @@
+# UAT MW-057 (Manager (web) tab), in the app's manager WebView: add an
+# appointment on DAY at 6 PM with a prep task 2 hours before (4 PM, Kuya
+# Marito); the prep shows in the appointment and on the plan; move the
+# appointment to 7 PM and the prep follows to 5 PM; delete it and the prep
+# goes. Nothing stays. Test manager.
+appId: com.linara.mobile
+name: MW-057 Appointment with prep tasks
+tags: [uat, manager, changes-data]
+env:
+  DAY: 10 October 2026
+  DAY_LABEL: Sat10
+---
+- runFlow: ../common/sign-in-manager.yaml
+- tapOn: "Schedule"
+- extendedWaitUntil:
+    visible: "Plan view"
+    timeout: 20000
+- tapOn: "Appointments"
+- tapOn: "New appointment"
+- extendedWaitUntil:
+    visible: "Save appointment"
+    timeout: 10000
+- waitForAnimationToEnd
+- tapOn: "Title"
+- inputText: "UAT appointment"
+- runFlow: ../common/settle.yaml
+# Date: the WebView's date dialog.
+- tapOn: '\d{4}-\d{2}-\d{2}'
+- tapOn: ${DAY}
+- tapOn: "SET"
+- waitForAnimationToEnd
+- runFlow:
+    file: ../common/set-web-time.yaml
+    env:
+      FIELD: "06:00"
+      HOUR: "6"
+      MINUTE: "00"
+      AMPM: PM
+# One prep task, 2 hours before.
+- tapOn: "Add prep"
+- tapOn: "Prep task title"
+- inputText: "UAT prep"
+- runFlow: ../common/settle.yaml
+# A long press doesn't select in this number field; the tap lands after the 1.
+- tapOn: "1, How long before hours"
+- eraseText: 3
+- inputText: "2"
+- runFlow: ../common/settle.yaml
+- scrollUntilVisible:
+    element: "Save appointment"
+    centerElement: true
+- tapOn: "Save appointment"
+- extendedWaitUntil:
+    notVisible: "Save appointment"
+    timeout: 15000
+- extendedWaitUntil:
+    visible: "UAT appointment"
+    timeout: 10000
+- assertVisible: "6:00 PM"
+- assertVisible: ".*4:00 PM . Marito"
+- takeScreenshot: MW-057-added
+# The prep is on the plan at 4 PM.
+- tapOn: "Plan"
+- scrollUntilVisible:
+    element: ".*4:00 PM.*UAT prep.*"
+    centerElement: true
+
+# Move it to 7 PM: the prep follows to 5 PM.
+- runFlow: ../common/scroll-to-top.yaml
+- tapOn: "Appointments"
+- tapOn: "Edit"
+- extendedWaitUntil:
+    visible: "Edit appointment"
+    timeout: 10000
+- waitForAnimationToEnd
+- runFlow:
+    file: ../common/set-web-time.yaml
+    env:
+      FIELD: "18:00"
+      HOUR: "7"
+      MINUTE: "00"
+      AMPM: PM
+- tapOn: "Save changes"
+- extendedWaitUntil:
+    visible: "7:00 PM"
+    timeout: 15000
+- tapOn: "Plan"
+- scrollUntilVisible:
+    element: ".*5:00 PM.*UAT prep.*"
+    centerElement: true
+- takeScreenshot: MW-057-moved
+
+# Delete it: the prep goes too.
+- runFlow: ../common/scroll-to-top.yaml
+- tapOn: "Appointments"
+- tapOn: "Remove appointment"
+- extendedWaitUntil:
+    notVisible: "UAT appointment"
+    timeout: 15000
+- tapOn: "Plan"
+- scrollUntilVisible:
+    element: ${DAY_LABEL}
+    centerElement: true
+- assertNotVisible: ".*UAT prep.*"

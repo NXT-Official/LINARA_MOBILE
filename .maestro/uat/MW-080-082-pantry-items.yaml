@@ -1,0 +1,110 @@
+# UAT MW-080, MW-081, MW-082 (Manager (web) tab), in the app's manager
+# WebView: add a pantry item, lower it to Running low and Out (low means
+# below "Keep at least", 2026-10-07), edit it, delete it. Nothing stays.
+# Test manager. The grocery quick-add sits behind the modal with its own
+# "Add" and "Unit", so the modal's are picked by position.
+appId: com.linara.mobile
+name: MW-080-082 Pantry items
+tags: [uat, manager, changes-data]
+---
+- runFlow: ../common/sign-in-manager.yaml
+- tapOn: "Pantry"
+- extendedWaitUntil:
+    visible: "Add item"
+    timeout: 20000
+
+# MW-080: add an item with a quantity, unit, buy-more-at and shelf.
+- tapOn: "Add item"
+- assertVisible: "Add pantry item"
+# The keyboard moves the sheet and the WebView's tree lags behind it, so
+# close the keyboard and let it settle before the next field.
+- waitForAnimationToEnd
+- tapOn: "Name"
+- inputText: "UAT bangus"
+- runFlow: ../common/settle.yaml
+- tapOn: "1, On hand"
+- eraseText: 3
+- inputText: "3"
+- runFlow: ../common/settle.yaml
+- tapOn: "1, Keep at least"
+- eraseText: 3
+- inputText: "2"
+- runFlow: ../common/settle.yaml
+- tapOn: "Category"
+- tapOn: "Fresh"
+- tapOn:
+    text: "Add"
+    rightOf: "Cancel"
+- extendedWaitUntil:
+    notVisible: "Add pantry item"
+    timeout: 15000
+# Fresh is the second shelf, so the new item shows near the top.
+- extendedWaitUntil:
+    visible: "Edit UAT bangus"
+    timeout: 15000
+- assertVisible: "Keep at least 2 pcs"
+- assertVisible: "Fresh"
+- takeScreenshot: MW-080-added
+
+# MW-081: at 2 (= keep at least) it's fine; at 1 it's running low and is
+# suggested on Needed; at 0 it's out.
+- tapOn: "One less UAT bangus"
+- assertNotVisible: "Running low"
+- tapOn: "One less UAT bangus"
+- extendedWaitUntil:
+    visible: "Running low"
+    timeout: 10000
+# The header count is its own text node: "1" + " running low".
+- assertVisible: " running low"
+- takeScreenshot: MW-081-low
+- tapOn: "One less UAT bangus"
+- extendedWaitUntil:
+    visible: "Out"
+    timeout: 10000
+- scrollUntilVisible:
+    element: "Suggested, not on the list yet"
+- takeScreenshot: MW-081-suggested
+- scrollUntilVisible:
+    element: "Edit UAT bangus"
+    direction: UP
+
+# MW-082: edit name, unit and keep-at-least; then delete (asks first).
+- tapOn: "Edit UAT bangus"
+- assertVisible: "Save"
+- waitForAnimationToEnd
+- tapOn: "Name"
+- eraseText: 12
+- inputText: "UAT tilapia"
+- runFlow: ../common/settle.yaml
+- tapOn:
+    text: "Unit"
+    above: "Category"
+- eraseText: 5
+- inputText: "kg"
+- runFlow: ../common/settle.yaml
+- tapOn: "2, Keep at least"
+- eraseText: 3
+- inputText: "1"
+- runFlow: ../common/settle.yaml
+- tapOn: "Save"
+- extendedWaitUntil:
+    visible: "Edit UAT tilapia"
+    timeout: 15000
+- assertVisible: "Keep at least 1 kg"
+- tapOn: "Remove UAT tilapia"
+- assertVisible: "Keep"
+- tapOn: "Remove"
+- extendedWaitUntil:
+    notVisible: "Edit UAT tilapia"
+    timeout: 15000
+
+# Leftover from the helper's SA-051 (its flow adds but doesn't remove).
+- runFlow:
+    when:
+      visible: "Remove UAT asin"
+    commands:
+      - tapOn: "Remove UAT asin"
+      - tapOn: "Remove"
+      - extendedWaitUntil:
+          notVisible: "Edit UAT asin"
+          timeout: 15000

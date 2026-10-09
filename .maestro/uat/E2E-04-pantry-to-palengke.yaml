@@ -1,0 +1,146 @@
+# UAT E2E-04 (End to end tab), with MW-086 and MW-090 (Manager (web) tab):
+# the helper marks Test 2 "Ubos na" and, as pantry lead, drafts a run and
+# sends it for approval; the manager (WebView) sets the cash and approves;
+# the helper ticks Test 2 bought with its cost, snaps the receipt, gives
+# back the change and closes; the manager finds it in History, balanced,
+# with the receipt inside the run. env RUN/CASH/COST/CHANGE below.
+# Leaves a closed run (closed runs can't be deleted); the other Kailangan
+# lines ride along unbought and go back to Kailangan. Test helper (pantry
+# lead) and test manager.
+appId: com.linara.mobile
+name: E2E-04 Pantry to palengke and back
+tags: [uat, e2e, helper, manager, changes-data]
+env:
+  RUN: UAT run 5
+  CASH: "100"
+  COST: "40"
+  CHANGE: "60"
+---
+# 1. Helper: Test 2 runs out; draft a run and send it for approval.
+- runFlow: ../common/sign-in-staff.yaml
+- tapOn: "Pantry"
+- scrollUntilVisible:
+    element: "Ubos na ang Test 2"
+- tapOn: "Ubos na ang Test 2"
+- scrollUntilVisible:
+    element: "Tanggalin ang Test 2"
+    direction: UP
+- scrollUntilVisible:
+    element: "Gumawa ng run mula sa Kailangan"
+    direction: UP
+- tapOn: "Gumawa ng run mula sa Kailangan"
+- tapOn: "Palengke"
+- eraseText: 20
+- inputText: ${RUN}
+- hideKeyboard
+- assertVisible: 'Mga bibilhin · [1-9]\d*'
+- tapOn: "Gawin ang draft"
+- extendedWaitUntil:
+    visible: ${RUN}
+    timeout: 15000
+- scrollUntilVisible:
+    element: "Ipa-approve"
+- tapOn: "Ipa-approve"
+- scrollUntilVisible:
+    element: "Bawiin"
+
+# 2. Manager (MW-086): open the waiting run, set the cash, approve.
+- runFlow: ../common/sign-in-manager.yaml
+- tapOn: "Pantry"
+- extendedWaitUntil:
+    visible: 'Runs \d+.*'
+    timeout: 20000
+- tapOn: 'Runs \d+.*'
+- extendedWaitUntil:
+    visible: ".*${RUN}.*"
+    timeout: 10000
+- tapOn: ".*${RUN}.*"
+- extendedWaitUntil:
+    visible: "Waiting for approval"
+    timeout: 10000
+- assertVisible: ".*Test 2.*"
+- scrollUntilVisible:
+    element: 'Cash given \(₱\)'
+    centerElement: true
+- tapOn: 'Cash given \(₱\)'
+- inputText: ${CASH}
+- runFlow: ../common/settle.yaml
+- scrollUntilVisible:
+    element: "Approve"
+    centerElement: true
+- tapOn: "Approve"
+# Approving closes the run; the list now shows it under "Ready to shop".
+- extendedWaitUntil:
+    visible: ".*${RUN} Ready to shop.*"
+    timeout: 15000
+- takeScreenshot: MW-086-approved
+
+# 3. Helper: shop Test 2, receipt, change, close.
+- runFlow: ../common/sign-in-staff.yaml
+- tapOn: "Pantry"
+- scrollUntilVisible:
+    element: ${RUN}
+# Every Kailangan line rode along, so Test 2 can be below the fold.
+- scrollUntilVisible:
+    element: "Test 2"
+    centerElement: true
+# The second match is the item's "bought" box (the first is its row).
+- tapOn:
+    text: "Test 2"
+    index: 1
+- tapOn: "—"
+- inputText: ${COST}
+- pressKey: Enter
+# (The card's "... pa ang natitira" total is scrolled off with nine lines.)
+- extendedWaitUntil:
+    visible: "Kunan ang resibo"
+    timeout: 10000
+- tapOn: "Kunan ang resibo"
+- tapOn: "Shutter"
+- tapOn: "Done"
+- extendedWaitUntil:
+    visible: "Kunan ulit ang resibo"
+    timeout: 30000
+- tapOn:
+    text: "Tapos na"
+    rightOf: "Kunan ulit ang resibo"
+- assertVisible: ".*nagastos = .*"
+- assertVisible: "Ibabalik sa Kailangan ang .* na hindi nabili."
+- assertVisible:
+    text: ${CHANGE}
+    below: ".*nagastos = .*"
+- tapOn: "Isara ang run"
+- scrollUntilVisible:
+    element: "Mga natapos na run"
+
+# 4. Manager (MW-090): History shows the run balanced, with its receipt;
+# the unbought lines are back on Needed.
+- runFlow: ../common/sign-in-manager.yaml
+- tapOn: "Pantry"
+- extendedWaitUntil:
+    visible: 'Needed \d+'
+    timeout: 20000
+- assertVisible: "Edit Kamatis"
+- tapOn: "History"
+- extendedWaitUntil:
+    visible: ".*${RUN}.*"
+    timeout: 10000
+- assertVisible: ".*1 receipt.*"
+- takeScreenshot: MW-090-history
+- tapOn: "Previous month"
+- extendedWaitUntil:
+    notVisible: ".*${RUN}.*"
+    timeout: 10000
+- tapOn: "Next month"
+- extendedWaitUntil:
+    visible: ".*${RUN}.*"
+    timeout: 10000
+- tapOn: ".*${RUN}.*"
+- extendedWaitUntil:
+    visible: "Done"
+    timeout: 10000
+- assertVisible: "It balances."
+- scrollUntilVisible:
+    element: "Receipts"
+    centerElement: true
+- takeScreenshot: E2E-04-closed-run

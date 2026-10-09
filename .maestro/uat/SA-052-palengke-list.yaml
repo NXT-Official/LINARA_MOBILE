@@ -21,6 +21,9 @@ tags: [uat, helper, changes-data]
 - eraseText: 20
 - inputText: "UAT dayap"
 - hideKeyboard
+# The edit form opens under the line; with a long list it ends below the fold.
+- scrollUntilVisible:
+    element: "I-save"
 - tapOn: "I-save"
 - scrollUntilVisible:
     element: "UAT dayap"

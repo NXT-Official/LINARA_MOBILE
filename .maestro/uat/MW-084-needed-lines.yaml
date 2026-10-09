@@ -1,0 +1,75 @@
+# UAT MW-084 (Manager (web) tab), in the app's manager WebView: on Needed,
+# add a line with a qty and unit, tick it bought, untick it, remove it.
+# Nothing stays (a bought line can't be deleted, so it's unticked first).
+# Needs 9+ lines on Needed for the search and chips. Test manager.
+appId: com.linara.mobile
+name: MW-084 Needed lines
+tags: [uat, manager, changes-data]
+---
+- runFlow: ../common/sign-in-manager.yaml
+- tapOn: "Pantry"
+- extendedWaitUntil:
+    visible: 'Needed \d+'
+    timeout: 20000
+# 9+ lines: search and chips show.
+- assertVisible: "Search grocery list"
+- assertVisible: "To buy"
+- assertVisible: "Bought today"
+
+# The quick-add field is exposed as "Add item", like the pantry's button.
+- scrollUntilVisible:
+    element: "Qty"
+- tapOn:
+    text: "Add item"
+    below: 'Needed \d+'
+- waitForAnimationToEnd
+- inputText: "UAT talong"
+- runFlow: ../common/settle.yaml
+- tapOn:
+    text: "1"
+    below: "Qty"
+- eraseText: 3
+- inputText: "2"
+- runFlow: ../common/settle.yaml
+- tapOn:
+    text: "pcs"
+    below: "Unit"
+- eraseText: 5
+- inputText: "kg"
+- runFlow: ../common/settle.yaml
+- tapOn: "Add"
+- extendedWaitUntil:
+    visible: "Edit UAT talong"
+    timeout: 15000
+- assertVisible: "2 kg"
+- takeScreenshot: MW-084-added
+
+# Tick it bought: it moves under "Bought today".
+- tapOn: "Bought UAT talong"
+- extendedWaitUntil:
+    notVisible: "Edit UAT talong"
+    timeout: 15000
+- scrollUntilVisible:
+    element: 'Bought today · \d+'
+- takeScreenshot: MW-084-bought
+# Untick, then remove (one tap; no confirm on a grocery line).
+- scrollUntilVisible:
+    element: "Bought UAT talong"
+- tapOn: "Bought UAT talong"
+- extendedWaitUntil:
+    visible: "Remove UAT talong"
+    timeout: 15000
+- tapOn: "Remove UAT talong"
+- extendedWaitUntil:
+    notVisible: "UAT talong"
+    timeout: 15000
+
+# Leftover from the helper's SA-052 when it picks an older line.
+- runFlow:
+    when:
+      visible: "Remove UAT kalamansi"
+    commands:
+      - tapOn: "Remove UAT kalamansi"
+      - extendedWaitUntil:
+          notVisible: "Remove UAT kalamansi"
+          timeout: 15000
