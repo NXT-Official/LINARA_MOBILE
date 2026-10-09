@@ -2,13 +2,15 @@
 # its cost, snap the receipt (the emulator's camera), give back the change,
 # close; unbought lines go back to Kailangan. Needs an approved ("ready")
 # run with cash for the test helper whose lines include ITEM, plus one more
-# line left unbought. env: RUN (title), ITEM, COST, CHANGE: edit them here
-# (a flow's own env wins over maestro -e).
+# line left unbought, and linked to an open task of the test helper's with
+# "palengke" in its title (closing the run finishes it: no second receipt).
+# env: RUN (title), ITEM, COST, CHANGE: edit them here (a flow's own env wins
+# over maestro -e).
 appId: com.linara.mobile
 name: SA-054 Shop and close a run
 tags: [uat, helper, changes-data, needs-setup]
 env:
-  RUN: UAT run 3
+  RUN: UAT run 4
   ITEM: UAT bawang
   COST: "60"
   CHANGE: "440"
@@ -58,3 +60,6 @@ env:
 - tapOn: "Isara ang run"
 - scrollUntilVisible:
     element: "Mga natapos na run"
+# The task carrying the run was finished with it: no "Palengke Run" card
+# asking for the receipt again (O55).
+- assertNotVisible: "Palengke Run"

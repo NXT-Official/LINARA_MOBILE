@@ -1,5 +1,5 @@
 import { useEffect } from "react";
-import { QueryClientProvider } from "@tanstack/react-query";
+import { PersistQueryClientProvider } from "@tanstack/react-query-persist-client";
 import { Stack } from "expo-router";
 import { StatusBar } from "expo-status-bar";
 import * as SplashScreen from "expo-splash-screen";
@@ -8,6 +8,7 @@ import { Fraunces_600SemiBold, Fraunces_700Bold } from "@expo-google-fonts/fraun
 import { NunitoSans_400Regular, NunitoSans_700Bold } from "@expo-google-fonts/nunito-sans";
 
 import { queryClient } from "@/lib/query-client";
+import { recordPersister, SAVED_RECORD_MAX_AGE, shouldSaveQuery } from "@/lib/query-persist";
 import { SessionProvider } from "@/lib/session-context";
 import { useOfflineSync } from "@/hooks/use-offline-sync";
 import { usePushNotifications } from "@/hooks/use-push-notifications";
@@ -56,9 +57,17 @@ export default function RootLayout() {
 
   return (
     <SessionProvider>
-      <QueryClientProvider client={queryClient}>
+      {/* Record ko is kept on the phone for when there's no internet (lib/query-persist.ts). */}
+      <PersistQueryClientProvider
+        client={queryClient}
+        persistOptions={{
+          persister: recordPersister,
+          maxAge: SAVED_RECORD_MAX_AGE,
+          dehydrateOptions: { shouldDehydrateQuery: shouldSaveQuery },
+        }}
+      >
         <AppShell />
-      </QueryClientProvider>
+      </PersistQueryClientProvider>
     </SessionProvider>
   );
 }

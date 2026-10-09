@@ -55,14 +55,19 @@ describe("labels and coverage", () => {
 });
 
 describe("requestsToList", () => {
-  it("keeps a waiting request on the card ahead of cancelled ones for the same day", () => {
+  it("lists a waiting request first and leaves out cancelled ones", () => {
     const rows = [
       { id: "a", status: "cancelled" },
-      { id: "b", status: "cancelled" },
+      { id: "b", status: "declined" },
       { id: "c", status: "approved" },
       { id: "d", status: "cancelled" },
       { id: "e", status: "pending" },
     ];
-    expect(requestsToList(rows).map((r) => r.id)).toEqual(["e", "c", "a", "b"]);
+    expect(requestsToList(rows).map((r) => r.id)).toEqual(["e", "b", "c"]);
+  });
+
+  it("shows at most four", () => {
+    const rows = ["a", "b", "c", "d", "e"].map((id) => ({ id, status: "approved" }));
+    expect(requestsToList(rows).map((r) => r.id)).toEqual(["a", "b", "c", "d"]);
   });
 });

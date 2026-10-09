@@ -21,8 +21,13 @@ const longDate = (iso: string) =>
  * Shown with or without a household, so she can leave Linara entirely. Her
  * records with each household stay with them, as the law requires; she's told
  * so, and pointed at her PDF first.
+ *
+ * While she's employed she can't ask yet (../LINARA/supabase/
+ * restrict-account-deletion.sql): she gives notice first (NoticeCard, above),
+ * the household ends the employment on her last day with her final pay, and
+ * then she can (KNOWN_GAPS.md O55, the user's choice 2026-10-09).
  */
-export function PrivacyAccountCard() {
+export function PrivacyAccountCard({ employed }: { employed: boolean }) {
   const queryClient = useQueryClient();
   const requestQuery = useQuery({
     queryKey: ["my-deletion-request"],
@@ -78,6 +83,20 @@ export function PrivacyAccountCard() {
           />
           {keep.isError ? <Text style={styles.error}>Hindi nabawi. Subukan ulit.</Text> : null}
         </>
+      ) : asking && employed ? (
+        <>
+          <Text style={styles.body}>
+            May trabaho ka pa, kaya hindi pa mabubura ang account mo. Kailangan munang matapos ang
+            employment mo, para maayos ang huling sahod at record mo.
+          </Text>
+          <Text style={styles.body}>
+            1. Magbigay ng abiso sa employer mo: &quot;Aalis ka na ba? Magbigay ng abiso&quot;, sa
+            itaas.
+          </Text>
+          <Text style={styles.body}>2. Tatapusin nila ang employment mo sa huling araw mo.</Text>
+          <Text style={styles.body}>3. Bumalik dito at burahin ang account mo.</Text>
+          <PrimaryButton label="Sige" variant="secondary" onPress={() => setAsking(false)} />
+        </>
       ) : asking ? (
         <>
           <Text style={styles.body}>
@@ -88,10 +107,6 @@ export function PrivacyAccountCard() {
             Ang payslips, oras at leave mo ay mananatili sa household na pinagtrabahuhan mo nang
             hindi bababa sa tatlong taon, dahil iyon ang hinihingi ng batas. Kung gusto mo ng kopya,
             i-download muna ang PDF ng record mo sa itaas.
-          </Text>
-          <Text style={styles.body}>
-            Kung may trabaho ka pa, kailangan munang tapusin ng employer mo ang employment mo, para
-            maayos ang huling sahod mo.
           </Text>
           <TextField
             label="Bakit? (optional)"

@@ -1,10 +1,9 @@
-# UAT SA-087: asking to delete the account explains the 30 days and what
-# stays with the household. A helper who is still employed is told the
-# employer must end it first; if the request goes through instead, it is
-# taken back at once ("Huwag nang burahin"). Test helper.
+# UAT SA-087: a helper who is still employed can't ask to delete her account
+# yet (KNOWN_GAPS.md O55): she's told to give notice first, the employer ends
+# the employment, then she deletes. No request is made. Test helper (employed).
 appId: com.linara.mobile
 name: SA-087 Ask to delete the account
-tags: [uat, helper, changes-data]
+tags: [uat, helper]
 ---
 - runFlow: ../common/sign-in-staff.yaml
 - tapOn: "Record ko"
@@ -12,23 +11,11 @@ tags: [uat, helper, changes-data]
     element: "Burahin ang account ko"
 - tapOn: "Burahin ang account ko"
 - scrollUntilVisible:
-    element: ".*sa loob ng 30 araw.*"
-- scrollUntilVisible:
-    element: ".*hindi bababa sa tatlong taon.*"
-- scrollUntilVisible:
-    element: ".*kailangan munang tapusin ng employer mo.*"
-- scrollUntilVisible:
-    element: "Burahin ang account ko"
-- tapOn:
-    text: "Burahin ang account ko"
-    index: 0
-- waitForAnimationToEnd
-- takeScreenshot: SA-087-after-ask
-- runFlow:
-    when:
-      visible: "Huwag nang burahin"
-    commands:
-      - tapOn: "Huwag nang burahin"
-      - extendedWaitUntil:
-          notVisible: "Huwag nang burahin"
-          timeout: 15000
+    element: "May trabaho ka pa, kaya hindi pa mabubura ang account mo.*"
+- assertVisible: "1. Magbigay ng abiso sa employer mo.*"
+- assertVisible: "3. Bumalik dito at burahin ang account mo."
+# No way to send the request from here.
+- assertNotVisible: "Bakit\\? \\(optional\\)"
+- takeScreenshot: SA-087-employed
+- tapOn: "Sige"
+- assertNotVisible: "Huwag nang burahin"

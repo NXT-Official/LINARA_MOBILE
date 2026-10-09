@@ -3,6 +3,7 @@ import { isAuthRetryableFetchError } from "@supabase/supabase-js";
 import { MANAGER_DASHBOARD_URL } from "@/lib/env";
 import { unregisterForPush } from "@/lib/notifications";
 import { queryClient } from "@/lib/query-client";
+import { clearSavedRecord } from "@/lib/query-persist";
 import { getQueuedActions } from "@/services/sqlite-queue";
 import { supabase } from "@/services/supabase";
 
@@ -144,4 +145,5 @@ export async function signOutHelper(): Promise<void> {
     throw new Error(error.message);
   }
   queryClient.clear();
+  await clearSavedRecord();
 }
