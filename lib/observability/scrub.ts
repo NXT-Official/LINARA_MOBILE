@@ -33,10 +33,24 @@ function filterQuoted(literal: string, inner: string): string {
   return PLAIN_IDENTIFIER.test(inner) ? literal : '"[Filtered]"';
 }
 
+/**
+ * `text` cut to MAX_TEXT_LENGTH characters. When the cut lands inside a word,
+ * the whole word goes: half an email address, phone number or token no longer
+ * matches the pattern that would mask it, and its first half would go out as
+ * it is.
+ */
+function capForScrubbing(text: string): string {
+  if (text.length <= MAX_TEXT_LENGTH) return text;
+  let end = MAX_TEXT_LENGTH;
+  if (!/\s/.test(text.charAt(end))) {
+    while (end > 0 && !/\s/.test(text.charAt(end - 1))) end -= 1;
+  }
+  return `${text.slice(0, end)}…`;
+}
+
 /** Removes secrets and personal data from one string. */
 export function scrubText(text: string): string {
-  const capped = text.length > MAX_TEXT_LENGTH ? `${text.slice(0, MAX_TEXT_LENGTH)}…` : text;
-  return capped
+  return capForScrubbing(text)
     .replace(QUOTED_LITERAL, filterQuoted)
     .replace(DATA_URI, "[data-uri]")
     .replace(JWT, "[jwt]")

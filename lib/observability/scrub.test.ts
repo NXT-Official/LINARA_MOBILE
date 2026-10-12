@@ -101,6 +101,24 @@ describe("scrubText", () => {
     scrubText(text);
     expect(performance.now() - started).toBeLessThan(50);
   });
+
+  it("drops the whole word a cut lands in, so no half email address goes out", () => {
+    // "x " × 995 is 1,990 characters, so the cut at 2,000 leaves "maria.sant",
+    // which no longer looks like an email address to the pattern.
+    const scrubbed = scrubText(`${"x ".repeat(995)}maria.santos@gmail.com was refused`);
+    expect(scrubbed).not.toContain("maria");
+    expect(scrubbed).toBe(`${"x ".repeat(995)}…`);
+  });
+
+  it("drops the whole word a cut lands in, so no half phone number goes out", () => {
+    const scrubbed = scrubText(`${"x ".repeat(997)}09171234567 refused`);
+    expect(scrubbed).not.toContain("0917");
+  });
+
+  it("keeps the word before a cut that lands on a space", () => {
+    // "x " × 997 is 1,994 characters, so "word12" ends exactly at the cut.
+    expect(scrubText(`${"x ".repeat(997)}word12 and more`)).toBe(`${"x ".repeat(997)}word12…`);
+  });
 });
 
 describe("scrubSentryEvent", () => {
