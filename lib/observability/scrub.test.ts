@@ -65,6 +65,42 @@ describe("scrubText", () => {
   it("leaves ordinary text alone", () => {
     expect(scrubText("Couldn't save the task (500)")).toBe("Couldn't save the task (500)");
   });
+
+  it("filters a quoted value Postgres echoes back, such as a name typed where a uuid goes", () => {
+    expect(scrubText('invalid input syntax for type uuid: "Lorna Bautista"')).toBe(
+      'invalid input syntax for type uuid: "[Filtered]"',
+    );
+  });
+
+  it("filters the quoted filter text in a PostgREST PGRST100 message", () => {
+    expect(scrubText('"failed to parse filter (eq.Lorna Bautista)" (line 1, column 4)')).toBe(
+      '"[Filtered]" (line 1, column 4)',
+    );
+  });
+
+  it("keeps quoted identifiers: tables, constraints, columns", () => {
+    const text = 'new row for relation "helpers" violates check constraint "helpers.wage_check_1"';
+    expect(scrubText(text)).toBe(text);
+  });
+
+  it("caps long text at 2,000 characters", () => {
+    const out = scrubText("x ".repeat(3_000));
+    expect(out).toBe(`${"x ".repeat(1_000)}…`);
+  });
+
+  it("filters a quoted value the cap cuts in half", () => {
+    const out = scrubText(`${"x".repeat(1_990)} "Lorna Bautista lives here"`);
+    expect(out).not.toContain("Lorna");
+  });
+
+  it.each([
+    ["a run of letters", "a".repeat(50_000)],
+    ["a run of dotted letters", "a.".repeat(25_000)],
+  ])("scrubs 50,000 characters of %s quickly", (_name, text) => {
+    const started = performance.now();
+    scrubText(text);
+    expect(performance.now() - started).toBeLessThan(50);
+  });
 });
 
 describe("scrubSentryEvent", () => {

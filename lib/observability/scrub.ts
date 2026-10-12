@@ -20,9 +20,24 @@ const LONG_BASE64 = /[A-Za-z0-9+/_-]{120,}={0,2}/g;
 const URL_TOKEN = /[a-z][a-z0-9+.-]*:\/\/[^\s"'<>)]+/gi;
 const BARE_PATH = /(^|[\s"'(=])(\/[^\s"'<>)]*)/g;
 
+// Longer text is cut before any pattern runs: the email and URL patterns
+// backtrack quadratically on long runs (50,000 letters took 5 s on the JS thread).
+const MAX_TEXT_LENGTH = 2_000;
+// A double-quoted literal, or one the cap left open at the end. Postgres and
+// PostgREST quote the value they reject: `invalid input syntax for type uuid:
+// "Lorna Bautista"`. Only plain identifiers (a table, a constraint) stay.
+const QUOTED_LITERAL = /"((?:[^"\\\n]|\\.)*)(?:"|$)/g;
+const PLAIN_IDENTIFIER = /^[A-Za-z0-9_.]{0,63}$/;
+
+function filterQuoted(literal: string, inner: string): string {
+  return PLAIN_IDENTIFIER.test(inner) ? literal : '"[Filtered]"';
+}
+
 /** Removes secrets and personal data from one string. */
 export function scrubText(text: string): string {
-  return text
+  const capped = text.length > MAX_TEXT_LENGTH ? `${text.slice(0, MAX_TEXT_LENGTH)}…` : text;
+  return capped
+    .replace(QUOTED_LITERAL, filterQuoted)
     .replace(DATA_URI, "[data-uri]")
     .replace(JWT, "[jwt]")
     .replace(BEARER, "$1[token]")

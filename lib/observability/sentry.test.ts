@@ -23,9 +23,18 @@ interface Env {
   SENTRY_ENVIRONMENT: string | null;
 }
 
-async function load(env: Env) {
+function boom(): never {
+  throw new Error("scrubber failed");
+}
+
+async function load(env: Env, { scrubThrows = false } = {}) {
   vi.resetModules();
   vi.doMock("../env", () => env);
+  if (scrubThrows) {
+    vi.doMock("./scrub", () => ({ scrubSentryEvent: boom, scrubSentryLog: boom }));
+  } else {
+    vi.doUnmock("./scrub");
+  }
   sdk.init.mockClear();
   const adapter = await import("./sentry");
   const options = sdk.init.mock.calls[0]?.[0];
@@ -82,6 +91,17 @@ describe("Sentry init", () => {
     const { options } = await load({ SENTRY_DSN: null, SENTRY_ENVIRONMENT: "development" });
     expect(options.enableNativeFramesTracking).toBe(false);
     expect(sdk.expoRouterIntegration).toHaveBeenCalledWith({ enableTimeToInitialDisplay: false });
+  });
+
+  it("drops whatever a scrubber throws on, so the SDK never falls back to sending it raw", async () => {
+    const { options } = await load(
+      { SENTRY_DSN: null, SENTRY_ENVIRONMENT: "preview" },
+      { scrubThrows: true },
+    );
+    expect(options.beforeSend?.({ type: undefined, message: "Lorna Bautista" }, {})).toBeNull();
+    expect(options.beforeSendTransaction?.({ type: "transaction" }, {})).toBeNull();
+    expect(options.beforeBreadcrumb?.({ message: "Lorna Bautista" })).toBeNull();
+    expect(options.beforeSendLog?.({ level: "warn", message: "Lorna Bautista" })).toBeNull();
   });
 
   it("scrubs errors, transactions, breadcrumbs and logs before they leave", async () => {

@@ -22,6 +22,22 @@ const settings = resolveSentrySettings({ dsn: SENTRY_DSN, environment: SENTRY_EN
 // src: https://docs.sentry.io/platforms/react-native/tracing/instrumentation/expo-router/ · 8.30.0 · 2026-10-12
 const inExpoGo = isRunningInExpoGo();
 
+// A hook that throws makes the SDK report the failure as a new internal event
+// that skips beforeSend and carries whatever the error says. A scrubber that
+// fails drops the item instead.
+// src: @sentry/core build/esm/client.js (_processEvent, __sentry__) · 10.76.0 · 2026-10-12
+function failClosed<A extends unknown[], R>(
+  hook: (...args: A) => R | null,
+): (...args: A) => R | null {
+  return (...args) => {
+    try {
+      return hook(...args);
+    } catch {
+      return null;
+    }
+  };
+}
+
 Sentry.init({
   // Off means no DSN at all, so the native SDK is not started either.
   dsn: settings.enabled ? settings.dsn : undefined,
@@ -49,10 +65,10 @@ Sentry.init({
     Sentry.expoRouterIntegration({ enableTimeToInitialDisplay: !inExpoGo }),
     Sentry.consoleLoggingIntegration({ levels: ["warn", "error"] }),
   ],
-  beforeSend: (event) => scrubSentryEvent(event),
-  beforeSendTransaction: (event) => scrubSentryEvent(event),
-  beforeBreadcrumb: (breadcrumb) => scrubSentryEvent(breadcrumb),
-  beforeSendLog: (log) => scrubSentryLog(log),
+  beforeSend: failClosed((event) => scrubSentryEvent(event)),
+  beforeSendTransaction: failClosed((event) => scrubSentryEvent(event)),
+  beforeBreadcrumb: failClosed((breadcrumb) => scrubSentryEvent(breadcrumb)),
+  beforeSendLog: failClosed((log) => scrubSentryLog(log)),
 });
 
 /**
