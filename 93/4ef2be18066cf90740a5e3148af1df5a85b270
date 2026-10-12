@@ -1,0 +1,93 @@
+lib/observability/url-sanitize.test.ts
+  s_f8d6ceb53516cd::t_5de476b0da4f82 48,63-65
+  s_f8d6ceb53516cd::t_200bdb338fea82 1-47,49-62,66-83
+app/_layout.tsx
+  s_f8d6ceb53516cd::t_f1165544f4c52f 16,26
+  s_f8d6ceb53516cd::t_9bb13145374197 2-3
+  s_f8d6ceb53516cd::t_fb105d1a5cdb54 45
+  s_f8d6ceb53516cd::t_dd6ef3c8342375 1
+  s_f8d6ceb53516cd::t_9bbbef02157acb 79-81
+app.json
+  s_f8d6ceb53516cd::t_d1c284bbd66d47 42-50
+lib/observability/use-screen-opened-log.ts
+  s_f8d6ceb53516cd::t_752ba0d7734d79 1-18
+package.json
+  s_f8d6ceb53516cd::t_a039076dcfc154 72-79
+  s_f8d6ceb53516cd::t_ec0e54b7f7aeae 12
+lib/observability/sentry.test.ts
+  s_f8d6ceb53516cd::t_cc751b1398dc13 136,142-144
+  s_f8d6ceb53516cd::t_839dd30981602e 65-69
+  s_f8d6ceb53516cd::t_bec169cb6a2609 1-64,70-120,123-130,134-135,137-141,145-146
+  s_f8d6ceb53516cd::t_b9dc7b9c45e21c 121-122
+  s_f8d6ceb53516cd::t_5de476b0da4f82 131-133
+lib/observability/config.ts
+  s_f8d6ceb53516cd::t_5de476b0da4f82 22
+  s_f8d6ceb53516cd::t_3f4b346b7b7ca3 25-27
+  s_f8d6ceb53516cd::t_67ff74b9aa00fa 1-21,23-24,28-47
+lib/observability/scrub.test.ts
+  s_f8d6ceb53516cd::t_40099b69c88226 1-39,43-88,90-127,219-254
+  s_f8d6ceb53516cd::t_5de476b0da4f82 40-42
+  s_f8d6ceb53516cd::t_7c56e400c82beb 89
+  s_f8d6ceb53516cd::t_1e83ffbf0792fd 128-211,215-218
+  s_f8d6ceb53516cd::t_4a42e5de6be527 212-214
+  s_f8d6ceb53516cd::t_87696bc616607c 255-332,334-371,373-407
+  s_f8d6ceb53516cd::t_efb53530596c06 333,372
+lib/observability/config.test.ts
+  s_f8d6ceb53516cd::t_451cbaf9883952 1-78
+lib/observability/sentry.ts
+  s_f8d6ceb53516cd::t_f540f4890d08c8 43-47
+  s_f8d6ceb53516cd::t_bf3878181e899b 1,7
+  s_f8d6ceb53516cd::t_a35667b27fcf65 58-69,72-73
+  s_f8d6ceb53516cd::t_9b77695bce803d 2-6,8-42,48-57,70-71,74-79
+metro.config.cjs
+  s_f8d6ceb53516cd::t_423b15f15fa0fe 4
+  s_f8d6ceb53516cd::t_d661891dcea2fc 1-3,5-7
+.env.example
+  s_f8d6ceb53516cd::t_1ac9db86b10e00 16-17
+  s_f8d6ceb53516cd::t_5c2725fef07284 15
+  s_f8d6ceb53516cd::t_f446946068f9c7 13-14
+  s_f8d6ceb53516cd::t_730ec4b94896dd 18-20
+lib/observability/identity.ts
+  s_f8d6ceb53516cd::t_76313718b5d964 1-13
+lib/observability/wiring.test.ts
+  s_f8d6ceb53516cd::t_d67442d8ca00f8 1-59
+lib/observability/scrub.ts
+  s_f8d6ceb53516cd::t_69c5da2423c17b 48-56,65-69,73-110,159,165-166,171
+  s_f8d6ceb53516cd::t_54bb7ef30d4f0b 189-244,246-256,258
+  s_f8d6ceb53516cd::t_639b26c22d143b 1-47,57-64,70-72,111-114,145-150,153-155,172-188,257,259
+  s_f8d6ceb53516cd::t_86e4d568dd99cc 115-144,151-152,156-158,160-164,167-170
+  s_f8d6ceb53516cd::t_0bd704c48e7832 245
+lib/env.ts
+  s_f8d6ceb53516cd::t_0692489021ae89 48-53,55-58
+  s_f8d6ceb53516cd::t_238b80c49102a6 54
+lib/observability/url-sanitize.ts
+  s_f8d6ceb53516cd::t_01226032de4524 1-129
+lib/session-context.tsx
+  s_f8d6ceb53516cd::t_9632d806857e68 62,64,67
+  s_f8d6ceb53516cd::t_76b6e879d4f06c 4
+  s_f8d6ceb53516cd::t_5d89aec5defa57 63,65-66
+lib/observability/identity.test.ts
+  s_f8d6ceb53516cd::t_7631ecd488a242 1-22
+lib/observability/raw-source.d.ts
+  s_f8d6ceb53516cd::t_8e6a5acd7e5232 1-6
+eas.json
+  s_f8d6ceb53516cd::t_9f2424c3af7b2e 10-13,20-24,28-32
+bun.lock
+  s_f8d6ceb53516cd::t_033fa22ee7c49b 14,458-497,654,864-865,1106,1364-1365,1478-1479,1720-1721,1746-1747,1796-1797,1800-1801,1904-1905,1996-1997,2092-2107,2150-2151,2218-2219,2238-2239
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.7.5",
+  "base_commit_sha": "934ef2be18066cf90740a5e3148af1df5a85b270",
+  "prompts": {},
+  "sessions": {
+    "s_f8d6ceb53516cd": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "c84df994-0d2a-4bdf-b97f-83f23f252335",
+        "model": "claude-opus-5-5"
+      },
+      "human_author": "naaxtech <naaxtech.official@gmail.com>"
+    }
+  }
+}
