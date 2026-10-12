@@ -1,0 +1,22 @@
+lib/observability/scrub.test.ts
+  s_f8d6ceb53516cd::t_411aaa1c50c770 104-118,121
+  s_f8d6ceb53516cd::t_2d3b9802a86ea7 119-120
+lib/observability/scrub.ts
+  s_f8d6ceb53516cd::t_644cf138f18d44 36-50,53
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.7.5",
+  "base_commit_sha": "5f2ed777953e5cdc55c3e4c0c21509541b0a0e6c",
+  "prompts": {},
+  "sessions": {
+    "s_f8d6ceb53516cd": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "c84df994-0d2a-4bdf-b97f-83f23f252335",
+        "model": "claude-opus-5-5"
+      },
+      "human_author": "naaxtech <naaxtech.official@gmail.com>"
+    }
+  }
+}
