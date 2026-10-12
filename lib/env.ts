@@ -45,3 +45,14 @@ export const WEB_APP_URL: string | null = rawWebAppUrl?.trim().replace(/\/+$/, "
 // the deployed dashboard so a build without EXPO_PUBLIC_WEB_APP_URL still
 // opens it.
 export const MANAGER_DASHBOARD_URL = WEB_APP_URL ?? "https://linara-delta.vercel.app";
+
+// Optional: replaces the committed Sentry DSN (lib/observability/config.ts).
+// eslint-disable-next-line no-restricted-syntax -- sole, validated process.env access point
+const rawSentryDsn = process.env.EXPO_PUBLIC_SENTRY_DSN;
+export const SENTRY_DSN: string | null = rawSentryDsn?.trim() || null;
+
+// Optional: the Sentry environment, set by eas.json's preview and production profiles.
+// Unset (the dev server, Expo Go, tests) means nothing is reported.
+// eslint-disable-next-line no-restricted-syntax -- sole, validated process.env access point
+const rawSentryEnvironment = process.env.EXPO_PUBLIC_SENTRY_ENVIRONMENT;
+export const SENTRY_ENVIRONMENT: string | null = rawSentryEnvironment?.trim() || null;

@@ -1,3 +1,6 @@
+// First, so Sentry starts before the rest of the root layout's imports run.
+import { wrapRootLayout } from "@/lib/observability/sentry";
+
 import { useEffect } from "react";
 import { PersistQueryClientProvider } from "@tanstack/react-query-persist-client";
 import { Stack } from "expo-router";
@@ -10,6 +13,7 @@ import { NunitoSans_400Regular, NunitoSans_700Bold } from "@expo-google-fonts/nu
 import { queryClient } from "@/lib/query-client";
 import { recordPersister, SAVED_RECORD_MAX_AGE, shouldSaveQuery } from "@/lib/query-persist";
 import { SessionProvider } from "@/lib/session-context";
+import { useScreenOpenedLog } from "@/lib/observability/use-screen-opened-log";
 import { useOfflineSync } from "@/hooks/use-offline-sync";
 import { usePushNotifications } from "@/hooks/use-push-notifications";
 
@@ -19,6 +23,7 @@ SplashScreen.preventAutoHideAsync();
 function AppShell() {
   useOfflineSync();
   usePushNotifications();
+  useScreenOpenedLog();
 
   return (
     <>
@@ -37,7 +42,7 @@ function AppShell() {
  * family names here must match lib/theme.ts's `fonts` tokens) before
  * revealing the app, so no screen ever flashes the system font first.
  */
-export default function RootLayout() {
+function RootLayout() {
   const [fontsLoaded] = useFonts({
     Fraunces_600SemiBold,
     Fraunces_700Bold,
@@ -71,3 +76,6 @@ export default function RootLayout() {
     </SessionProvider>
   );
 }
+
+// src: https://docs.sentry.io/platforms/react-native/manual-setup/expo/ · 8.30.0 · 2026-10-12
+export default wrapRootLayout(RootLayout);

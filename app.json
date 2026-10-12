@@ -39,7 +39,15 @@
           "color": "#1F5A54"
         }
       ],
-      "expo-sharing"
+      "expo-sharing",
+      [
+        "@sentry/react-native/expo",
+        {
+          "url": "https://sentry.io/",
+          "organization": "naax-linara",
+          "project": "linara-mobile"
+        }
+      ]
     ],
     "experiments": {
       "typedRoutes": true

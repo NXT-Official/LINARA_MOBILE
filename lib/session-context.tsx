@@ -1,6 +1,7 @@
 import { createContext, useCallback, useContext, useEffect, useState, type ReactNode } from "react";
 import type { Session } from "@supabase/supabase-js";
 
+import { setSentryUser } from "@/lib/observability/sentry";
 import { clearSavedRecord } from "@/lib/query-persist";
 import { supabase } from "@/services/supabase";
 
@@ -57,6 +58,12 @@ export function SessionProvider({ children }: { children: ReactNode }) {
 
     return () => subscription.subscription.unsubscribe();
   }, [reload]);
+
+  // Sentry follows whichever session is current: the saved one read at start,
+  // every auth event, and dropSession. It takes the opaque id only (lib/observability/identity.ts).
+  useEffect(() => {
+    setSentryUser(session);
+  }, [session]);
 
   return (
     <SessionContext.Provider value={{ session, isLoading, reload, dropSession }}>
