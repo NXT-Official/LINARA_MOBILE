@@ -1,0 +1,27 @@
+lib/observability/sentry.test.ts
+  s_f8d6ceb53516cd::t_813f32a12a9be7 26-30,33-37
+  s_f8d6ceb53516cd::t_6dc8c9c39c0f8f 96-106
+lib/observability/sentry.ts
+  s_f8d6ceb53516cd::t_45e89652d993c6 68-71
+  s_f8d6ceb53516cd::t_ea3ab37f1b2cfc 25-40
+lib/observability/scrub.test.ts
+  s_f8d6ceb53516cd::t_c1aade09ffd9fc 68-103
+lib/observability/scrub.ts
+  s_f8d6ceb53516cd::t_18269726d1fa7e 23-35,38-40
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.7.5",
+  "base_commit_sha": "dc2e7933c8c5691d61f363c54bcd0e3a6545185f",
+  "prompts": {},
+  "sessions": {
+    "s_f8d6ceb53516cd": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "c84df994-0d2a-4bdf-b97f-83f23f252335",
+        "model": "claude-opus-5-5"
+      },
+      "human_author": "naaxtech <naaxtech.official@gmail.com>"
+    }
+  }
+}
