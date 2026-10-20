@@ -15,7 +15,7 @@ tags: [uat, helper]
 - assertVisible: "1. Magbigay ng abiso sa employer mo.*"
 - assertVisible: "3. Bumalik dito at burahin ang account mo."
 # No way to send the request from here.
-- assertNotVisible: "Bakit\\? \\(optional\\)"
+- assertNotVisible: "Bakit\\? \\(kung meron\\)"
 - takeScreenshot: SA-087-employed
 - scrollUntilVisible:
     element: "Sige"
