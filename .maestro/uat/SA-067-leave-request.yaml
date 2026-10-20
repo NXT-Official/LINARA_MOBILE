@@ -16,7 +16,7 @@ tags: [uat, helper, changes-data]
 - tapOn: "Humiling ng leave"
 # With no SIL yet, nothing is picked for her (O55).
 - scrollUntilVisible:
-    element: "Pumili kung anong klaseng leave."
+    element: "Pumili kung paano babayaran ang leave."
 # SIL: the helper has none yet.
 - tapOn: "SIL"
 - takeScreenshot: SA-067-sil

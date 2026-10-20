@@ -194,6 +194,8 @@ export function LeaveRequestForm({
       )}
       {error ? <Text style={styles.warning}>{error}</Text> : null}
       <RequestDisclosure open={open} onOpenChange={setOpen} openLabel="Humiling ng leave">
+        {/* Labelled like the fields below, so a missing pick has a name (QA F-LM-007). */}
+        <Text style={styles.fieldLabel}>Paano babayaran?</Text>
         <View style={styles.chips} accessibilityRole="radiogroup">
           {ASKABLE.map((a) => (
             <Chip
@@ -205,10 +207,11 @@ export function LeaveRequestForm({
           ))}
         </View>
         <Text style={styles.hint}>
-          {ASKABLE.find((a) => a.kind === kind)?.hint ?? "Pumili kung anong klaseng leave."}
+          {ASKABLE.find((a) => a.kind === kind)?.hint ?? "Pumili kung paano babayaran ang leave."}
         </Text>
         {kind === "in_kind" && blocked ? <Text style={styles.warning}>{blocked}</Text> : null}
 
+        <Text style={styles.fieldLabel}>Dahilan</Text>
         <View style={styles.chips} accessibilityRole="radiogroup">
           {REASONS.map((r) => (
             <Chip
@@ -254,6 +257,9 @@ export function LeaveRequestForm({
           </Text>
         ) : null}
 
+        {kind === null && days > 0 ? (
+          <Text style={styles.warning}>Pumili muna sa &quot;Paano babayaran?&quot; sa itaas.</Text>
+        ) : null}
         {sendError ? <Text style={styles.warning}>{sendError}</Text> : null}
         <PrimaryButton
           label={submitting ? "Sinesend..." : "Ipadala sa manager"}
@@ -302,6 +308,11 @@ const styles = StyleSheet.create({
   },
   hint: {
     fontSize: 13,
+    color: colors.mutedInk,
+  },
+  fieldLabel: {
+    fontSize: 13,
+    fontWeight: "700",
     color: colors.mutedInk,
   },
   chips: {
