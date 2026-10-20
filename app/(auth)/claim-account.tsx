@@ -91,7 +91,7 @@ export default function ClaimAccountScreen() {
           value={password}
           onChangeText={setPassword}
           error={passwordError}
-          placeholder="••••••"
+          placeholder="Gumawa ng password"
           secureTextEntry
         />
         <TextField
@@ -99,7 +99,7 @@ export default function ClaimAccountScreen() {
           value={confirmPassword}
           onChangeText={setConfirmPassword}
           error={confirmError}
-          placeholder="••••••"
+          placeholder="I-type ulit ang password"
           secureTextEntry
         />
 

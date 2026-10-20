@@ -86,7 +86,7 @@ export default function SignInScreen() {
             setPassword(text);
             setError(null);
           }}
-          placeholder="••••••"
+          placeholder="Ilagay ang password mo"
           secureTextEntry
           returnKeyType="go"
           onSubmitEditing={submit}

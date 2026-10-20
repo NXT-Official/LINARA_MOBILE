@@ -16,7 +16,7 @@ onFlowComplete:
 - setAirplaneMode: enabled
 - tapOn: "hal. rosa@gmail.com"
 - inputText: ${MAESTRO_STAFF_EMAIL}
-- tapOn: "••••••"
+- tapOn: "Ilagay ang password mo"
 - setClipboard: ${MAESTRO_STAFF_PASSWORD}
 - pasteText
 - pressKey: Enter
