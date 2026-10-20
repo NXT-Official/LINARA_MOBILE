@@ -1,13 +1,5 @@
 import { useEffect, useState } from "react";
-import {
-  KeyboardAvoidingView,
-  Platform,
-  Pressable,
-  ScrollView,
-  StyleSheet,
-  Text,
-  View,
-} from "react-native";
+import { KeyboardAvoidingView, Pressable, ScrollView, StyleSheet, Text, View } from "react-native";
 import { router, useLocalSearchParams } from "expo-router";
 import { Ionicons } from "@expo/vector-icons";
 
@@ -16,6 +8,7 @@ import { colors, fonts } from "@/lib/theme";
 import { textParts } from "@/lib/i18n/translate";
 import { requestPasswordReset } from "@/services/api/auth";
 import { TextField } from "@/components/ui/text-field";
+import { KEYBOARD_BEHAVIOR } from "@/components/ui/keyboard-screen";
 import { PrimaryButton } from "@/components/ui/primary-button";
 
 /** Supabase lets one address ask again only after this long. */
@@ -62,10 +55,7 @@ export default function ForgotPasswordScreen() {
   };
 
   return (
-    <KeyboardAvoidingView
-      style={styles.flex}
-      behavior={Platform.OS === "ios" ? "padding" : undefined}
-    >
+    <KeyboardAvoidingView style={styles.flex} behavior={KEYBOARD_BEHAVIOR}>
       <ScrollView contentContainerStyle={styles.content} keyboardShouldPersistTaps="handled">
         {sentTo ? (
           <View style={styles.sentCard} accessibilityRole="alert">

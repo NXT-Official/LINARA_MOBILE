@@ -1,7 +1,6 @@
 import { useState } from "react";
 import {
   KeyboardAvoidingView,
-  Platform,
   Pressable,
   ScrollView,
   StyleSheet,
@@ -14,6 +13,7 @@ import { router, useLocalSearchParams } from "expo-router";
 import { useT } from "@/lib/i18n/locale-context";
 import { colors } from "@/lib/theme";
 import { flagDiscrepancy } from "@/services/api/handshake";
+import { KEYBOARD_BEHAVIOR } from "@/components/ui/keyboard-screen";
 import { PrimaryButton } from "@/components/ui/primary-button";
 
 const FLAG_CATEGORIES = [
@@ -52,10 +52,7 @@ export default function FlagTermsScreen() {
   };
 
   return (
-    <KeyboardAvoidingView
-      style={styles.flex}
-      behavior={Platform.OS === "ios" ? "padding" : undefined}
-    >
+    <KeyboardAvoidingView style={styles.flex} behavior={KEYBOARD_BEHAVIOR}>
       <ScrollView contentContainerStyle={styles.content} keyboardShouldPersistTaps="handled">
         <Text style={styles.eyebrow}>{t("flag.eyebrow")}</Text>
         <Text style={styles.title}>{t("flag.title")}</Text>

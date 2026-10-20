@@ -12,6 +12,7 @@ import { router } from "expo-router";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 
 import { useT } from "@/lib/i18n/locale-context";
+import { KeyboardScrollView } from "@/components/ui/keyboard-screen";
 import { colors, fonts } from "@/lib/theme";
 import { formatDateFil, formatHoursMinutes, formatPeso, formatShiftTime } from "@/lib/format";
 import {
@@ -97,7 +98,7 @@ export default function RecordScreen() {
   });
 
   return (
-    <ScrollView
+    <KeyboardScrollView
       ref={scrollRef}
       style={styles.screen}
       contentContainerStyle={styles.content}
@@ -140,7 +141,7 @@ export default function RecordScreen() {
       {employmentsQuery.isLoading ? null : (
         <SignOutButton onConfirmShown={() => scrollRef.current?.scrollToEnd({ animated: true })} />
       )}
-    </ScrollView>
+    </KeyboardScrollView>
   );
 }
 

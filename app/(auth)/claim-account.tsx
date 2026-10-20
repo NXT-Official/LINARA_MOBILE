@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { KeyboardAvoidingView, Platform, ScrollView, StyleSheet, Text, View } from "react-native";
+import { KeyboardAvoidingView, ScrollView, StyleSheet, Text, View } from "react-native";
 import { router, useLocalSearchParams } from "expo-router";
 
 import { useT } from "@/lib/i18n/locale-context";
@@ -7,6 +7,7 @@ import { colors } from "@/lib/theme";
 import { textParts } from "@/lib/i18n/translate";
 import { claimProfile } from "@/services/api/handshake";
 import { TextField } from "@/components/ui/text-field";
+import { KEYBOARD_BEHAVIOR } from "@/components/ui/keyboard-screen";
 import { PrimaryButton } from "@/components/ui/primary-button";
 
 const MIN_PASSWORD_LENGTH = 6;
@@ -62,10 +63,7 @@ export default function ClaimAccountScreen() {
   };
 
   return (
-    <KeyboardAvoidingView
-      style={styles.flex}
-      behavior={Platform.OS === "ios" ? "padding" : undefined}
-    >
+    <KeyboardAvoidingView style={styles.flex} behavior={KEYBOARD_BEHAVIOR}>
       <ScrollView contentContainerStyle={styles.content} keyboardShouldPersistTaps="handled">
         <Text style={styles.eyebrow}>{t("claim.step")}</Text>
         <Text style={styles.title}>{t("claim.title")}</Text>

@@ -1,11 +1,12 @@
 import { useCallback, useMemo, useState } from "react";
-import { ActivityIndicator, Pressable, ScrollView, StyleSheet, Text, View } from "react-native";
+import { ActivityIndicator, Pressable, StyleSheet, Text, View } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import * as ImagePicker from "expo-image-picker";
 import { useFocusEffect } from "expo-router";
 
 import { useT } from "@/lib/i18n/locale-context";
+import { KeyboardScrollView } from "@/components/ui/keyboard-screen";
 import { colors, fonts } from "@/lib/theme";
 import { usePalengkeBudget } from "@/hooks/use-palengke-budget";
 import { usePantryEdits } from "@/hooks/use-pantry-edits";
@@ -351,7 +352,7 @@ export default function PantryScreen() {
   const noPantry = noProfile || noDataToShow(pantryQuery);
 
   return (
-    <ScrollView
+    <KeyboardScrollView
       style={styles.screen}
       contentContainerStyle={styles.content}
       keyboardShouldPersistTaps="handled"
@@ -631,7 +632,7 @@ export default function PantryScreen() {
           />
         )}
       </View>
-    </ScrollView>
+    </KeyboardScrollView>
   );
 }
 

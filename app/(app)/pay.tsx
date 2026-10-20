@@ -3,6 +3,7 @@ import { ActivityIndicator, ScrollView, StyleSheet, Text, View } from "react-nat
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 
 import { useT } from "@/lib/i18n/locale-context";
+import { KeyboardScrollView } from "@/components/ui/keyboard-screen";
 import { colors, fonts } from "@/lib/theme";
 import { getHouseholdCutoff } from "@/services/api/cutoff";
 import { getMyHelperProfile } from "@/services/api/helper-profile";
@@ -207,7 +208,7 @@ export default function PayScreen() {
   const restMinutes = restOwedMinutes(ledgerQuery.data ?? []);
 
   return (
-    <ScrollView
+    <KeyboardScrollView
       ref={scrollRef}
       style={styles.screen}
       contentContainerStyle={styles.content}
@@ -307,7 +308,7 @@ export default function PayScreen() {
       )}
 
       <SignOutButton onConfirmShown={() => scrollRef.current?.scrollToEnd({ animated: true })} />
-    </ScrollView>
+    </KeyboardScrollView>
   );
 }
 

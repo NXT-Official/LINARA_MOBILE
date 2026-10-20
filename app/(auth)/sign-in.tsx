@@ -1,13 +1,5 @@
 import { useState } from "react";
-import {
-  KeyboardAvoidingView,
-  Platform,
-  Pressable,
-  ScrollView,
-  StyleSheet,
-  Text,
-  View,
-} from "react-native";
+import { KeyboardAvoidingView, Pressable, ScrollView, StyleSheet, Text, View } from "react-native";
 import { router } from "expo-router";
 
 import { useT } from "@/lib/i18n/locale-context";
@@ -18,6 +10,7 @@ import { supabase } from "@/services/supabase";
 import { signIn } from "@/services/api/auth";
 import { LanguageMenu } from "@/components/features/account/language-menu";
 import { TextField } from "@/components/ui/text-field";
+import { KEYBOARD_BEHAVIOR } from "@/components/ui/keyboard-screen";
 import { PrimaryButton } from "@/components/ui/primary-button";
 
 /**
@@ -58,10 +51,7 @@ export default function SignInScreen() {
     router.push({ pathname: "/(auth)/forgot-password", params: { email: email.trim() } });
 
   return (
-    <KeyboardAvoidingView
-      style={styles.flex}
-      behavior={Platform.OS === "ios" ? "padding" : undefined}
-    >
+    <KeyboardAvoidingView style={styles.flex} behavior={KEYBOARD_BEHAVIOR}>
       <ScrollView contentContainerStyle={styles.content} keyboardShouldPersistTaps="handled">
         <View style={styles.hero}>
           <Text style={styles.title}>{t("signIn.title")}</Text>

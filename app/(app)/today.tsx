@@ -2,6 +2,7 @@ import { useState } from "react";
 import { ActivityIndicator, ScrollView, StyleSheet, Text, View } from "react-native";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 
+import { KeyboardScreen } from "@/components/ui/keyboard-screen";
 import { colors } from "@/lib/theme";
 import { OFF_AVAILABILITY, type ManualAvailability } from "@/lib/availability";
 import { useRosaAvailability } from "@/hooks/use-rosa-availability";
@@ -350,7 +351,7 @@ export default function TodayScreen() {
   const focusTask = deckIndex >= 0 ? deck[deckIndex] : null;
 
   return (
-    <View style={styles.flex}>
+    <KeyboardScreen>
       <ScrollView
         style={styles.screen}
         contentContainerStyle={styles.content}
@@ -486,7 +487,7 @@ export default function TodayScreen() {
           </>
         )}
       </ScrollView>
-    </View>
+    </KeyboardScreen>
   );
 }
 
