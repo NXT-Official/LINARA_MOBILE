@@ -1,6 +1,8 @@
 import NetInfo from "@react-native-community/netinfo";
 import { onlineManager, QueryClient } from "@tanstack/react-query";
 
+import { isReachable } from "./connection";
+
 /**
  * Single shared TanStack Query client for the native runtime. Remote tables
  * (helper_profiles, tickets, pantry_items, vales, ...) are the single source
@@ -26,9 +28,9 @@ export const queryClient = new QueryClient({
 
 // React Native has no browser online event, so TanStack never knew the signal
 // came back. Told here, every screen reloads what failed on reconnect instead
-// of waiting for a pull-down (QA F-LM-008).
+// of waiting for a pull-down (QA F-LM-008), once the internet is confirmed.
 onlineManager.setEventListener((setOnline) =>
   NetInfo.addEventListener((state) => {
-    setOnline(Boolean(state.isConnected) && state.isInternetReachable !== false);
+    setOnline(isReachable(state));
   }),
 );
