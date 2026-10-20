@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useRef, useState } from "react";
 import {
   ActivityIndicator,
   Pressable,
@@ -79,6 +79,7 @@ const longDate = (value: string) =>
  */
 export default function RecordScreen() {
   const { session } = useSession();
+  const scrollRef = useRef<ScrollView>(null);
   const employmentsQuery = useQuery({
     queryKey: ["my-employments", session?.user.id],
     queryFn: getMyEmployments,
@@ -90,6 +91,7 @@ export default function RecordScreen() {
 
   return (
     <ScrollView
+      ref={scrollRef}
       style={styles.screen}
       contentContainerStyle={styles.content}
       keyboardShouldPersistTaps="handled"
@@ -124,7 +126,9 @@ export default function RecordScreen() {
       )}
       {/* Here as well as My Pay: My Record is the one tab that always opens,
           even with no household, so she can always sign out. */}
-      {employmentsQuery.isLoading ? null : <SignOutButton />}
+      {employmentsQuery.isLoading ? null : (
+        <SignOutButton onConfirmShown={() => scrollRef.current?.scrollToEnd({ animated: true })} />
+      )}
     </ScrollView>
   );
 }

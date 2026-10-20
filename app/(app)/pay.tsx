@@ -1,3 +1,4 @@
+import { useRef } from "react";
 import { ActivityIndicator, ScrollView, StyleSheet, Text, View } from "react-native";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 
@@ -43,6 +44,7 @@ import { SignOutButton } from "@/components/features/account/sign-out-button";
  */
 export default function PayScreen() {
   const queryClient = useQueryClient();
+  const scrollRef = useRef<ScrollView>(null);
 
   const profileQuery = useQuery({
     queryKey: ["my-helper-profile"],
@@ -204,6 +206,7 @@ export default function PayScreen() {
 
   return (
     <ScrollView
+      ref={scrollRef}
       style={styles.screen}
       contentContainerStyle={styles.content}
       keyboardShouldPersistTaps="handled"
@@ -301,7 +304,7 @@ export default function PayScreen() {
         </>
       )}
 
-      <SignOutButton />
+      <SignOutButton onConfirmShown={() => scrollRef.current?.scrollToEnd({ animated: true })} />
     </ScrollView>
   );
 }

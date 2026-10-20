@@ -9,9 +9,11 @@ import { PrimaryButton } from "@/components/ui/primary-button";
 /**
  * Two-tap sign-out. The first tap only asks, so a stray touch at the bottom
  * of My Pay can't log her out; signOutHelper refuses while offline actions
- * are still queued and the reason is shown inline.
+ * are still queued and the reason is shown inline. The question opens at the
+ * bottom of the screen, so `onConfirmShown` lets the screen scroll its
+ * buttons into view (QA LM-18).
  */
-export function SignOutButton() {
+export function SignOutButton({ onConfirmShown }: { onConfirmShown?: () => void } = {}) {
   const [confirming, setConfirming] = useState(false);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -37,7 +39,7 @@ export function SignOutButton() {
           <Text style={styles.prompt}>
             Sigurado ka? Kailangan mo ang email at password mo para makabalik.
           </Text>
-          <View style={styles.row}>
+          <View style={styles.row} onLayout={onConfirmShown}>
             <PrimaryButton
               label="Huwag na"
               variant="secondary"
