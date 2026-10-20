@@ -22,6 +22,7 @@ import { completeTicket, getActivePalengkeTicket } from "@/services/api/tickets"
 import { uploadEvidenceImage } from "@/services/media-upload";
 import { enqueueSyncAction } from "@/services/sqlite-queue";
 import { isOffline } from "@/lib/network";
+import { noDataToShow } from "@/lib/query-state";
 import { PantryStockList } from "@/components/features/pantry/pantry-stock-list";
 import { BudgetBar } from "@/components/features/pantry/budget-bar";
 import { PalengkeChecklist } from "@/components/features/pantry/palengke-checklist";
@@ -298,6 +299,10 @@ export default function PantryScreen() {
   };
 
   const palengkeTicket = palengkeTicketQuery.data;
+  // Offline with nothing loaded: say so, not "nothing to buy" (QA F-LM-002).
+  const noProfile = noDataToShow(profileQuery);
+  const noPalengke = noProfile || noDataToShow(groceryQuery);
+  const noPantry = noProfile || noDataToShow(pantryQuery);
 
   return (
     <ScrollView
@@ -312,9 +317,13 @@ export default function PantryScreen() {
         <View style={styles.loading}>
           <ActivityIndicator color={colors.pineTeal} />
         </View>
+      ) : noPalengke ? (
+        <Text style={styles.errorText}>
+          Walang internet, kaya hindi ma-load ang palengke list. Babalik ito kapag may signal na.
+        </Text>
       ) : (
         <>
-          {!runsOn && <BudgetBar spent={spent} budget={budget} />}
+          {!runsOn && budget !== null && <BudgetBar spent={spent} budget={budget} />}
 
           {runsOn && (readyRuns.length > 0 || leadRuns.length > 0) && (
             <View style={styles.section}>
@@ -453,7 +462,7 @@ export default function PantryScreen() {
         </>
       )}
 
-      {!palengkeTicket && !groceryQuery.isLoading && (
+      {!palengkeTicket && !groceryQuery.isLoading && !noPalengke && (
         <ReceiptSnapCard
           latest={latestReceiptQuery.data ?? null}
           saving={snapMutation.isPending && !snapMutation.variables}
@@ -533,7 +542,11 @@ export default function PantryScreen() {
             onChip={setPantryFilter}
           />
         )}
-        {pantryQuery.isLoading ? (
+        {noPantry ? (
+          <Text style={styles.errorText}>
+            Walang internet, kaya hindi ma-load ang pantry. Babalik ito kapag may signal na.
+          </Text>
+        ) : pantryQuery.isLoading ? (
           <View style={styles.loading}>
             <ActivityIndicator color={colors.pineTeal} />
           </View>
