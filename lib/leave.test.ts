@@ -3,6 +3,7 @@ import { describe, expect, it } from "vitest";
 import {
   canCancelLeave,
   countLeaveDays,
+  leaveBlockReason,
   leaveCovers,
   leaveDatesLabel,
   requestsToList,
@@ -69,5 +70,25 @@ describe("requestsToList", () => {
   it("shows at most four", () => {
     const rows = ["a", "b", "c", "d", "e"].map((id) => ({ id, status: "approved" }));
     expect(requestsToList(rows).map((r) => r.id)).toEqual(["a", "b", "c", "d"]);
+  });
+});
+
+describe("leaveBlockReason", () => {
+  it("lets a request through when she has enough", () => {
+    expect(leaveBlockReason("sil", 2, 5, 0)).toBeNull();
+    expect(leaveBlockReason("in_kind", 1, 0, 30)).toBeNull();
+    expect(leaveBlockReason("unpaid", 3, 0, 0)).toBeNull();
+    expect(leaveBlockReason(null, 1, 0, 0)).toBeNull();
+  });
+
+  it("holds SIL past what's left, at the boundary", () => {
+    expect(leaveBlockReason("sil", 5, 5, 0)).toBeNull();
+    expect(leaveBlockReason("sil", 6, 5, 0)).toBe("5 na lang ang SIL mo.");
+    expect(leaveBlockReason("sil", 1, 0, 0)).toBe("0 na lang ang SIL mo.");
+  });
+
+  it("holds a day off from rest owed with none owed (QA F-LM-003)", () => {
+    expect(leaveBlockReason("in_kind", 1, 5, 0)).toBe("Wala ka pang rest owed.");
+    expect(leaveBlockReason("in_kind", 1, 5, -15)).toBe("Wala ka pang rest owed.");
   });
 });

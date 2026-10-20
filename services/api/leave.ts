@@ -1,3 +1,5 @@
+import { isOffline } from "@/lib/network";
+import { OFFLINE_SEND, requestErrorMessage } from "@/lib/request-error";
 import { supabase } from "@/services/supabase";
 
 /**
@@ -107,6 +109,7 @@ export async function requestLeave(
   endDate: string,
   note?: string,
 ): Promise<{ requestId: string; days: number; minutes: number }> {
+  if (await isOffline()) throw new Error(OFFLINE_SEND);
   const { data, error } = await supabase.rpc("request_leave", {
     p_helper_id: helperId,
     p_kind: kind,
@@ -116,7 +119,8 @@ export async function requestLeave(
     p_note: note ?? null,
   });
 
-  if (error) throw new Error(error.message);
+  // Her words, never the server's English (QA F-LM-003).
+  if (error) throw new Error(requestErrorMessage(error.message, false));
 
   const row = (
     data as { request_id: string; requested_days: number; requested_minutes: number }[] | null
@@ -127,8 +131,9 @@ export async function requestLeave(
 
 /** A pending request, or approved leave that hasn't started yet. */
 export async function cancelLeave(requestId: string): Promise<void> {
+  if (await isOffline()) throw new Error(OFFLINE_SEND);
   const { error } = await supabase.rpc("cancel_leave_request", { p_request_id: requestId });
-  if (error) throw new Error(error.message);
+  if (error) throw new Error(requestErrorMessage(error.message, false));
 }
 
 /** Her answer to leave a manager recorded for her. A dispute flags it; it doesn't undo it. */
@@ -137,12 +142,13 @@ export async function ackLeave(
   ack: "confirmed" | "disputed",
   note?: string,
 ): Promise<void> {
+  if (await isOffline()) throw new Error(OFFLINE_SEND);
   const { error } = await supabase.rpc("ack_leave", {
     p_request_id: requestId,
     p_ack: ack,
     p_note: note ?? null,
   });
-  if (error) throw new Error(error.message);
+  if (error) throw new Error(requestErrorMessage(error.message, false));
 }
 
 export interface UnpaidLeaveDue {

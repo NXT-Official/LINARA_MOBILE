@@ -277,12 +277,9 @@ export default function PayScreen() {
               leave={leaveQuery.data ?? []}
               householdToday={householdToday}
               submitting={leaveMutation.isPending}
-              error={
-                (leaveMutation.error ?? leaveCancelMutation.error ?? leaveAckMutation.error)
-                  ?.message ?? null
-              }
+              error={(leaveCancelMutation.error ?? leaveAckMutation.error)?.message ?? null}
               onSubmit={(kind, reason, startDate, endDate, note) =>
-                leaveMutation.mutate({ kind, reason, startDate, endDate, note })
+                leaveMutation.mutateAsync({ kind, reason, startDate, endDate, note })
               }
               onCancel={(id) => leaveCancelMutation.mutate(id)}
               onAck={(id, ack) => leaveAckMutation.mutate({ id, ack })}

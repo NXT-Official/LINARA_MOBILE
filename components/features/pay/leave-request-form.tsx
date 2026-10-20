@@ -3,7 +3,13 @@ import { Pressable, StyleSheet, Text, View } from "react-native";
 
 import { colors, fonts } from "@/lib/theme";
 import { formatHoursMinutes } from "@/lib/format";
-import { canCancelLeave, countLeaveDays, leaveDatesLabel, requestsToList } from "@/lib/leave";
+import {
+  canCancelLeave,
+  countLeaveDays,
+  leaveBlockReason,
+  leaveDatesLabel,
+  requestsToList,
+} from "@/lib/leave";
 import { DateTimeField } from "@/components/ui/date-time-field";
 import { TextField } from "@/components/ui/text-field";
 import { PrimaryButton } from "@/components/ui/primary-button";
@@ -50,7 +56,8 @@ const STATUS_LABEL: Record<LeaveStatus, string> = {
  * manager without undoing it.
  *
  * Every check here is advisory. `request_leave` applies the balances,
- * overlaps and dates on the server and its refusal is shown as `error`.
+ * overlaps and dates on the server. A refused request keeps what she filled
+ * in and shows why in the form; a refused cancel or answer is `error`.
  */
 export function LeaveRequestForm({
   sil,
@@ -72,7 +79,7 @@ export function LeaveRequestForm({
   /** The household's date from Postgres, never the phone's. */
   householdToday: string | undefined;
   submitting: boolean;
-  /** The server's refusal of her last request, as it worded it. */
+  /** Why her last cancel or answer didn't go through, in Taglish. */
   error: string | null;
   onSubmit: (
     kind: LeaveKind,
@@ -80,7 +87,7 @@ export function LeaveRequestForm({
     startDate: string,
     endDate: string,
     note?: string,
-  ) => void;
+  ) => Promise<unknown>;
   onCancel: (id: string) => void;
   onAck: (id: string, ack: "confirmed" | "disputed") => void;
   /** The row a cancel or answer is in flight for. */
@@ -92,18 +99,25 @@ export function LeaveRequestForm({
   const [endDate, setEndDate] = useState("");
   const [note, setNote] = useState("");
   const [open, setOpen] = useState(false);
+  const [sendError, setSendError] = useState<string | null>(null);
 
   const days = countLeaveDays(startDate, endDate || startDate, weeklyRestDay);
   const silLeft = sil?.days ?? 0;
   // SIL is the default only when she has some; otherwise she picks, so an
   // unpaid day is never one she didn't choose (../LINARA/KNOWN_GAPS.md O55).
   const kind = pickedKind ?? (silLeft > 0 ? "sil" : null);
-  const tooMuch = kind === "sil" && days > silLeft;
-  const canSubmit = kind !== null && days > 0 && !tooMuch && !submitting;
+  const blocked = leaveBlockReason(kind, days, silLeft, restOwedMinutes);
+  const canSubmit = kind !== null && days > 0 && blocked === null && !submitting;
 
-  const handleSubmit = () => {
+  const handleSubmit = async () => {
     if (!canSubmit || kind === null) return;
-    onSubmit(kind, reason, startDate, endDate || startDate, note.trim() || undefined);
+    setSendError(null);
+    try {
+      await onSubmit(kind, reason, startDate, endDate || startDate, note.trim() || undefined);
+    } catch (e) {
+      setSendError(e instanceof Error ? e.message : String(e));
+      return;
+    }
     setStartDate("");
     setEndDate("");
     setNote("");
@@ -193,6 +207,7 @@ export function LeaveRequestForm({
         <Text style={styles.hint}>
           {ASKABLE.find((a) => a.kind === kind)?.hint ?? "Pumili kung anong klaseng leave."}
         </Text>
+        {kind === "in_kind" && blocked ? <Text style={styles.warning}>{blocked}</Text> : null}
 
         <View style={styles.chips} accessibilityRole="radiogroup">
           {REASONS.map((r) => (
@@ -235,10 +250,11 @@ export function LeaveRequestForm({
           <Text style={styles.preview}>
             {days === 0
               ? "Rest day mo lahat ng araw na iyon."
-              : `${days} araw${tooMuch ? ` — ${silLeft} na lang ang SIL mo.` : ""}`}
+              : `${days} araw${kind === "sil" && blocked ? `. ${blocked}` : ""}`}
           </Text>
         ) : null}
 
+        {sendError ? <Text style={styles.warning}>{sendError}</Text> : null}
         <PrimaryButton
           label={submitting ? "Sinesend..." : "Ipadala sa manager"}
           onPress={handleSubmit}
