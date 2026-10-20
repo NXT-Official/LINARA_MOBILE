@@ -216,10 +216,11 @@ export function recordPdfHtml(r: RecordPdfInput): string {
     row("Role", r.station),
     row(
       "Arrangement",
+      // The words Record ko uses, so the two never disagree (QA F-LM-009).
       r.employment === "live-in"
-        ? "Live-in"
+        ? "Stay-in"
         : r.employment === "live-out"
-          ? "Live-out"
+          ? "Stay-out"
           : "Not recorded",
     ),
     r.endedOn

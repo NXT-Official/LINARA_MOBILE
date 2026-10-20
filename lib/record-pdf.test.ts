@@ -124,6 +124,9 @@ describe("recordPdfHtml", () => {
   it("says deducted and not a certificate, and never claims remittance happened", () => {
     expect(html).toContain("deducted");
     expect(html).toContain("not a certificate of employment");
+    // Record ko says Stay-in; the PDF must match (QA F-LM-009).
+    expect(html).toContain("Stay-in");
+    expect(html).not.toContain("Live-in");
     expect(html).toContain("does not show whether they were remitted");
   });
 
