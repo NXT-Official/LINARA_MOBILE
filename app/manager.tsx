@@ -293,6 +293,8 @@ function Dashboard({ session }: { session: Session | null }) {
           Alert.alert(
             "Tingnan ang email mo",
             "Nagpadala kami ng confirmation link. Buksan iyon, tapos mag-sign in dito gamit ang email at password mo.",
+            undefined,
+            { cancelable: true },
           );
         }
         // Back to the screen if it's behind this one, else in place of it.

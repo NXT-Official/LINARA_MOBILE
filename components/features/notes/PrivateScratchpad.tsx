@@ -142,10 +142,16 @@ export function PrivateScratchpad({
   });
 
   const confirmDelete = (note: HelperNote) =>
-    Alert.alert("Burahin ang tala?", "Hindi na ito maibabalik.", [
-      { text: "Huwag", style: "cancel" },
-      { text: "Burahin", style: "destructive", onPress: () => deleteMutation.mutate(note.id) },
-    ]);
+    Alert.alert(
+      "Burahin ang tala?",
+      "Hindi na ito maibabalik.",
+      [
+        { text: "Huwag", style: "cancel" },
+        { text: "Burahin", style: "destructive", onPress: () => deleteMutation.mutate(note.id) },
+      ],
+      // Android Back closes it like Huwag (QA F-LM-006).
+      { cancelable: true },
+    );
 
   const handleReleaseRecord = async () => {
     const uri = await stopRecording();

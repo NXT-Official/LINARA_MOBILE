@@ -93,10 +93,15 @@ export function PalengkeChecklist({
   }
 
   const confirmRemove = (item: GroceryItemRow) =>
-    Alert.alert(`Tanggalin ang ${item.name}?`, "Mawawala ito sa palengke list.", [
-      { text: "Kanselahin", style: "cancel" },
-      { text: "Tanggalin", style: "destructive", onPress: () => onRemove(item) },
-    ]);
+    Alert.alert(
+      `Tanggalin ang ${item.name}?`,
+      "Mawawala ito sa palengke list.",
+      [
+        { text: "Kanselahin", style: "cancel" },
+        { text: "Tanggalin", style: "destructive", onPress: () => onRemove(item) },
+      ],
+      { cancelable: true },
+    );
 
   return (
     <View style={styles.list}>
