@@ -301,19 +301,27 @@ export interface GroceryItemInput {
  * anything; every helper can add a pantry item that ran out
  * (../LINARA/supabase/add-pantry-roles.sql).
  */
-export async function addGroceryItem(householdId: string, input: GroceryItemInput): Promise<void> {
-  const { error } = await supabase.from("grocery_items").insert({
-    household_id: householdId,
-    name: input.name,
-    qty: input.qty,
-    unit: input.unit,
-    pantry_item_id: input.pantryItemId ?? null,
-    bought: false,
-  });
+export async function addGroceryItem(
+  householdId: string,
+  input: GroceryItemInput,
+): Promise<string> {
+  const { data, error } = await supabase
+    .from("grocery_items")
+    .insert({
+      household_id: householdId,
+      name: input.name,
+      qty: input.qty,
+      unit: input.unit,
+      pantry_item_id: input.pantryItemId ?? null,
+      bought: false,
+    })
+    .select("id")
+    .single();
 
   if (error) {
     throw new Error(error.message);
   }
+  return (data as { id: string }).id;
 }
 
 /** Fixes an item's name or amount. */

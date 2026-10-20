@@ -11,6 +11,7 @@ import { usePantryEdits } from "@/hooks/use-pantry-edits";
 import { getMyHelperProfile, getMyPantryRole } from "@/services/api/helper-profile";
 import { getPantryItems, PANTRY_CATEGORIES, type PantryCategory } from "@/services/api/pantry";
 import {
+  addGroceryItem,
   getGroceryItems,
   getLatestGroceryReceipt,
   recordGroceryReceipt,
@@ -30,7 +31,13 @@ import { ReceiptCaptureCard } from "@/components/features/pantry/receipt-capture
 import { ReceiptSnapCard } from "@/components/features/pantry/receipt-snap-card";
 import { ItemForm } from "@/components/features/pantry/item-form";
 import { ListFilter, matchesQuery } from "@/components/features/pantry/list-filter";
-import { CATEGORY_LABEL, groupByPantryCategory, needsBuying } from "@/lib/pantry";
+import {
+  CATEGORY_LABEL,
+  groupByPantryCategory,
+  isSuggested,
+  needsBuying,
+  pantrySuggestions,
+} from "@/lib/pantry";
 import { HouseSwitcher } from "@/components/features/workplace/house-switcher";
 import { useWorkplaces } from "@/hooks/use-workplaces";
 import { useGroceryRuns } from "@/hooks/use-grocery-runs";
@@ -83,6 +90,8 @@ export default function PantryScreen() {
   const [addingGrocery, setAddingGrocery] = useState(false);
   const [addingPantry, setAddingPantry] = useState(false);
   const [creatingRun, setCreatingRun] = useState(false);
+  // Pantry ids she took off Kailangan while they were only suggested.
+  const [dismissed, setDismissed] = useState<Set<string>>(new Set());
   // Runs she saved a receipt for while the tab was open.
   const [snappedRuns, setSnappedRuns] = useState<Set<string>>(new Set());
 
@@ -177,7 +186,31 @@ export default function PantryScreen() {
   });
 
   const toggleMutation = useMutation({
-    mutationFn: (item: GroceryItemRow) => setGroceryItemBought(item.id, !item.bought),
+    mutationFn: async (item: GroceryItemRow) => {
+      if (!isSuggested(item)) return setGroceryItemBought(item.id, !item.bought);
+      // A low pantry item ticked straight from Kailangan: it goes on the list
+      // and is bought, so the pantry restocks as for any other line.
+      const id = await addGroceryItem(house as string, {
+        name: item.name,
+        qty: item.qty,
+        unit: item.unit,
+        pantryItemId: item.pantryItemId,
+      });
+      await setGroceryItemBought(id, true);
+    },
+    onSuccess: () => {
+      void queryClient.invalidateQueries({ queryKey: ["grocery-items"] });
+      void queryClient.invalidateQueries({ queryKey: ["pantry-items"] });
+    },
+  });
+  const addSuggestionMutation = useMutation({
+    mutationFn: (v: { item: GroceryItemRow; name: string; qty: number; unit: string }) =>
+      addGroceryItem(house as string, {
+        name: v.name,
+        qty: v.qty,
+        unit: v.unit,
+        pantryItemId: v.item.pantryItemId,
+      }),
     onSuccess: () => queryClient.invalidateQueries({ queryKey: ["grocery-items"] }),
   });
 
@@ -222,8 +255,19 @@ export default function PantryScreen() {
 
   const groceryItems = useMemo(() => groceryQuery.data ?? [], [groceryQuery.data]);
   const pantryItems = useMemo(() => pantryQuery.data ?? [], [pantryQuery.data]);
-  // With runs, the checklist below is Kailangan: what isn't on a run.
-  const poolItems = runsOn ? groceryItems.filter((g) => !g.runId) : groceryItems;
+  // With runs, the checklist below is Kailangan: what isn't on a run. Low
+  // pantry items join it as the manager's Needed list shows them (QA LM-15).
+  const realPool = runsOn ? groceryItems.filter((g) => !g.runId) : groceryItems;
+  const poolItems = [...realPool, ...pantrySuggestions(pantryItems, groceryItems, dismissed)];
+  // A suggestion edited is put on the list as typed; removed, it's hidden here.
+  const editLine: typeof edits.editGrocery = (item, values, done) => {
+    if (!isSuggested(item)) return edits.editGrocery(item, values, done);
+    addSuggestionMutation.mutate({ item, ...values }, { onSuccess: done });
+  };
+  const removeLine = (item: GroceryItemRow) => {
+    if (!isSuggested(item)) return edits.removeGrocery(item);
+    if (item.pantryItemId) setDismissed((prev) => new Set(prev).add(item.pantryItemId as string));
+  };
   const readyRuns = runs.open.filter((r) => r.status === "ready");
   const leadRuns = inCharge ? runs.open.filter((r) => r.status !== "ready") : [];
   const itemsOf = (runId: string) => groceryItems.filter((g) => g.runId === runId);
@@ -367,7 +411,7 @@ export default function PantryScreen() {
                 {runsOn ? "Kailangan" : "Listahan sa palengke"}
               </Text>
               <View style={styles.headButtons}>
-                {inCharge && runsOn && !creatingRun && poolItems.some((g) => !g.bought) && (
+                {inCharge && runsOn && !creatingRun && realPool.some((g) => !g.bought) && (
                   <Pressable
                     onPress={() => setCreatingRun(true)}
                     style={styles.addButton}
@@ -391,7 +435,7 @@ export default function PantryScreen() {
             </View>
             {inCharge && creatingRun && (
               <NewRunForm
-                pool={poolItems}
+                pool={realPool}
                 saving={runs.busy === "new-run"}
                 onSubmit={(title, itemIds) =>
                   void runs
@@ -437,8 +481,8 @@ export default function PantryScreen() {
                 savingId={edits.savingId}
                 onToggle={(item) => toggleMutation.mutate(item)}
                 onCost={(item, cost) => costMutation.mutate({ item, cost })}
-                onEdit={edits.editGrocery}
-                onRemove={edits.removeGrocery}
+                onEdit={editLine}
+                onRemove={removeLine}
               />
             ) : (
               groceryGroups.map(({ section, items }) => (
@@ -452,8 +496,8 @@ export default function PantryScreen() {
                     savingId={edits.savingId}
                     onToggle={(item) => toggleMutation.mutate(item)}
                     onCost={(item, cost) => costMutation.mutate({ item, cost })}
-                    onEdit={edits.editGrocery}
-                    onRemove={edits.removeGrocery}
+                    onEdit={editLine}
+                    onRemove={removeLine}
                   />
                 </View>
               ))

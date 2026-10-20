@@ -8,11 +8,8 @@ import {
   updateGroceryItem,
   type GroceryItemRow,
 } from "@/services/api/grocery";
+import { restockQty } from "@/lib/pantry";
 import { addPantryItem, updatePantryItem, type PantryItemRow } from "@/services/api/pantry";
-
-/** Matches the web's low-stock suggestion: enough to get back to par, at least one. */
-const restockQty = (item: PantryItemRow) =>
-  Math.max(1, Math.round((item.par - item.qty) * 100) / 100);
 
 /**
  * Her side of keeping the pantry and the palengke list (client feedback,
