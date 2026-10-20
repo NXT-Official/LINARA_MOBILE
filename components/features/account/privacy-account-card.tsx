@@ -117,7 +117,7 @@ export function PrivacyAccountCard({
             i-download muna ang PDF ng record mo sa itaas.
           </Text>
           <TextField
-            label="Bakit? (optional)"
+            label="Bakit? (kung meron)"
             value={note}
             onChangeText={setNote}
             maxLength={300}

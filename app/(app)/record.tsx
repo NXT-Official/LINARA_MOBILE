@@ -417,7 +417,7 @@ function CurrentRecord({ employment }: { employment: Employment }) {
               })}
             </View>
             <TextField
-              label="Ano ang tama? (optional)"
+              label="Ano ang tama? (kung meron)"
               value={note}
               onChangeText={setNote}
               placeholder="Hal. ₱9,000 ang napag-usapan"
