@@ -1,6 +1,7 @@
 import { Pressable, StyleSheet, Text, View } from "react-native";
 
 import { colors } from "@/lib/theme";
+import { utosAnswers } from "@/lib/utos";
 import type { QuickUtoItem } from "@/services/api/quick-utos";
 
 function formatTimeOfDay(iso: string): string {
@@ -8,11 +9,9 @@ function formatTimeOfDay(iso: string): string {
 }
 
 /**
- * A single Quick Utos banner (roadmap Story 7, step 5). Mirrors
- * the web reference's UtosChip ack buttons ("Got it" -> seen, "Done" ->
- * done), but has no acked/checkmark state of its own -- the parent feed
- * drops the row entirely once acked, matching this screen's "vanish when
- * acknowledged" acceptance criterion.
+ * A single Quick Utos banner (roadmap Story 7, step 5). Sige (seen) tells
+ * the manager she saw it and keeps it here with Tapos na (done), which takes
+ * it off (QA F-LM-004).
  */
 export function UtosChip({
   utos,
@@ -42,17 +41,21 @@ export function UtosChip({
         <Text style={styles.waitingText}>Naghihintay — makikita mo &apos;to pagbalik mo.</Text>
       ) : (
         <View style={styles.actions}>
-          <Pressable
-            disabled={acking}
-            onPress={() => onAck(utos.id, "seen")}
-            style={({ pressed }) => [
-              styles.actionButton,
-              styles.secondaryButton,
-              pressed && styles.pressed,
-            ]}
-          >
-            <Text style={styles.secondaryButtonText}>Sige</Text>
-          </Pressable>
+          {utosAnswers(utos.ackState).includes("seen") ? (
+            <Pressable
+              disabled={acking}
+              onPress={() => onAck(utos.id, "seen")}
+              style={({ pressed }) => [
+                styles.actionButton,
+                styles.secondaryButton,
+                pressed && styles.pressed,
+              ]}
+            >
+              <Text style={styles.secondaryButtonText}>Sige</Text>
+            </Pressable>
+          ) : (
+            <Text style={styles.seenText}>Nakita mo na. Pindutin kapag tapos na.</Text>
+          )}
           <Pressable
             disabled={acking}
             onPress={() => onAck(utos.id, "done")}
@@ -111,6 +114,12 @@ const styles = StyleSheet.create({
     color: "#C24E30",
   },
   meta: {
+    fontSize: 13,
+    color: colors.mutedInk,
+  },
+  seenText: {
+    flex: 1,
+    alignSelf: "center",
     fontSize: 13,
     color: colors.mutedInk,
   },
