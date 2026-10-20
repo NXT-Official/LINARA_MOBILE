@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 import { ActivityIndicator, StyleSheet, Text, View } from "react-native";
 
+import { useT } from "@/lib/i18n/locale-context";
 import { colors, fonts } from "@/lib/theme";
 import { queryClient } from "@/lib/query-client";
 import { useSession } from "@/lib/session-context";
@@ -27,6 +28,7 @@ const SIGN_OUT_MS = 8_000;
  */
 export function StartupWait() {
   const { session, reload, dropSession } = useSession();
+  const t = useT();
   const [stalled, setStalled] = useState(false);
   const [signingOut, setSigningOut] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -61,7 +63,7 @@ export function StartupWait() {
       }
       dropSession();
     } catch (err) {
-      setError(err instanceof Error ? err.message : "Hindi nakapag-sign out.");
+      setError(err instanceof Error ? err.message : t("signOut.failed"));
     } finally {
       setSigningOut(false);
     }
@@ -77,14 +79,12 @@ export function StartupWait() {
 
   return (
     <View style={[styles.center, styles.stalled]}>
-      <Text style={styles.title}>Medyo natatagalan</Text>
-      <Text style={styles.body}>
-        Baka mahina ang internet. Subukan ulit, o mag-sign out at mag-sign in muli.
-      </Text>
+      <Text style={styles.title}>{t("startup.title")}</Text>
+      <Text style={styles.body}>{t("startup.body")}</Text>
       {error ? <Text style={styles.error}>{error}</Text> : null}
-      <PrimaryButton label="Subukan ulit" onPress={tryAgain} disabled={signingOut} />
+      <PrimaryButton label={t("common.tryAgain")} onPress={tryAgain} disabled={signingOut} />
       <PrimaryButton
-        label={session ? "Mag-sign out" : "Bumalik sa sign in"}
+        label={session ? t("signOut.button") : t("common.backToSignIn")}
         variant="secondary"
         onPress={() => void leave()}
         loading={signingOut}

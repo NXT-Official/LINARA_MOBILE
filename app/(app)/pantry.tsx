@@ -5,6 +5,7 @@ import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import * as ImagePicker from "expo-image-picker";
 import { useFocusEffect } from "expo-router";
 
+import { useT } from "@/lib/i18n/locale-context";
 import { colors, fonts } from "@/lib/theme";
 import { usePalengkeBudget } from "@/hooks/use-palengke-budget";
 import { usePantryEdits } from "@/hooks/use-pantry-edits";
@@ -79,6 +80,7 @@ const PANTRY_CHIPS: { key: PantryFilter; label: string }[] = [
  */
 export default function PantryScreen() {
   const queryClient = useQueryClient();
+  const t = useT();
   const [receiptUri, setReceiptUri] = useState<string | null>(null);
   const [receiptPendingUpload, setReceiptPendingUpload] = useState(false);
   const [uploading, setUploading] = useState(false);
@@ -354,7 +356,7 @@ export default function PantryScreen() {
       contentContainerStyle={styles.content}
       keyboardShouldPersistTaps="handled"
     >
-      <Text style={styles.header}>Pantry at palengke</Text>
+      <Text style={styles.header}>{t("header.pantry")}</Text>
       <HouseSwitcher places={places} />
 
       {groceryQuery.isLoading ? (

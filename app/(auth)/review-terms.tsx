@@ -2,10 +2,12 @@ import { ActivityIndicator, Linking, ScrollView, StyleSheet, Text, View } from "
 import { router, useLocalSearchParams } from "expo-router";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 
+import { useT } from "@/lib/i18n/locale-context";
 import { colors } from "@/lib/theme";
 import { PRIVACY_URL, TERMS_URL } from "@/lib/legal";
 import { formatShiftTime, weekdayName } from "@/lib/format";
 import { useSession } from "@/lib/session-context";
+import { textParts } from "@/lib/i18n/translate";
 import { joinHousehold } from "@/services/api/employment";
 import { verifyInviteCode } from "@/services/api/handshake";
 import { PrimaryButton } from "@/components/ui/primary-button";
@@ -31,6 +33,7 @@ function TermRow({ label, value }: { label: string; value: string }) {
  */
 export default function ReviewTermsScreen() {
   const { code, flagged } = useLocalSearchParams<{ code: string; flagged?: string }>();
+  const t = useT();
 
   const { session } = useSession();
   const queryClient = useQueryClient();
@@ -53,8 +56,8 @@ export default function ReviewTermsScreen() {
 
   return (
     <ScrollView style={styles.screen} contentContainerStyle={styles.content}>
-      <Text style={styles.eyebrow}>Hakbang 2 sa 3</Text>
-      <Text style={styles.title}>Tingnan mo muna — ito ba ang usapan?</Text>
+      <Text style={styles.eyebrow}>{t("review.step")}</Text>
+      <Text style={styles.title}>{t("review.title")}</Text>
 
       {termsQuery.isLoading ? (
         <View style={styles.loading}>
@@ -62,59 +65,57 @@ export default function ReviewTermsScreen() {
         </View>
       ) : termsQuery.isError || !termsQuery.data ? (
         <View style={styles.errorBox}>
-          <Text style={styles.errorText}>
-            Hindi namin nahanap ang code na iyan, o na-claim na ito. Paki-check at subukan ulit.
-          </Text>
-          <PrimaryButton label="Bumalik" variant="secondary" onPress={goBack} />
+          <Text style={styles.errorText}>{t("review.notFound")}</Text>
+          <PrimaryButton label={t("common.back")} variant="secondary" onPress={goBack} />
         </View>
       ) : (
         <>
           {flagged === "1" && (
             <View style={styles.flaggedBanner}>
-              <Text style={styles.flaggedText}>
-                Salamat — sinabi na namin sa manager mo. Pwede ka pa ring mag-continue, o mag-antay
-                muna ng ayos.
-              </Text>
+              <Text style={styles.flaggedText}>{t("review.flagged")}</Text>
             </View>
           )}
 
           <View style={styles.card}>
-            <TermRow label="Pangalan" value={termsQuery.data.name} />
-            <TermRow label="Trabaho" value={termsQuery.data.station} />
+            <TermRow label={t("review.name")} value={termsQuery.data.name} />
+            <TermRow label={t("review.station")} value={termsQuery.data.station} />
             <TermRow
-              label="Oras ng shift"
+              label={t("review.shift")}
               value={`${formatShiftTime(termsQuery.data.shiftStart)} – ${formatShiftTime(termsQuery.data.shiftEnd)}`}
             />
-            <TermRow label="Rest day" value={weekdayName(termsQuery.data.weeklyRestDay)} />
             <TermRow
-              label="Sahod kada buwan"
+              label={t("review.restDay")}
+              value={weekdayName(termsQuery.data.weeklyRestDay)}
+            />
+            <TermRow
+              label={t("review.wage")}
               value={`₱${termsQuery.data.monthlyRate.toLocaleString()}`}
             />
           </View>
 
           <PrimaryButton
-            label="May hindi tama? →"
+            label={t("review.somethingWrong")}
             variant="secondary"
             onPress={() => router.push({ pathname: "/(auth)/flag-terms", params: { code } })}
           />
 
           <View style={styles.actions}>
             <PrimaryButton
-              label="Bumalik"
+              label={t("common.back")}
               variant="secondary"
               style={styles.actionButton}
               onPress={goBack}
             />
             {session ? (
               <PrimaryButton
-                label="Tama — sumali"
+                label={t("review.join")}
                 style={styles.actionButton}
                 loading={joinMutation.isPending}
                 onPress={() => joinMutation.mutate()}
               />
             ) : (
               <PrimaryButton
-                label="Tama ito — tuloy"
+                label={t("review.continue")}
                 style={styles.actionButton}
                 onPress={() => router.push({ pathname: "/(auth)/claim-account", params: { code } })}
               />
@@ -124,19 +125,25 @@ export default function ReviewTermsScreen() {
             <Text style={styles.joinError}>
               {joinMutation.error instanceof Error
                 ? joinMutation.error.message
-                : "Hindi nakasali. Subukan ulit."}
+                : t("review.joinFailed")}
             </Text>
           ) : null}
           <Text style={styles.legal}>
-            Sa pagsali, sumasang-ayon ka sa{" "}
-            <Text style={styles.legalLink} onPress={() => void Linking.openURL(TERMS_URL)}>
-              terms
-            </Text>{" "}
-            at{" "}
-            <Text style={styles.legalLink} onPress={() => void Linking.openURL(PRIVACY_URL)}>
-              privacy policy
-            </Text>{" "}
-            ng Linara.
+            {textParts(t("review.legal")).map((part, i) =>
+              typeof part === "string" ? (
+                part
+              ) : (
+                <Text
+                  key={i}
+                  style={styles.legalLink}
+                  onPress={() =>
+                    void Linking.openURL(part.name === "terms" ? TERMS_URL : PRIVACY_URL)
+                  }
+                >
+                  {t(part.name === "terms" ? "review.terms" : "review.privacy")}
+                </Text>
+              ),
+            )}
           </Text>
         </>
       )}

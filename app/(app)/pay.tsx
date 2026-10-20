@@ -2,6 +2,7 @@ import { useRef } from "react";
 import { ActivityIndicator, ScrollView, StyleSheet, Text, View } from "react-native";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 
+import { useT } from "@/lib/i18n/locale-context";
 import { colors, fonts } from "@/lib/theme";
 import { getHouseholdCutoff } from "@/services/api/cutoff";
 import { getMyHelperProfile } from "@/services/api/helper-profile";
@@ -45,6 +46,7 @@ import { SignOutButton } from "@/components/features/account/sign-out-button";
 export default function PayScreen() {
   const queryClient = useQueryClient();
   const scrollRef = useRef<ScrollView>(null);
+  const t = useT();
 
   const profileQuery = useQuery({
     queryKey: ["my-helper-profile"],
@@ -211,7 +213,7 @@ export default function PayScreen() {
       contentContainerStyle={styles.content}
       keyboardShouldPersistTaps="handled"
     >
-      <Text style={styles.header}>Sahod ko</Text>
+      <Text style={styles.header}>{t("tabs.pay")}</Text>
 
       {profileQuery.isLoading ? (
         <View style={styles.loading}>

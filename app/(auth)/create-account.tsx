@@ -3,6 +3,7 @@ import { Pressable, ScrollView, StyleSheet, Text, View } from "react-native";
 import { router } from "expo-router";
 import { Ionicons } from "@expo/vector-icons";
 
+import { useT } from "@/lib/i18n/locale-context";
 import { colors, fonts } from "@/lib/theme";
 
 type IconName = ComponentProps<typeof Ionicons>["name"];
@@ -13,23 +14,24 @@ type IconName = ComponentProps<typeof Ionicons>["name"];
  * (sign-in.tsx): the account's type decides where it lands.
  */
 export default function CreateAccountScreen() {
+  const t = useT();
   return (
     <ScrollView style={styles.flex} contentContainerStyle={styles.content}>
       <View style={styles.hero}>
-        <Text style={styles.title}>Gumawa ng account</Text>
-        <Text style={styles.subtitle}>Alin ka sa dalawa?</Text>
+        <Text style={styles.title}>{t("create.title")}</Text>
+        <Text style={styles.subtitle}>{t("create.subtitle")}</Text>
       </View>
 
       <Choice
         icon="person-outline"
-        title="Kasambahay ako"
-        body="Nagtatrabaho ako sa isang bahay. Sasali ako gamit ang invite code galing sa employer ko."
+        title={t("create.helperTitle")}
+        body={t("create.helperBody")}
         onPress={() => router.push("/(auth)/welcome")}
       />
       <Choice
         icon="home-outline"
-        title="Employer ako"
-        body="I run a household. Set it up, then invite the people who work in it."
+        title={t("create.employerTitle")}
+        body={t("create.employerBody")}
         onPress={() => router.push({ pathname: "/manager", params: { signup: "1" } })}
       />
 
@@ -39,7 +41,7 @@ export default function CreateAccountScreen() {
         accessibilityRole="button"
         style={styles.linkWrap}
       >
-        <Text style={styles.link}>May account ka na? Mag-sign in</Text>
+        <Text style={styles.link}>{t("common.haveAccount")}</Text>
       </Pressable>
     </ScrollView>
   );

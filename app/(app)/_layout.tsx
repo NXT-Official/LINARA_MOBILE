@@ -6,6 +6,7 @@ import { useQuery } from "@tanstack/react-query";
 
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 
+import { useT } from "@/lib/i18n/locale-context";
 import { colors } from "@/lib/theme";
 import { useSession } from "@/lib/session-context";
 import { getMyEmployments } from "@/services/api/employment";
@@ -56,6 +57,7 @@ export default function AppTabsLayout() {
   // Android draws apps edge to edge, under the status bar; with the header
   // hidden, nothing else keeps the screens' tops clear of it.
   const insets = useSafeAreaInsets();
+  const t = useT();
   const { session, isLoading } = useSession();
   const pathname = usePathname();
   const kindQuery = useAccountKind();
@@ -119,41 +121,41 @@ export default function AppTabsLayout() {
       <Tabs.Screen
         name="today"
         options={{
-          title: "Ngayon",
+          title: t("tabs.today"),
           tabBarIcon: ({ color, size }) => (
             <Ionicons name="checkmark-circle" size={size} color={color} />
           ),
-          ...lockedButton("Ngayon"),
+          ...lockedButton(t("tabs.today")),
         }}
       />
       <Tabs.Screen
         name="week"
         options={{
-          title: "Linggo ko",
+          title: t("tabs.week"),
           tabBarIcon: ({ color, size }) => <Ionicons name="calendar" size={size} color={color} />,
-          ...lockedButton("Linggo ko"),
+          ...lockedButton(t("tabs.week")),
         }}
       />
       <Tabs.Screen
         name="pantry"
         options={{
-          title: "Pantry",
+          title: t("tabs.pantry"),
           tabBarIcon: ({ color, size }) => <Ionicons name="basket" size={size} color={color} />,
-          ...lockedButton("Pantry"),
+          ...lockedButton(t("tabs.pantry")),
         }}
       />
       <Tabs.Screen
         name="pay"
         options={{
-          title: "Sahod ko",
+          title: t("tabs.pay"),
           tabBarIcon: ({ color, size }) => <Ionicons name="card" size={size} color={color} />,
-          ...lockedButton("Sahod ko"),
+          ...lockedButton(t("tabs.pay")),
         }}
       />
       <Tabs.Screen
         name="record"
         options={{
-          title: "Record ko",
+          title: t("tabs.record"),
           tabBarIcon: ({ color, size }) => (
             <Ionicons name="document-text" size={size} color={color} />
           ),

@@ -11,16 +11,17 @@ import {
 } from "react-native";
 import { router, useLocalSearchParams } from "expo-router";
 
+import { useT } from "@/lib/i18n/locale-context";
 import { colors } from "@/lib/theme";
 import { flagDiscrepancy } from "@/services/api/handshake";
 import { PrimaryButton } from "@/components/ui/primary-button";
 
-const FLAG_CATEGORIES: { value: "wage" | "shift" | "restDay" | "station"; label: string }[] = [
-  { value: "wage", label: "Sahod" },
-  { value: "shift", label: "Oras ng shift" },
-  { value: "restDay", label: "Rest day" },
-  { value: "station", label: "Trabaho" },
-];
+const FLAG_CATEGORIES = [
+  { value: "wage", label: "flag.wage" },
+  { value: "shift", label: "flag.shift" },
+  { value: "restDay", label: "flag.restDay" },
+  { value: "station", label: "flag.station" },
+] as const;
 
 /**
  * Discrepancy flagging (roadmap Story 6, step 3 / plan.md 3.1 step 3).
@@ -31,6 +32,7 @@ const FLAG_CATEGORIES: { value: "wage" | "shift" | "restDay" | "station"; label:
  */
 export default function FlagTermsScreen() {
   const { code } = useLocalSearchParams<{ code: string }>();
+  const t = useT();
   const [field, setField] = useState<(typeof FLAG_CATEGORIES)[number]["value"]>("wage");
   const [note, setNote] = useState("");
   const [loading, setLoading] = useState(false);
@@ -43,7 +45,7 @@ export default function FlagTermsScreen() {
       await flagDiscrepancy(code, field, note.trim());
       router.replace({ pathname: "/(auth)/review-terms", params: { code, flagged: "1" } });
     } catch (err) {
-      setError(err instanceof Error ? err.message : "May error sa pagpapadala ng flag.");
+      setError(err instanceof Error ? err.message : t("flag.failed"));
     } finally {
       setLoading(false);
     }
@@ -55,14 +57,11 @@ export default function FlagTermsScreen() {
       behavior={Platform.OS === "ios" ? "padding" : undefined}
     >
       <ScrollView contentContainerStyle={styles.content} keyboardShouldPersistTaps="handled">
-        <Text style={styles.eyebrow}>Sabihin ang mali</Text>
-        <Text style={styles.title}>May hindi tama?</Text>
-        <Text style={styles.subtitle}>
-          Alin ang mali? Sabihin mo lang — ipapaalam namin sa manager. Hindi mo pa kailangang
-          pumirma.
-        </Text>
+        <Text style={styles.eyebrow}>{t("flag.eyebrow")}</Text>
+        <Text style={styles.title}>{t("flag.title")}</Text>
+        <Text style={styles.subtitle}>{t("flag.subtitle")}</Text>
 
-        <Text style={styles.label}>Aling detalye?</Text>
+        <Text style={styles.label}>{t("flag.which")}</Text>
         <View style={styles.categoryRow}>
           {FLAG_CATEGORIES.map((category) => {
             const selected = category.value === field;
@@ -75,7 +74,7 @@ export default function FlagTermsScreen() {
                 <Text
                   style={[styles.categoryChipText, selected && styles.categoryChipTextSelected]}
                 >
-                  {category.label}
+                  {t(category.label)}
                 </Text>
               </Pressable>
             );
@@ -83,11 +82,11 @@ export default function FlagTermsScreen() {
         </View>
 
         <View style={styles.noteField}>
-          <Text style={styles.label}>Tala (kung meron)</Text>
+          <Text style={styles.label}>{t("flag.note")}</Text>
           <TextInput
             value={note}
             onChangeText={setNote}
-            placeholder="Hal. Ang usapan namin ay ₱8,500 monthly rate, hindi ₱8,000."
+            placeholder={t("flag.notePlaceholder")}
             placeholderTextColor={colors.mutedInk}
             multiline
             numberOfLines={4}
@@ -100,13 +99,13 @@ export default function FlagTermsScreen() {
 
         <View style={styles.actions}>
           <PrimaryButton
-            label="Huwag na"
+            label={t("flag.cancel")}
             variant="secondary"
             style={styles.actionButton}
             onPress={() => router.back()}
           />
           <PrimaryButton
-            label="Ipadala sa manager"
+            label={t("common.sendToManager")}
             style={styles.actionButton}
             loading={loading}
             onPress={submitFlag}

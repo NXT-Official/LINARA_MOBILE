@@ -11,6 +11,7 @@ import {
 import { router } from "expo-router";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 
+import { useT } from "@/lib/i18n/locale-context";
 import { colors, fonts } from "@/lib/theme";
 import { formatDateFil, formatHoursMinutes, formatPeso, formatShiftTime } from "@/lib/format";
 import {
@@ -37,6 +38,7 @@ import {
 import { getMyCoveredTeams, getMyWorkplaces } from "@/services/api/workplaces";
 import { loadRecordPdfInput, shareRecordPdf } from "@/services/record-export";
 import { PrivacyAccountCard } from "@/components/features/account/privacy-account-card";
+import { LanguageMenu } from "@/components/features/account/language-menu";
 import { SignOutButton } from "@/components/features/account/sign-out-button";
 import { PaymentConfirmations } from "@/components/features/pay/payment-confirmations";
 import { DateTimeField } from "@/components/ui/date-time-field";
@@ -78,6 +80,7 @@ const longDate = (value: string) => formatDateFil(asDay(value));
 export default function RecordScreen() {
   const { session } = useSession();
   const scrollRef = useRef<ScrollView>(null);
+  const t = useT();
   const employmentsQuery = useQuery({
     queryKey: ["my-employments", session?.user.id],
     queryFn: getMyEmployments,
@@ -100,7 +103,7 @@ export default function RecordScreen() {
       contentContainerStyle={styles.content}
       keyboardShouldPersistTaps="handled"
     >
-      <Text style={styles.header}>Record ko</Text>
+      <Text style={styles.header}>{t("tabs.record")}</Text>
       <Text style={styles.sub}>
         {current
           ? "Ang trabaho at sahod mo, sa iisang lugar."
@@ -131,6 +134,7 @@ export default function RecordScreen() {
           />
         </>
       )}
+      <LanguageMenu />
       {/* Here as well as My Pay: My Record is the one tab that always opens,
           even with no household, so she can always sign out. */}
       {employmentsQuery.isLoading ? null : (
