@@ -470,6 +470,9 @@ export default function TodayScreen() {
               onChanged={refreshToday}
               places={places}
               variant={layout === "timeline" ? "timeline" : "list"}
+              emptyText={
+                layout === "focus" ? undefined : "Walang task ngayon. Magandang break, po!"
+              }
             />
 
             <TeamDay places={places} helperId={profileQuery.data.id} />

@@ -86,6 +86,12 @@ export default function RecordScreen() {
   const employments = employmentsQuery.data ?? [];
   const current = employments.find((e) => e.status === "ACTIVE") ?? null;
   const past = employments.filter((e) => e.status === "INACTIVE");
+  // The same read as CurrentRecord's, from the cache: has she given notice?
+  const currentTermsQuery = useQuery({
+    queryKey: ["terms-on-file", current?.helperId],
+    queryFn: () => getMyTermsOnFile(current?.helperId as string),
+    enabled: Boolean(current),
+  });
 
   return (
     <ScrollView
@@ -119,7 +125,10 @@ export default function RecordScreen() {
           <PaymentConfirmations />
           {current ? <CurrentRecord employment={current} /> : <JoinHouseholdCard />}
           {past.length > 0 ? <PastEmployments past={past} /> : null}
-          <PrivacyAccountCard employed={current !== null} />
+          <PrivacyAccountCard
+            employed={current !== null}
+            noticeGiven={Boolean(currentTermsQuery.data?.noticeLastDay)}
+          />
         </>
       )}
       {/* Here as well as My Pay: My Record is the one tab that always opens,

@@ -27,7 +27,14 @@ const longDate = (iso: string) => formatDateFil(new Date(iso));
  * the household ends the employment on her last day with her final pay, and
  * then she can (KNOWN_GAPS.md O55, the user's choice 2026-10-09).
  */
-export function PrivacyAccountCard({ employed }: { employed: boolean }) {
+export function PrivacyAccountCard({
+  employed,
+  noticeGiven = false,
+}: {
+  employed: boolean;
+  /** She already gave notice, so the first step is done (QA F-LM-010). */
+  noticeGiven?: boolean;
+}) {
   const queryClient = useQueryClient();
   const requestQuery = useQuery({
     queryKey: ["my-deletion-request"],
@@ -90,8 +97,9 @@ export function PrivacyAccountCard({ employed }: { employed: boolean }) {
             employment mo, para maayos ang huling sahod at record mo.
           </Text>
           <Text style={styles.body}>
-            1. Magbigay ng abiso sa employer mo: &quot;Aalis ka na ba? Magbigay ng abiso&quot;, sa
-            itaas.
+            {noticeGiven
+              ? "1. Nakapagbigay ka na ng abiso. Nakikita na ito ng employer mo."
+              : '1. Magbigay ng abiso sa employer mo: "Aalis ka na ba? Magbigay ng abiso", sa itaas.'}
           </Text>
           <Text style={styles.body}>2. Tatapusin nila ang employment mo sa huling araw mo.</Text>
           <Text style={styles.body}>3. Bumalik dito at burahin ang account mo.</Text>

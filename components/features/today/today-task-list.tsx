@@ -47,6 +47,7 @@ export function TodayTaskList({
   onChanged,
   places,
   variant = "list",
+  emptyText,
 }: {
   helperId: string;
   householdId: string;
@@ -55,6 +56,8 @@ export function TodayTaskList({
   onChanged: () => void;
   places: Workplaces;
   variant?: "list" | "timeline";
+  /** Shown when today has no task. Without it an empty day shows nothing. */
+  emptyText?: string;
 }) {
   const queryClient = useQueryClient();
   const [open, setOpen] = useState(true);
@@ -132,7 +135,14 @@ export function TodayTaskList({
   const tasks = (tasksQuery.data ?? []).filter(
     (t) => places.house === "all" || t.householdId === places.house,
   );
-  if (tasks.length === 0) return null;
+  if (tasks.length === 0) {
+    // Listahan and Oras say so too, not only Isa-isa (QA F-LM-010).
+    return emptyText && tasksQuery.isSuccess ? (
+      <View style={styles.emptyCard}>
+        <Text style={styles.emptyText}>{emptyText}</Text>
+      </View>
+    ) : null;
+  }
   const done = tasks.filter((t) => t.status === "done").length;
   const timeline = variant === "timeline";
   const shown = open || timeline;
@@ -249,6 +259,19 @@ function NowLine({ at }: { at: number }) {
 }
 
 const styles = StyleSheet.create({
+  emptyCard: {
+    borderRadius: 24,
+    padding: 20,
+    backgroundColor: colors.cardCream,
+    borderWidth: 1,
+    borderColor: colors.border,
+    alignItems: "center",
+  },
+  emptyText: {
+    fontSize: 14,
+    fontWeight: "600",
+    color: colors.ink,
+  },
   card: {
     borderRadius: 20,
     paddingHorizontal: 16,
