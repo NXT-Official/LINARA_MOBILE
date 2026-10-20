@@ -351,7 +351,11 @@ export default function TodayScreen() {
 
   return (
     <View style={styles.flex}>
-      <ScrollView style={styles.screen} contentContainerStyle={styles.content}>
+      <ScrollView
+        style={styles.screen}
+        contentContainerStyle={styles.content}
+        keyboardShouldPersistTaps="handled"
+      >
         {profileQuery.isLoading ? (
           <View style={styles.loading}>
             <ActivityIndicator color={colors.pineTeal} />

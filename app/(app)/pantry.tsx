@@ -300,7 +300,11 @@ export default function PantryScreen() {
   const palengkeTicket = palengkeTicketQuery.data;
 
   return (
-    <ScrollView style={styles.screen} contentContainerStyle={styles.content}>
+    <ScrollView
+      style={styles.screen}
+      contentContainerStyle={styles.content}
+      keyboardShouldPersistTaps="handled"
+    >
       <Text style={styles.header}>Pantry at palengke</Text>
       <HouseSwitcher places={places} />
 

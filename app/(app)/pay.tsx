@@ -203,7 +203,11 @@ export default function PayScreen() {
   const restMinutes = restOwedMinutes(ledgerQuery.data ?? []);
 
   return (
-    <ScrollView style={styles.screen} contentContainerStyle={styles.content}>
+    <ScrollView
+      style={styles.screen}
+      contentContainerStyle={styles.content}
+      keyboardShouldPersistTaps="handled"
+    >
       <Text style={styles.header}>Sahod ko</Text>
 
       {profileQuery.isLoading ? (
