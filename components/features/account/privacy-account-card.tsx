@@ -3,6 +3,7 @@ import { Linking, Pressable, StyleSheet, Text, View } from "react-native";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 
 import { colors, fonts } from "@/lib/theme";
+import { formatDateFil } from "@/lib/format";
 import { DELETION_WINDOW_DAYS, PRIVACY_URL, TERMS_URL } from "@/lib/legal";
 import {
   cancelAccountDeletion,
@@ -12,8 +13,7 @@ import {
 import { PrimaryButton } from "@/components/ui/primary-button";
 import { TextField } from "@/components/ui/text-field";
 
-const longDate = (iso: string) =>
-  new Date(iso).toLocaleDateString("en-PH", { year: "numeric", month: "long", day: "numeric" });
+const longDate = (iso: string) => formatDateFil(new Date(iso));
 
 /**
  * The end of My Record: the privacy policy and terms, and the in-app way to
@@ -58,14 +58,14 @@ export function PrivacyAccountCard({ employed }: { employed: boolean }) {
           onPress={() => void Linking.openURL(PRIVACY_URL)}
           style={styles.link}
         >
-          <Text style={styles.linkText}>Privacy policy</Text>
+          <Text style={styles.linkText}>Patakaran sa privacy</Text>
         </Pressable>
         <Pressable
           accessibilityRole="link"
           onPress={() => void Linking.openURL(TERMS_URL)}
           style={styles.link}
         >
-          <Text style={styles.linkText}>Terms</Text>
+          <Text style={styles.linkText}>Mga tuntunin</Text>
         </Pressable>
       </View>
 

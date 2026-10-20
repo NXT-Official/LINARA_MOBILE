@@ -83,7 +83,7 @@ export default function FlagTermsScreen() {
         </View>
 
         <View style={styles.noteField}>
-          <Text style={styles.label}>Note (optional)</Text>
+          <Text style={styles.label}>Tala (kung meron)</Text>
           <TextInput
             value={note}
             onChangeText={setNote}

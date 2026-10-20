@@ -44,3 +44,23 @@ export function formatHoursMinutes(totalMinutes: number): string {
   if (minutes === 0) return `${hours}h`;
   return `${hours}h ${minutes}m`;
 }
+
+const MONTHS_FIL = [
+  "Ene",
+  "Peb",
+  "Mar",
+  "Abr",
+  "May",
+  "Hun",
+  "Hul",
+  "Ago",
+  "Set",
+  "Okt",
+  "Nob",
+  "Dis",
+];
+
+/** "Okt 8, 2026": the date as the rest of the app writes it, in Filipino (QA LM-14). */
+export function formatDateFil(d: Date): string {
+  return `${MONTHS_FIL[d.getMonth()]} ${d.getDate()}, ${d.getFullYear()}`;
+}

@@ -243,7 +243,7 @@ export function LeaveRequestForm({
           minimumIsoDate={startDate || householdToday}
         />
         <TextField
-          label="Note (optional)"
+          label="Tala (kung meron)"
           value={note}
           onChangeText={setNote}
           placeholder="Piyesta"

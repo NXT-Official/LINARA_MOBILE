@@ -8,7 +8,7 @@ function formatTimeOfDay(ts: number): string {
 }
 
 const STATUS_LABEL: Record<RosaAvailabilityStatus["status"], string> = {
-  on_shift: "On Shift",
+  on_shift: "Naka-shift",
   available: "Available",
   off: "Off",
 };

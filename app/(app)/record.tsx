@@ -12,7 +12,7 @@ import { router } from "expo-router";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 
 import { colors, fonts } from "@/lib/theme";
-import { formatHoursMinutes, formatPeso, formatShiftTime } from "@/lib/format";
+import { formatDateFil, formatHoursMinutes, formatPeso, formatShiftTime } from "@/lib/format";
 import {
   leaveDaysLabel,
   recordShareText,
@@ -54,8 +54,7 @@ const FLAG_FIELDS: { value: TermsFlagField; label: string }[] = [
 
 const INVITE_CODE_LENGTH = 6;
 
-const shortDate = (d: Date) =>
-  d.toLocaleDateString("en-PH", { year: "numeric", month: "short", day: "numeric" });
+const shortDate = formatDateFil;
 /** A "YYYY-MM-DD" column as that calendar day on the phone. */
 const calendarDate = (ymd: string) => {
   const [y, m, d] = ymd.split("-").map(Number);
@@ -63,8 +62,7 @@ const calendarDate = (ymd: string) => {
 };
 /** A timestamp, or a "YYYY-MM-DD" date read as that calendar day on the phone. */
 const asDay = (value: string) => (value.length === 10 ? calendarDate(value) : new Date(value));
-const longDate = (value: string) =>
-  asDay(value).toLocaleDateString("en-PH", { year: "numeric", month: "long", day: "numeric" });
+const longDate = (value: string) => formatDateFil(asDay(value));
 
 /**
  * My Record (concept doc §6, "the line that flips the app"): the terms the
@@ -572,7 +570,7 @@ function NoticeCard({
         minimumIsoDate={today}
       />
       <TextField
-        label="Mensahe (optional)"
+        label="Mensahe (kung meron)"
         value={note}
         onChangeText={setNote}
         placeholder="Hal. Uuwi na ako sa probinsya"
