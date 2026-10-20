@@ -298,7 +298,7 @@ export default function PayScreen() {
             <ValeRequestForm
               vales={vales}
               submitting={valeMutation.isPending}
-              onSubmit={(amount, reason) => valeMutation.mutate({ amount, reason })}
+              onSubmit={(amount, reason) => valeMutation.mutateAsync({ amount, reason })}
             />
           )}
         </>

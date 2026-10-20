@@ -29,21 +29,29 @@ export function ValeRequestForm({
   submitting,
 }: {
   vales: ValeRequest[];
-  onSubmit: (amount: number, reason: string) => void;
+  /** Rejects with a message to show; the form keeps what she typed. */
+  onSubmit: (amount: number, reason: string) => Promise<void>;
   submitting: boolean;
 }) {
   const [amount, setAmount] = useState("");
   const [reason, setReason] = useState("");
   const [open, setOpen] = useState(false);
+  const [sendError, setSendError] = useState<string | null>(null);
 
   const parsedAmount = parseAmount(amount);
   const amountError =
     amount.trim() !== "" && parsedAmount === null ? "Ilagay ang halaga, hal. 1,500." : null;
   const canSubmit = parsedAmount !== null && parsedAmount > 0 && reason.trim().length > 0;
 
-  const handleSubmit = () => {
-    if (!canSubmit || parsedAmount === null) return;
-    onSubmit(parsedAmount, reason.trim());
+  const handleSubmit = async () => {
+    if (!canSubmit || parsedAmount === null || submitting) return;
+    setSendError(null);
+    try {
+      await onSubmit(parsedAmount, reason.trim());
+    } catch (e) {
+      setSendError(e instanceof Error ? e.message : String(e));
+      return;
+    }
     setAmount("");
     setReason("");
     setOpen(false);
@@ -97,6 +105,7 @@ export function ValeRequestForm({
           placeholder="Gamot para sa anak"
           multiline
         />
+        {sendError ? <Text style={styles.sendError}>{sendError}</Text> : null}
         <PrimaryButton
           label="Ipadala sa manager"
           onPress={handleSubmit}
@@ -170,5 +179,10 @@ const styles = StyleSheet.create({
   },
   badgeTextDeclined: {
     color: colors.mutedInk,
+  },
+  sendError: {
+    fontSize: 13,
+    fontWeight: "700",
+    color: colors.terracottaInk,
   },
 });
