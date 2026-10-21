@@ -1,21 +1,16 @@
 import { useState } from "react";
-import {
-  KeyboardAvoidingView,
-  Platform,
-  Pressable,
-  ScrollView,
-  StyleSheet,
-  Text,
-  View,
-} from "react-native";
+import { KeyboardAvoidingView, Pressable, ScrollView, StyleSheet, Text, View } from "react-native";
 import { router } from "expo-router";
 
+import { useT } from "@/lib/i18n/locale-context";
 import { colors } from "@/lib/theme";
 import { queryClient } from "@/lib/query-client";
 import { accountKindKey } from "@/hooks/use-account-kind";
 import { supabase } from "@/services/supabase";
 import { signIn } from "@/services/api/auth";
+import { LanguageMenu } from "@/components/features/account/language-menu";
 import { TextField } from "@/components/ui/text-field";
+import { KEYBOARD_BEHAVIOR, useKeyboardOffset } from "@/components/ui/keyboard-screen";
 import { PrimaryButton } from "@/components/ui/primary-button";
 
 /**
@@ -31,6 +26,8 @@ import { PrimaryButton } from "@/components/ui/primary-button";
  */
 export default function SignInScreen() {
   const [email, setEmail] = useState("");
+  const t = useT();
+  const keyboardOffset = useKeyboardOffset();
   const [password, setPassword] = useState("");
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -45,7 +42,7 @@ export default function SignInScreen() {
       queryClient.setQueryData(accountKindKey(data.session?.user.id), kind);
       router.replace(kind === "manager" ? "/manager" : "/(app)/today");
     } catch (err) {
-      setError(err instanceof Error ? err.message : "Hindi nakapag-sign in.");
+      setError(err instanceof Error ? err.message : t("signIn.failed"));
     } finally {
       setLoading(false);
     }
@@ -57,36 +54,35 @@ export default function SignInScreen() {
   return (
     <KeyboardAvoidingView
       style={styles.flex}
-      behavior={Platform.OS === "ios" ? "padding" : undefined}
+      behavior={KEYBOARD_BEHAVIOR}
+      keyboardVerticalOffset={keyboardOffset}
     >
       <ScrollView contentContainerStyle={styles.content} keyboardShouldPersistTaps="handled">
         <View style={styles.hero}>
-          <Text style={styles.title}>Maligayang pagbabalik</Text>
-          <Text style={styles.subtitle}>
-            Para sa employer at kasambahay. Mag-sign in gamit ang email at password mo.
-          </Text>
+          <Text style={styles.title}>{t("signIn.title")}</Text>
+          <Text style={styles.subtitle}>{t("signIn.subtitle")}</Text>
         </View>
 
         <TextField
-          label="Email"
+          label={t("common.email")}
           value={email}
           onChangeText={(text) => {
             setEmail(text);
             setError(null);
           }}
-          placeholder="hal. rosa@gmail.com"
+          placeholder={t("common.emailPlaceholder")}
           keyboardType="email-address"
           autoCapitalize="none"
           autoCorrect={false}
         />
         <TextField
-          label="Password"
+          label={t("common.password")}
           value={password}
           onChangeText={(text) => {
             setPassword(text);
             setError(null);
           }}
-          placeholder="••••••"
+          placeholder={t("signIn.passwordPlaceholder")}
           secureTextEntry
           returnKeyType="go"
           onSubmitEditing={submit}
@@ -95,22 +91,23 @@ export default function SignInScreen() {
         {error ? <Text style={styles.errorText}>{error}</Text> : null}
 
         <PrimaryButton
-          label="Mag-sign in"
+          label={t("signIn.submit")}
           loading={loading}
           disabled={!email.trim() || !password}
           onPress={submit}
         />
 
         <Pressable onPress={forgotPassword} hitSlop={8} accessibilityRole="button">
-          <Text style={styles.link}>Nakalimutan ang password?</Text>
+          <Text style={styles.link}>{t("signIn.forgot")}</Text>
         </Pressable>
         <Pressable
           onPress={() => router.push("/(auth)/create-account")}
           hitSlop={8}
           accessibilityRole="button"
         >
-          <Text style={styles.link}>Wala pang account? Gumawa ng account</Text>
+          <Text style={styles.link}>{t("signIn.create")}</Text>
         </Pressable>
+        <LanguageMenu />
       </ScrollView>
     </KeyboardAvoidingView>
   );

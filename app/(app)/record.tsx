@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useRef, useState } from "react";
 import {
   ActivityIndicator,
   Pressable,
@@ -11,8 +11,10 @@ import {
 import { router } from "expo-router";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 
+import { useT } from "@/lib/i18n/locale-context";
+import { KeyboardScrollView } from "@/components/ui/keyboard-screen";
 import { colors, fonts } from "@/lib/theme";
-import { formatHoursMinutes, formatPeso, formatShiftTime } from "@/lib/format";
+import { formatDateFil, formatHoursMinutes, formatPeso, formatShiftTime } from "@/lib/format";
 import {
   leaveDaysLabel,
   recordShareText,
@@ -37,6 +39,7 @@ import {
 import { getMyCoveredTeams, getMyWorkplaces } from "@/services/api/workplaces";
 import { loadRecordPdfInput, shareRecordPdf } from "@/services/record-export";
 import { PrivacyAccountCard } from "@/components/features/account/privacy-account-card";
+import { LanguageMenu } from "@/components/features/account/language-menu";
 import { SignOutButton } from "@/components/features/account/sign-out-button";
 import { PaymentConfirmations } from "@/components/features/pay/payment-confirmations";
 import { DateTimeField } from "@/components/ui/date-time-field";
@@ -54,8 +57,7 @@ const FLAG_FIELDS: { value: TermsFlagField; label: string }[] = [
 
 const INVITE_CODE_LENGTH = 6;
 
-const shortDate = (d: Date) =>
-  d.toLocaleDateString("en-PH", { year: "numeric", month: "short", day: "numeric" });
+const shortDate = formatDateFil;
 /** A "YYYY-MM-DD" column as that calendar day on the phone. */
 const calendarDate = (ymd: string) => {
   const [y, m, d] = ymd.split("-").map(Number);
@@ -63,8 +65,7 @@ const calendarDate = (ymd: string) => {
 };
 /** A timestamp, or a "YYYY-MM-DD" date read as that calendar day on the phone. */
 const asDay = (value: string) => (value.length === 10 ? calendarDate(value) : new Date(value));
-const longDate = (value: string) =>
-  asDay(value).toLocaleDateString("en-PH", { year: "numeric", month: "long", day: "numeric" });
+const longDate = (value: string) => formatDateFil(asDay(value));
 
 /**
  * My Record (concept doc §6, "the line that flips the app"): the terms the
@@ -79,6 +80,8 @@ const longDate = (value: string) =>
  */
 export default function RecordScreen() {
   const { session } = useSession();
+  const scrollRef = useRef<ScrollView>(null);
+  const t = useT();
   const employmentsQuery = useQuery({
     queryKey: ["my-employments", session?.user.id],
     queryFn: getMyEmployments,
@@ -87,14 +90,21 @@ export default function RecordScreen() {
   const employments = employmentsQuery.data ?? [];
   const current = employments.find((e) => e.status === "ACTIVE") ?? null;
   const past = employments.filter((e) => e.status === "INACTIVE");
+  // The same read as CurrentRecord's, from the cache: has she given notice?
+  const currentTermsQuery = useQuery({
+    queryKey: ["terms-on-file", current?.helperId],
+    queryFn: () => getMyTermsOnFile(current?.helperId as string),
+    enabled: Boolean(current),
+  });
 
   return (
-    <ScrollView
+    <KeyboardScrollView
+      ref={scrollRef}
       style={styles.screen}
       contentContainerStyle={styles.content}
       keyboardShouldPersistTaps="handled"
     >
-      <Text style={styles.header}>Record ko</Text>
+      <Text style={styles.header}>{t("tabs.record")}</Text>
       <Text style={styles.sub}>
         {current
           ? "Ang trabaho at sahod mo, sa iisang lugar."
@@ -119,13 +129,19 @@ export default function RecordScreen() {
           <PaymentConfirmations />
           {current ? <CurrentRecord employment={current} /> : <JoinHouseholdCard />}
           {past.length > 0 ? <PastEmployments past={past} /> : null}
-          <PrivacyAccountCard employed={current !== null} />
+          <PrivacyAccountCard
+            employed={current !== null}
+            noticeGiven={Boolean(currentTermsQuery.data?.noticeLastDay)}
+          />
         </>
       )}
+      <LanguageMenu />
       {/* Here as well as My Pay: My Record is the one tab that always opens,
           even with no household, so she can always sign out. */}
-      {employmentsQuery.isLoading ? null : <SignOutButton />}
-    </ScrollView>
+      {employmentsQuery.isLoading ? null : (
+        <SignOutButton onConfirmShown={() => scrollRef.current?.scrollToEnd({ animated: true })} />
+      )}
+    </KeyboardScrollView>
   );
 }
 
@@ -406,7 +422,7 @@ function CurrentRecord({ employment }: { employment: Employment }) {
               })}
             </View>
             <TextField
-              label="Ano ang tama? (optional)"
+              label="Ano ang tama? (kung meron)"
               value={note}
               onChangeText={setNote}
               placeholder="Hal. ₱9,000 ang napag-usapan"
@@ -568,7 +584,7 @@ function NoticeCard({
         minimumIsoDate={today}
       />
       <TextField
-        label="Mensahe (optional)"
+        label="Mensahe (kung meron)"
         value={note}
         onChangeText={setNote}
         placeholder="Hal. Uuwi na ako sa probinsya"

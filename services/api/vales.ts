@@ -1,3 +1,5 @@
+import { isOffline } from "@/lib/network";
+import { OFFLINE_SEND, requestErrorMessage } from "@/lib/request-error";
 import { supabase } from "@/services/supabase";
 
 export interface ValeRequest {
@@ -53,14 +55,16 @@ export async function getMyVales(helperId: string): Promise<ValeRequest[]> {
  * doubles as the `WITH CHECK` here (Postgres default when only USING is
  * given), so this insert succeeds as long as `helperId` resolves to a
  * helper_profiles row in the caller's own household -- true here since the
- * caller is that helper, requesting for themself.
+ * caller is that helper, requesting for themself. A failure throws a Taglish
+ * message the form shows while keeping what she typed (QA LM-16).
  */
 export async function requestVale(helperId: string, amount: number, reason: string): Promise<void> {
+  if (await isOffline()) throw new Error(OFFLINE_SEND);
   const { error } = await supabase
     .from("vales")
     .insert({ helper_id: helperId, amount, reason, status: "pending" });
 
   if (error) {
-    throw new Error(error.message);
+    throw new Error(requestErrorMessage(error.message, false));
   }
 }

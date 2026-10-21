@@ -62,3 +62,19 @@ export function requestsToList<T extends { status: string }>(requests: T[], max 
     .slice(0, max)
     .map(({ r }) => r);
 }
+
+/**
+ * Why the form won't send this leave yet, or null. Advisory, like the rest:
+ * `request_leave` is the authority, but a day off from rest owed with none
+ * owed is refused for sure, so it isn't offered (QA F-LM-003).
+ */
+export function leaveBlockReason(
+  kind: string | null,
+  days: number,
+  silLeft: number,
+  restOwedMinutes: number,
+): string | null {
+  if (kind === "sil" && days > silLeft) return `${silLeft} na lang ang SIL mo.`;
+  if (kind === "in_kind" && restOwedMinutes <= 0) return "Wala ka pang rest owed.";
+  return null;
+}

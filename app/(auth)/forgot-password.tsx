@@ -1,19 +1,14 @@
 import { useEffect, useState } from "react";
-import {
-  KeyboardAvoidingView,
-  Platform,
-  Pressable,
-  ScrollView,
-  StyleSheet,
-  Text,
-  View,
-} from "react-native";
+import { KeyboardAvoidingView, Pressable, ScrollView, StyleSheet, Text, View } from "react-native";
 import { router, useLocalSearchParams } from "expo-router";
 import { Ionicons } from "@expo/vector-icons";
 
+import { useT } from "@/lib/i18n/locale-context";
 import { colors, fonts } from "@/lib/theme";
+import { textParts } from "@/lib/i18n/translate";
 import { requestPasswordReset } from "@/services/api/auth";
 import { TextField } from "@/components/ui/text-field";
+import { KEYBOARD_BEHAVIOR, useKeyboardOffset } from "@/components/ui/keyboard-screen";
 import { PrimaryButton } from "@/components/ui/primary-button";
 
 /** Supabase lets one address ask again only after this long. */
@@ -27,6 +22,8 @@ const RESEND_AFTER_SECONDS = 60;
  */
 export default function ForgotPasswordScreen() {
   const params = useLocalSearchParams<{ email?: string }>();
+  const t = useT();
+  const keyboardOffset = useKeyboardOffset();
   const [email, setEmail] = useState(params.email ?? "");
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -42,7 +39,7 @@ export default function ForgotPasswordScreen() {
   const send = async () => {
     const address = email.trim();
     if (!/^\S+@\S+\.\S+$/.test(address)) {
-      setError("Ilagay ang buong email address mo, hal. rosa@gmail.com.");
+      setError(t("forgot.invalidEmail"));
       return;
     }
     setLoading(true);
@@ -52,7 +49,7 @@ export default function ForgotPasswordScreen() {
       setSentTo(address);
       setWait(RESEND_AFTER_SECONDS);
     } catch (err) {
-      setError(err instanceof Error ? err.message : "Hindi naipadala ang reset link.");
+      setError(err instanceof Error ? err.message : t("forgot.failed"));
     } finally {
       setLoading(false);
     }
@@ -61,40 +58,43 @@ export default function ForgotPasswordScreen() {
   return (
     <KeyboardAvoidingView
       style={styles.flex}
-      behavior={Platform.OS === "ios" ? "padding" : undefined}
+      behavior={KEYBOARD_BEHAVIOR}
+      keyboardVerticalOffset={keyboardOffset}
     >
       <ScrollView contentContainerStyle={styles.content} keyboardShouldPersistTaps="handled">
         {sentTo ? (
           <View style={styles.sentCard} accessibilityRole="alert">
             <Ionicons name="mail-open-outline" size={36} color={colors.pineTeal} />
-            <Text style={styles.sentTitle}>Naipadala na ang link para sa bagong password!</Text>
+            <Text style={styles.sentTitle}>{t("forgot.sentTitle")}</Text>
             <Text style={styles.sentBody}>
-              I-check ang email mo. Kung may account ang <Text style={styles.strong}>{sentTo}</Text>
-              , may link doon para gumawa ng bagong password.
+              {textParts(t("forgot.sentBody")).map((part, i) =>
+                typeof part === "string" ? (
+                  part
+                ) : (
+                  <Text key={i} style={styles.strong}>
+                    {sentTo}
+                  </Text>
+                ),
+              )}
             </Text>
-            <Text style={styles.sentHint}>
-              Hindi makita? Tingnan ang Spam o Promotions folder. Pagkatapos mag-set ng bagong
-              password, bumalik dito at mag-sign in.
-            </Text>
+            <Text style={styles.sentHint}>{t("forgot.sentHint")}</Text>
           </View>
         ) : (
           <View style={styles.hero}>
-            <Text style={styles.title}>Nakalimutan ang password?</Text>
-            <Text style={styles.subtitle}>
-              Ilagay ang email ng account mo. Padadalhan ka namin ng link para gumawa ng bago.
-            </Text>
+            <Text style={styles.title}>{t("forgot.title")}</Text>
+            <Text style={styles.subtitle}>{t("forgot.subtitle")}</Text>
           </View>
         )}
 
         {sentTo ? null : (
           <TextField
-            label="Email"
+            label={t("common.email")}
             value={email}
             onChangeText={(text) => {
               setEmail(text);
               setError(null);
             }}
-            placeholder="hal. rosa@gmail.com"
+            placeholder={t("common.emailPlaceholder")}
             keyboardType="email-address"
             autoCapitalize="none"
             autoCorrect={false}
@@ -108,11 +108,11 @@ export default function ForgotPasswordScreen() {
         {sentTo ? (
           <>
             <PrimaryButton
-              label="Bumalik sa sign in"
+              label={t("common.backToSignIn")}
               onPress={() => router.replace("/(auth)/sign-in")}
             />
             <PrimaryButton
-              label={wait > 0 ? `Ipadala ulit (${wait}s)` : "Ipadala ulit"}
+              label={wait > 0 ? t("forgot.resendIn", { seconds: wait }) : t("forgot.resend")}
               variant="secondary"
               loading={loading}
               disabled={wait > 0}
@@ -126,19 +126,19 @@ export default function ForgotPasswordScreen() {
               hitSlop={8}
               accessibilityRole="button"
             >
-              <Text style={styles.link}>Ibang email ang gagamitin</Text>
+              <Text style={styles.link}>{t("forgot.otherEmail")}</Text>
             </Pressable>
           </>
         ) : (
           <>
             <PrimaryButton
-              label="Ipadala ang reset link"
+              label={t("forgot.send")}
               loading={loading}
               disabled={!email.trim()}
               onPress={send}
             />
             <Pressable onPress={() => router.back()} hitSlop={8} accessibilityRole="button">
-              <Text style={styles.link}>Bumalik sa sign in</Text>
+              <Text style={styles.link}>{t("common.backToSignIn")}</Text>
             </Pressable>
           </>
         )}

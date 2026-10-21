@@ -1,10 +1,13 @@
 import { useState } from "react";
-import { KeyboardAvoidingView, Platform, ScrollView, StyleSheet, Text, View } from "react-native";
+import { KeyboardAvoidingView, ScrollView, StyleSheet, Text, View } from "react-native";
 import { router, useLocalSearchParams } from "expo-router";
 
+import { useT } from "@/lib/i18n/locale-context";
 import { colors } from "@/lib/theme";
+import { textParts } from "@/lib/i18n/translate";
 import { claimProfile } from "@/services/api/handshake";
 import { TextField } from "@/components/ui/text-field";
+import { KEYBOARD_BEHAVIOR, useKeyboardOffset } from "@/components/ui/keyboard-screen";
 import { PrimaryButton } from "@/components/ui/primary-button";
 
 const MIN_PASSWORD_LENGTH = 6;
@@ -24,22 +27,21 @@ function isValidEmail(value: string): boolean {
  */
 export default function ClaimAccountScreen() {
   const { code } = useLocalSearchParams<{ code: string }>();
+  const t = useT();
+  const keyboardOffset = useKeyboardOffset();
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
-  const emailError =
-    email.length > 0 && !isValidEmail(email) ? "Hindi valid ang email address, po." : null;
+  const emailError = email.length > 0 && !isValidEmail(email) ? t("claim.emailInvalid") : null;
   const passwordError =
     password.length > 0 && password.length < MIN_PASSWORD_LENGTH
-      ? `Dapat may kahit ${MIN_PASSWORD_LENGTH} characters ang password.`
+      ? t("claim.passwordShort", { count: MIN_PASSWORD_LENGTH })
       : null;
   const confirmError =
-    confirmPassword.length > 0 && confirmPassword !== password
-      ? "Hindi magkatugma ang password."
-      : null;
+    confirmPassword.length > 0 && confirmPassword !== password ? t("claim.passwordMismatch") : null;
 
   const canSubmit =
     Boolean(email.trim()) &&
@@ -55,7 +57,7 @@ export default function ClaimAccountScreen() {
       await claimProfile(code, email.trim(), password);
       router.replace("/(app)/today");
     } catch (err) {
-      setError(err instanceof Error ? err.message : "Hindi nagtagumpay ang pag-claim ng account.");
+      setError(err instanceof Error ? err.message : t("claim.failed"));
     } finally {
       setLoading(false);
     }
@@ -64,65 +66,67 @@ export default function ClaimAccountScreen() {
   return (
     <KeyboardAvoidingView
       style={styles.flex}
-      behavior={Platform.OS === "ios" ? "padding" : undefined}
+      behavior={KEYBOARD_BEHAVIOR}
+      keyboardVerticalOffset={keyboardOffset}
     >
       <ScrollView contentContainerStyle={styles.content} keyboardShouldPersistTaps="handled">
-        <Text style={styles.eyebrow}>Hakbang 3 sa 3</Text>
-        <Text style={styles.title}>Iyo ang account na ito.</Text>
+        <Text style={styles.eyebrow}>{t("claim.step")}</Text>
+        <Text style={styles.title}>{t("claim.title")}</Text>
         <View style={styles.introCard}>
           <Text style={styles.introText}>
-            Ito ay <Text style={styles.introBold}>iyong-iyo</Text>. Makikita mo rito ang record ng
-            trabaho at sahod mo, at mada-download mo ito bilang PDF anumang oras.
+            {textParts(t("claim.intro")).map((part, i) =>
+              typeof part === "string" ? (
+                part
+              ) : (
+                <Text key={i} style={styles.introBold}>
+                  {t("claim.introMine")}
+                </Text>
+              ),
+            )}
           </Text>
         </View>
 
         <TextField
-          label="Email address mo"
+          label={t("claim.emailLabel")}
           value={email}
           onChangeText={setEmail}
           error={emailError}
-          placeholder="hal. rosa@gmail.com"
+          placeholder={t("common.emailPlaceholder")}
           keyboardType="email-address"
           autoCapitalize="none"
           autoCorrect={false}
         />
         <TextField
-          label="Password"
+          label={t("common.password")}
           value={password}
           onChangeText={setPassword}
           error={passwordError}
-          placeholder="••••••"
+          placeholder={t("claim.passwordPlaceholder")}
           secureTextEntry
         />
         <TextField
-          label="Ulitin ang password"
+          label={t("claim.confirmLabel")}
           value={confirmPassword}
           onChangeText={setConfirmPassword}
           error={confirmError}
-          placeholder="••••••"
+          placeholder={t("claim.confirmPlaceholder")}
           secureTextEntry
         />
 
-        <Text style={styles.privacyNote}>
-          Ito ay ise-save nang ligtas sa system. Iyong-iyo lang ang password na ito at hindi ito
-          nakikita ng manager mo.
-        </Text>
-        <Text style={styles.privacyNote}>
-          May account ka na mula sa dating household? Gamitin ang parehong email at password. Sasali
-          ka lang sa bagong household, at kasama pa rin ang record mo noon.
-        </Text>
+        <Text style={styles.privacyNote}>{t("claim.privacy")}</Text>
+        <Text style={styles.privacyNote}>{t("claim.returning")}</Text>
 
         {error ? <Text style={styles.errorText}>{error}</Text> : null}
 
         <View style={styles.actions}>
           <PrimaryButton
-            label="Bumalik"
+            label={t("common.back")}
             variant="secondary"
             style={styles.actionButton}
             onPress={() => router.back()}
           />
           <PrimaryButton
-            label="I-claim ang account ko"
+            label={t("claim.submit")}
             style={styles.actionButton}
             loading={loading}
             disabled={!canSubmit}

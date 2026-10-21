@@ -3,6 +3,7 @@ import { ActivityIndicator, Pressable, ScrollView, StyleSheet, Text, View } from
 import { Ionicons } from "@expo/vector-icons";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 
+import { useT } from "@/lib/i18n/locale-context";
 import { colors, fonts } from "@/lib/theme";
 import { formatClockTime, formatShiftTime } from "@/lib/format";
 import { startOfToday } from "@/lib/today";
@@ -40,6 +41,7 @@ const LEAVE_LABEL: Record<LeaveKind, string> = {
  */
 export default function WeekScreen() {
   const queryClient = useQueryClient();
+  const t = useT();
   const [mode, setMode] = useState<Mode>("week");
   const [weekStart, setWeekStart] = useState(() => startOfToday(new Date()));
   const [month, setMonth] = useState(() => {
@@ -123,7 +125,7 @@ export default function WeekScreen() {
 
   return (
     <ScrollView style={styles.screen} contentContainerStyle={styles.content}>
-      <Text style={styles.header}>Linggo ko</Text>
+      <Text style={styles.header}>{t("tabs.week")}</Text>
       <Text style={styles.sub}>
         Ang shift mo, ang rest day at mga day off mo, at ang mga naka-schedule para sa iyo.
       </Text>

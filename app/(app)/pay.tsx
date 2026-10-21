@@ -1,6 +1,9 @@
+import { useRef } from "react";
 import { ActivityIndicator, ScrollView, StyleSheet, Text, View } from "react-native";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 
+import { useT } from "@/lib/i18n/locale-context";
+import { KeyboardScrollView } from "@/components/ui/keyboard-screen";
 import { colors, fonts } from "@/lib/theme";
 import { getHouseholdCutoff } from "@/services/api/cutoff";
 import { getMyHelperProfile } from "@/services/api/helper-profile";
@@ -43,6 +46,8 @@ import { SignOutButton } from "@/components/features/account/sign-out-button";
  */
 export default function PayScreen() {
   const queryClient = useQueryClient();
+  const scrollRef = useRef<ScrollView>(null);
+  const t = useT();
 
   const profileQuery = useQuery({
     queryKey: ["my-helper-profile"],
@@ -203,8 +208,13 @@ export default function PayScreen() {
   const restMinutes = restOwedMinutes(ledgerQuery.data ?? []);
 
   return (
-    <ScrollView style={styles.screen} contentContainerStyle={styles.content}>
-      <Text style={styles.header}>Sahod ko</Text>
+    <KeyboardScrollView
+      ref={scrollRef}
+      style={styles.screen}
+      contentContainerStyle={styles.content}
+      keyboardShouldPersistTaps="handled"
+    >
+      <Text style={styles.header}>{t("tabs.pay")}</Text>
 
       {profileQuery.isLoading ? (
         <View style={styles.loading}>
@@ -273,12 +283,9 @@ export default function PayScreen() {
               leave={leaveQuery.data ?? []}
               householdToday={householdToday}
               submitting={leaveMutation.isPending}
-              error={
-                (leaveMutation.error ?? leaveCancelMutation.error ?? leaveAckMutation.error)
-                  ?.message ?? null
-              }
+              error={(leaveCancelMutation.error ?? leaveAckMutation.error)?.message ?? null}
               onSubmit={(kind, reason, startDate, endDate, note) =>
-                leaveMutation.mutate({ kind, reason, startDate, endDate, note })
+                leaveMutation.mutateAsync({ kind, reason, startDate, endDate, note })
               }
               onCancel={(id) => leaveCancelMutation.mutate(id)}
               onAck={(id, ack) => leaveAckMutation.mutate({ id, ack })}
@@ -294,14 +301,14 @@ export default function PayScreen() {
             <ValeRequestForm
               vales={vales}
               submitting={valeMutation.isPending}
-              onSubmit={(amount, reason) => valeMutation.mutate({ amount, reason })}
+              onSubmit={(amount, reason) => valeMutation.mutateAsync({ amount, reason })}
             />
           )}
         </>
       )}
 
-      <SignOutButton />
-    </ScrollView>
+      <SignOutButton onConfirmShown={() => scrollRef.current?.scrollToEnd({ animated: true })} />
+    </KeyboardScrollView>
   );
 }
 

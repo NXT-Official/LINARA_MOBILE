@@ -1,7 +1,8 @@
-import { useState } from "react";
-import { ActivityIndicator, ScrollView, StyleSheet, Text, View } from "react-native";
+import { useRef, useState } from "react";
+import { ActivityIndicator, Keyboard, ScrollView, StyleSheet, Text, View } from "react-native";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 
+import { KeyboardScreen } from "@/components/ui/keyboard-screen";
 import { colors } from "@/lib/theme";
 import { OFF_AVAILABILITY, type ManualAvailability } from "@/lib/availability";
 import { useRosaAvailability } from "@/hooks/use-rosa-availability";
@@ -55,6 +56,20 @@ import { isOffline } from "@/lib/network";
 export default function TodayScreen() {
   const queryClient = useQueryClient();
   const [ackingId, setAckingId] = useState<string | null>(null);
+  const scrollRef = useRef<ScrollView>(null);
+
+  // Android only scrolls the note field itself above the keyboard, leaving
+  // "Magdagdag ng tala" under it. The notes are last on the screen, so once
+  // the keyboard is up and the screen has shrunk, scroll to the end
+  // (device QA 2026-10-21, N-01).
+  const showNoteButton = () => {
+    const reveal = () => scrollRef.current?.scrollToEnd({ animated: true });
+    if (Keyboard.isVisible()) return reveal();
+    const shown = Keyboard.addListener("keyboardDidShow", () => {
+      shown.remove();
+      setTimeout(reveal, 100);
+    });
+  };
 
   const profileQuery = useQuery({
     queryKey: ["my-helper-profile"],
@@ -350,8 +365,13 @@ export default function TodayScreen() {
   const focusTask = deckIndex >= 0 ? deck[deckIndex] : null;
 
   return (
-    <View style={styles.flex}>
-      <ScrollView style={styles.screen} contentContainerStyle={styles.content}>
+    <KeyboardScreen>
+      <ScrollView
+        ref={scrollRef}
+        style={styles.screen}
+        contentContainerStyle={styles.content}
+        keyboardShouldPersistTaps="handled"
+      >
         {profileQuery.isLoading ? (
           <View style={styles.loading}>
             <ActivityIndicator color={colors.pineTeal} />
@@ -466,6 +486,9 @@ export default function TodayScreen() {
               onChanged={refreshToday}
               places={places}
               variant={layout === "timeline" ? "timeline" : "list"}
+              emptyText={
+                layout === "focus" ? undefined : "Walang task ngayon. Magandang break, po!"
+              }
             />
 
             <TeamDay places={places} helperId={profileQuery.data.id} />
@@ -475,11 +498,12 @@ export default function TodayScreen() {
               householdId={profileQuery.data.householdId}
               userId={profileQuery.data.userId}
               station={profileQuery.data.station}
+              onDraftFocus={showNoteButton}
             />
           </>
         )}
       </ScrollView>
-    </View>
+    </KeyboardScreen>
   );
 }
 

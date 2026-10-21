@@ -9,6 +9,7 @@ import { NunitoSans_400Regular, NunitoSans_700Bold } from "@expo-google-fonts/nu
 
 import { queryClient } from "@/lib/query-client";
 import { recordPersister, SAVED_RECORD_MAX_AGE, shouldSaveQuery } from "@/lib/query-persist";
+import { LocaleProvider } from "@/lib/i18n/locale-context";
 import { SessionProvider } from "@/lib/session-context";
 import { useOfflineSync } from "@/hooks/use-offline-sync";
 import { usePushNotifications } from "@/hooks/use-push-notifications";
@@ -56,18 +57,20 @@ export default function RootLayout() {
   }
 
   return (
-    <SessionProvider>
-      {/* Record ko is kept on the phone for when there's no internet (lib/query-persist.ts). */}
-      <PersistQueryClientProvider
-        client={queryClient}
-        persistOptions={{
-          persister: recordPersister,
-          maxAge: SAVED_RECORD_MAX_AGE,
-          dehydrateOptions: { shouldDehydrateQuery: shouldSaveQuery },
-        }}
-      >
-        <AppShell />
-      </PersistQueryClientProvider>
-    </SessionProvider>
+    <LocaleProvider>
+      <SessionProvider>
+        {/* Record ko is kept on the phone for when there's no internet (lib/query-persist.ts). */}
+        <PersistQueryClientProvider
+          client={queryClient}
+          persistOptions={{
+            persister: recordPersister,
+            maxAge: SAVED_RECORD_MAX_AGE,
+            dehydrateOptions: { shouldDehydrateQuery: shouldSaveQuery },
+          }}
+        >
+          <AppShell />
+        </PersistQueryClientProvider>
+      </SessionProvider>
+    </LocaleProvider>
   );
 }

@@ -70,7 +70,7 @@ export function PaymentConfirmations() {
           {disputing === p.id ? (
             <>
               <TextField
-                label="Ano ang nangyari? (optional)"
+                label="Ano ang nangyari? (kung meron)"
                 value={note}
                 onChangeText={setNote}
                 placeholder="Hal. ₱500 lang ang natanggap ko"

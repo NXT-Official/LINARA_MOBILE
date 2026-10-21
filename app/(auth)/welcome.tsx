@@ -1,17 +1,12 @@
 import { useState } from "react";
-import {
-  KeyboardAvoidingView,
-  Platform,
-  Pressable,
-  ScrollView,
-  StyleSheet,
-  Text,
-  View,
-} from "react-native";
+import { KeyboardAvoidingView, Pressable, ScrollView, StyleSheet, Text, View } from "react-native";
 import { router } from "expo-router";
 
+import { useT } from "@/lib/i18n/locale-context";
 import { colors } from "@/lib/theme";
+import { LanguageMenu } from "@/components/features/account/language-menu";
 import { TextField } from "@/components/ui/text-field";
+import { KEYBOARD_BEHAVIOR, useKeyboardOffset } from "@/components/ui/keyboard-screen";
 import { PrimaryButton } from "@/components/ui/primary-button";
 
 const INVITE_CODE_LENGTH = 6;
@@ -25,12 +20,14 @@ const INVITE_CODE_LENGTH = 6;
  */
 export default function WelcomeScreen() {
   const [code, setCode] = useState("");
+  const t = useT();
+  const keyboardOffset = useKeyboardOffset();
   const [error, setError] = useState<string | null>(null);
 
   const submitCode = () => {
     const trimmed = code.trim().toUpperCase();
     if (trimmed.length !== INVITE_CODE_LENGTH) {
-      setError(`Kailangan ${INVITE_CODE_LENGTH} characters ang invite code, po.`);
+      setError(t("welcome.codeLength", { count: INVITE_CODE_LENGTH }));
       return;
     }
     setError(null);
@@ -40,25 +37,24 @@ export default function WelcomeScreen() {
   return (
     <KeyboardAvoidingView
       style={styles.flex}
-      behavior={Platform.OS === "ios" ? "padding" : undefined}
+      behavior={KEYBOARD_BEHAVIOR}
+      keyboardVerticalOffset={keyboardOffset}
     >
       <ScrollView contentContainerStyle={styles.content} keyboardShouldPersistTaps="handled">
         <View style={styles.hero}>
           <Text style={styles.title}>Linara</Text>
-          <Text style={styles.subtitle}>
-            Maligayang pagdating! I-enter mo ang invite code galing sa employer mo para simulan.
-          </Text>
+          <Text style={styles.subtitle}>{t("welcome.subtitle")}</Text>
         </View>
 
         <TextField
-          label="Invite code"
+          label={t("welcome.codeLabel")}
           value={code}
           onChangeText={(text) => {
             setCode(text.toUpperCase());
             setError(null);
           }}
           error={error}
-          hint="6 na letra at numero"
+          hint={t("welcome.codeHint")}
           autoCapitalize="characters"
           autoCorrect={false}
           maxLength={INVITE_CODE_LENGTH}
@@ -67,15 +63,16 @@ export default function WelcomeScreen() {
           onSubmitEditing={submitCode}
         />
 
-        <PrimaryButton label="Tuloy" onPress={submitCode} disabled={!code.trim()} />
+        <PrimaryButton label={t("welcome.continue")} onPress={submitCode} disabled={!code.trim()} />
 
         <Pressable
           onPress={() => router.replace("/(auth)/sign-in")}
           hitSlop={8}
           accessibilityRole="button"
         >
-          <Text style={styles.link}>May account ka na? Mag-sign in</Text>
+          <Text style={styles.link}>{t("common.haveAccount")}</Text>
         </Pressable>
+        <LanguageMenu />
       </ScrollView>
     </KeyboardAvoidingView>
   );

@@ -3,7 +3,10 @@ import { describe, expect, it } from "vitest";
 import {
   CATEGORY_ORDER,
   groupByPantryCategory,
+  isSuggested,
   needsBuying,
+  pantrySuggestions,
+  restockQty,
   rowActions,
   stockState,
   unitFor,
@@ -120,5 +123,44 @@ describe("groupByPantryCategory", () => {
 describe("CATEGORY_ORDER", () => {
   it("offers every shelf the database accepts, once", () => {
     expect([...CATEGORY_ORDER].sort()).toEqual([...PANTRY_CATEGORIES].sort());
+  });
+});
+
+describe("pantrySuggestions (QA LM-15)", () => {
+  const item = (id: string, qty: number, par: number) => ({
+    id,
+    name: id,
+    qty,
+    par,
+    unit: "pcs",
+    category: "Pantry" as const,
+  });
+  type Pantry = Parameters<typeof pantrySuggestions>[0];
+
+  it("lists an out or low item that isn't on the list, with what brings it back to par", () => {
+    const out = pantrySuggestions([item("bigas", 0, 2), item("asin", 3, 2)] as Pantry, []);
+    expect(out.map((g) => [g.name, g.qty, g.pantryItemId])).toEqual([["bigas", 2, "bigas"]]);
+    expect(isSuggested(out[0])).toBe(true);
+    expect(out[0].bought).toBe(false);
+  });
+
+  it("skips one already listed to buy, but suggests it again once that line is bought", () => {
+    const pantry = [item("bigas", 0, 2)] as Pantry;
+    expect(pantrySuggestions(pantry, [{ pantryItemId: "bigas", bought: false }])).toEqual([]);
+    expect(pantrySuggestions(pantry, [{ pantryItemId: "bigas", bought: true }])).toHaveLength(1);
+  });
+
+  it("at par is enough; under par by a fraction still asks for one", () => {
+    expect(pantrySuggestions([item("itlog", 2, 2)] as Pantry, [])).toEqual([]);
+    expect(restockQty({ qty: 1.75, par: 2 })).toBe(1);
+    expect(restockQty({ qty: 0, par: 2.5 })).toBe(2.5);
+  });
+
+  it("leaves out what she removed from Kailangan", () => {
+    expect(pantrySuggestions([item("bigas", 0, 2)] as Pantry, [], new Set(["bigas"]))).toEqual([]);
+  });
+
+  it("a real line is never taken for a suggestion", () => {
+    expect(isSuggested({ id: "3f0c2a7e-1b2c-4d5e-8f90-123456789abc" })).toBe(false);
   });
 });

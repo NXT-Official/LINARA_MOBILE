@@ -140,7 +140,7 @@ export function ActiveFocusCard({
             </View>
           ) : (
             <PrimaryButton
-              label="Ipakita ang natapos mo (optional)"
+              label="Ipakita ang natapos mo (kung meron)"
               variant="secondary"
               onPress={takePhoto}
             />

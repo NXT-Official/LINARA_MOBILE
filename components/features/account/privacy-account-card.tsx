@@ -3,6 +3,7 @@ import { Linking, Pressable, StyleSheet, Text, View } from "react-native";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 
 import { colors, fonts } from "@/lib/theme";
+import { formatDateFil } from "@/lib/format";
 import { DELETION_WINDOW_DAYS, PRIVACY_URL, TERMS_URL } from "@/lib/legal";
 import {
   cancelAccountDeletion,
@@ -12,8 +13,7 @@ import {
 import { PrimaryButton } from "@/components/ui/primary-button";
 import { TextField } from "@/components/ui/text-field";
 
-const longDate = (iso: string) =>
-  new Date(iso).toLocaleDateString("en-PH", { year: "numeric", month: "long", day: "numeric" });
+const longDate = (iso: string) => formatDateFil(new Date(iso));
 
 /**
  * The end of My Record: the privacy policy and terms, and the in-app way to
@@ -27,7 +27,14 @@ const longDate = (iso: string) =>
  * the household ends the employment on her last day with her final pay, and
  * then she can (KNOWN_GAPS.md O55, the user's choice 2026-10-09).
  */
-export function PrivacyAccountCard({ employed }: { employed: boolean }) {
+export function PrivacyAccountCard({
+  employed,
+  noticeGiven = false,
+}: {
+  employed: boolean;
+  /** She already gave notice, so the first step is done (QA F-LM-010). */
+  noticeGiven?: boolean;
+}) {
   const queryClient = useQueryClient();
   const requestQuery = useQuery({
     queryKey: ["my-deletion-request"],
@@ -58,14 +65,14 @@ export function PrivacyAccountCard({ employed }: { employed: boolean }) {
           onPress={() => void Linking.openURL(PRIVACY_URL)}
           style={styles.link}
         >
-          <Text style={styles.linkText}>Privacy policy</Text>
+          <Text style={styles.linkText}>Patakaran sa privacy</Text>
         </Pressable>
         <Pressable
           accessibilityRole="link"
           onPress={() => void Linking.openURL(TERMS_URL)}
           style={styles.link}
         >
-          <Text style={styles.linkText}>Terms</Text>
+          <Text style={styles.linkText}>Mga tuntunin</Text>
         </Pressable>
       </View>
 
@@ -90,8 +97,9 @@ export function PrivacyAccountCard({ employed }: { employed: boolean }) {
             employment mo, para maayos ang huling sahod at record mo.
           </Text>
           <Text style={styles.body}>
-            1. Magbigay ng abiso sa employer mo: &quot;Aalis ka na ba? Magbigay ng abiso&quot;, sa
-            itaas.
+            {noticeGiven
+              ? "1. Nakapagbigay ka na ng abiso. Nakikita na ito ng employer mo."
+              : '1. Magbigay ng abiso sa employer mo: "Aalis ka na ba? Magbigay ng abiso", sa itaas.'}
           </Text>
           <Text style={styles.body}>2. Tatapusin nila ang employment mo sa huling araw mo.</Text>
           <Text style={styles.body}>3. Bumalik dito at burahin ang account mo.</Text>
@@ -109,7 +117,7 @@ export function PrivacyAccountCard({ employed }: { employed: boolean }) {
             i-download muna ang PDF ng record mo sa itaas.
           </Text>
           <TextField
-            label="Bakit? (optional)"
+            label="Bakit? (kung meron)"
             value={note}
             onChangeText={setNote}
             maxLength={300}

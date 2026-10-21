@@ -1,16 +1,19 @@
 import { useCallback, useMemo, useState } from "react";
-import { ActivityIndicator, Pressable, ScrollView, StyleSheet, Text, View } from "react-native";
+import { ActivityIndicator, Pressable, StyleSheet, Text, View } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import * as ImagePicker from "expo-image-picker";
 import { useFocusEffect } from "expo-router";
 
+import { useT } from "@/lib/i18n/locale-context";
+import { KeyboardScrollView } from "@/components/ui/keyboard-screen";
 import { colors, fonts } from "@/lib/theme";
 import { usePalengkeBudget } from "@/hooks/use-palengke-budget";
 import { usePantryEdits } from "@/hooks/use-pantry-edits";
 import { getMyHelperProfile, getMyPantryRole } from "@/services/api/helper-profile";
 import { getPantryItems, PANTRY_CATEGORIES, type PantryCategory } from "@/services/api/pantry";
 import {
+  addGroceryItem,
   getGroceryItems,
   getLatestGroceryReceipt,
   recordGroceryReceipt,
@@ -22,6 +25,7 @@ import { completeTicket, getActivePalengkeTicket } from "@/services/api/tickets"
 import { uploadEvidenceImage } from "@/services/media-upload";
 import { enqueueSyncAction } from "@/services/sqlite-queue";
 import { isOffline } from "@/lib/network";
+import { noDataToShow } from "@/lib/query-state";
 import { PantryStockList } from "@/components/features/pantry/pantry-stock-list";
 import { BudgetBar } from "@/components/features/pantry/budget-bar";
 import { PalengkeChecklist } from "@/components/features/pantry/palengke-checklist";
@@ -29,7 +33,13 @@ import { ReceiptCaptureCard } from "@/components/features/pantry/receipt-capture
 import { ReceiptSnapCard } from "@/components/features/pantry/receipt-snap-card";
 import { ItemForm } from "@/components/features/pantry/item-form";
 import { ListFilter, matchesQuery } from "@/components/features/pantry/list-filter";
-import { CATEGORY_LABEL, groupByPantryCategory, needsBuying } from "@/lib/pantry";
+import {
+  CATEGORY_LABEL,
+  groupByPantryCategory,
+  isSuggested,
+  needsBuying,
+  pantrySuggestions,
+} from "@/lib/pantry";
 import { HouseSwitcher } from "@/components/features/workplace/house-switcher";
 import { useWorkplaces } from "@/hooks/use-workplaces";
 import { useGroceryRuns } from "@/hooks/use-grocery-runs";
@@ -71,6 +81,7 @@ const PANTRY_CHIPS: { key: PantryFilter; label: string }[] = [
  */
 export default function PantryScreen() {
   const queryClient = useQueryClient();
+  const t = useT();
   const [receiptUri, setReceiptUri] = useState<string | null>(null);
   const [receiptPendingUpload, setReceiptPendingUpload] = useState(false);
   const [uploading, setUploading] = useState(false);
@@ -82,6 +93,8 @@ export default function PantryScreen() {
   const [addingGrocery, setAddingGrocery] = useState(false);
   const [addingPantry, setAddingPantry] = useState(false);
   const [creatingRun, setCreatingRun] = useState(false);
+  // Pantry ids she took off Kailangan while they were only suggested.
+  const [dismissed, setDismissed] = useState<Set<string>>(new Set());
   // Runs she saved a receipt for while the tab was open.
   const [snappedRuns, setSnappedRuns] = useState<Set<string>>(new Set());
 
@@ -176,7 +189,31 @@ export default function PantryScreen() {
   });
 
   const toggleMutation = useMutation({
-    mutationFn: (item: GroceryItemRow) => setGroceryItemBought(item.id, !item.bought),
+    mutationFn: async (item: GroceryItemRow) => {
+      if (!isSuggested(item)) return setGroceryItemBought(item.id, !item.bought);
+      // A low pantry item ticked straight from Kailangan: it goes on the list
+      // and is bought, so the pantry restocks as for any other line.
+      const id = await addGroceryItem(house as string, {
+        name: item.name,
+        qty: item.qty,
+        unit: item.unit,
+        pantryItemId: item.pantryItemId,
+      });
+      await setGroceryItemBought(id, true);
+    },
+    onSuccess: () => {
+      void queryClient.invalidateQueries({ queryKey: ["grocery-items"] });
+      void queryClient.invalidateQueries({ queryKey: ["pantry-items"] });
+    },
+  });
+  const addSuggestionMutation = useMutation({
+    mutationFn: (v: { item: GroceryItemRow; name: string; qty: number; unit: string }) =>
+      addGroceryItem(house as string, {
+        name: v.name,
+        qty: v.qty,
+        unit: v.unit,
+        pantryItemId: v.item.pantryItemId,
+      }),
     onSuccess: () => queryClient.invalidateQueries({ queryKey: ["grocery-items"] }),
   });
 
@@ -221,8 +258,19 @@ export default function PantryScreen() {
 
   const groceryItems = useMemo(() => groceryQuery.data ?? [], [groceryQuery.data]);
   const pantryItems = useMemo(() => pantryQuery.data ?? [], [pantryQuery.data]);
-  // With runs, the checklist below is Kailangan: what isn't on a run.
-  const poolItems = runsOn ? groceryItems.filter((g) => !g.runId) : groceryItems;
+  // With runs, the checklist below is Kailangan: what isn't on a run. Low
+  // pantry items join it as the manager's Needed list shows them (QA LM-15).
+  const realPool = runsOn ? groceryItems.filter((g) => !g.runId) : groceryItems;
+  const poolItems = [...realPool, ...pantrySuggestions(pantryItems, groceryItems, dismissed)];
+  // A suggestion edited is put on the list as typed; removed, it's hidden here.
+  const editLine: typeof edits.editGrocery = (item, values, done) => {
+    if (!isSuggested(item)) return edits.editGrocery(item, values, done);
+    addSuggestionMutation.mutate({ item, ...values }, { onSuccess: done });
+  };
+  const removeLine = (item: GroceryItemRow) => {
+    if (!isSuggested(item)) return edits.removeGrocery(item);
+    if (item.pantryItemId) setDismissed((prev) => new Set(prev).add(item.pantryItemId as string));
+  };
   const readyRuns = runs.open.filter((r) => r.status === "ready");
   const leadRuns = inCharge ? runs.open.filter((r) => r.status !== "ready") : [];
   const itemsOf = (runId: string) => groceryItems.filter((g) => g.runId === runId);
@@ -298,19 +346,31 @@ export default function PantryScreen() {
   };
 
   const palengkeTicket = palengkeTicketQuery.data;
+  // Offline with nothing loaded: say so, not "nothing to buy" (QA F-LM-002).
+  const noProfile = noDataToShow(profileQuery);
+  const noPalengke = noProfile || noDataToShow(groceryQuery);
+  const noPantry = noProfile || noDataToShow(pantryQuery);
 
   return (
-    <ScrollView style={styles.screen} contentContainerStyle={styles.content}>
-      <Text style={styles.header}>Pantry at palengke</Text>
+    <KeyboardScrollView
+      style={styles.screen}
+      contentContainerStyle={styles.content}
+      keyboardShouldPersistTaps="handled"
+    >
+      <Text style={styles.header}>{t("header.pantry")}</Text>
       <HouseSwitcher places={places} />
 
       {groceryQuery.isLoading ? (
         <View style={styles.loading}>
           <ActivityIndicator color={colors.pineTeal} />
         </View>
+      ) : noPalengke ? (
+        <Text style={styles.errorText}>
+          Walang internet, kaya hindi ma-load ang palengke list. Babalik ito kapag may signal na.
+        </Text>
       ) : (
         <>
-          {!runsOn && <BudgetBar spent={spent} budget={budget} />}
+          {!runsOn && budget !== null && <BudgetBar spent={spent} budget={budget} />}
 
           {runsOn && (readyRuns.length > 0 || leadRuns.length > 0) && (
             <View style={styles.section}>
@@ -354,7 +414,7 @@ export default function PantryScreen() {
                 {runsOn ? "Kailangan" : "Listahan sa palengke"}
               </Text>
               <View style={styles.headButtons}>
-                {inCharge && runsOn && !creatingRun && poolItems.some((g) => !g.bought) && (
+                {inCharge && runsOn && !creatingRun && realPool.some((g) => !g.bought) && (
                   <Pressable
                     onPress={() => setCreatingRun(true)}
                     style={styles.addButton}
@@ -378,7 +438,7 @@ export default function PantryScreen() {
             </View>
             {inCharge && creatingRun && (
               <NewRunForm
-                pool={poolItems}
+                pool={realPool}
                 saving={runs.busy === "new-run"}
                 onSubmit={(title, itemIds) =>
                   void runs
@@ -424,8 +484,8 @@ export default function PantryScreen() {
                 savingId={edits.savingId}
                 onToggle={(item) => toggleMutation.mutate(item)}
                 onCost={(item, cost) => costMutation.mutate({ item, cost })}
-                onEdit={edits.editGrocery}
-                onRemove={edits.removeGrocery}
+                onEdit={editLine}
+                onRemove={removeLine}
               />
             ) : (
               groceryGroups.map(({ section, items }) => (
@@ -439,8 +499,8 @@ export default function PantryScreen() {
                     savingId={edits.savingId}
                     onToggle={(item) => toggleMutation.mutate(item)}
                     onCost={(item, cost) => costMutation.mutate({ item, cost })}
-                    onEdit={edits.editGrocery}
-                    onRemove={edits.removeGrocery}
+                    onEdit={editLine}
+                    onRemove={removeLine}
                   />
                 </View>
               ))
@@ -449,7 +509,7 @@ export default function PantryScreen() {
         </>
       )}
 
-      {!palengkeTicket && !groceryQuery.isLoading && (
+      {!palengkeTicket && !groceryQuery.isLoading && !noPalengke && (
         <ReceiptSnapCard
           latest={latestReceiptQuery.data ?? null}
           saving={snapMutation.isPending && !snapMutation.variables}
@@ -529,7 +589,11 @@ export default function PantryScreen() {
             onChip={setPantryFilter}
           />
         )}
-        {pantryQuery.isLoading ? (
+        {noPantry ? (
+          <Text style={styles.errorText}>
+            Walang internet, kaya hindi ma-load ang pantry. Babalik ito kapag may signal na.
+          </Text>
+        ) : pantryQuery.isLoading ? (
           <View style={styles.loading}>
             <ActivityIndicator color={colors.pineTeal} />
           </View>
@@ -568,7 +632,7 @@ export default function PantryScreen() {
           />
         )}
       </View>
-    </ScrollView>
+    </KeyboardScrollView>
   );
 }
 

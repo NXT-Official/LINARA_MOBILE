@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "741022276781",
+    "project_id": "linara-d7dae",
+    "storage_bucket": "linara-d7dae.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:741022276781:android:73bb0e49250c580cfeba24",
+        "android_client_info": {
+          "package_name": "com.linara.mobile"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyDT4XSI83vixWajLWpoTO67wdLLzkZd9Pc"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

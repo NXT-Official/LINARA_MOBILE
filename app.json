@@ -52,6 +52,7 @@
     "android": {
       "package": "com.linara.mobile",
       "versionCode": 1,
+      "googleServicesFile": "./google-services.json",
       "adaptiveIcon": {
         "backgroundColor": "#1F5A54",
         "foregroundImage": "./assets/android-icon-foreground.png",

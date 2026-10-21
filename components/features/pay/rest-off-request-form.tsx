@@ -199,7 +199,7 @@ export function RestOffRequestForm({
           placeholder="Anong oras matatapos?"
         />
         <TextField
-          label="Dahilan (optional)"
+          label="Dahilan (kung meron)"
           value={note}
           onChangeText={setNote}
           placeholder="Doktor"

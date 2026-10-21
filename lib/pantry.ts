@@ -1,3 +1,4 @@
+import type { GroceryItemRow } from "@/services/api/grocery";
 import type { PantryCategory, PantryItemRow } from "@/services/api/pantry";
 
 /**
@@ -94,4 +95,42 @@ export function groupByPantryCategory<T extends { pantryItemId?: string | null }
     (target ?? sections[sections.length - 1]).items.push(item);
   }
   return sections.filter((s) => s.items.length > 0);
+}
+
+/** Matches the web's low-stock suggestion: enough to get back to par, at least one. */
+export const restockQty = (item: Pick<PantryItemRow, "qty" | "par">) =>
+  Math.max(1, Math.round((item.par - item.qty) * 100) / 100);
+
+const SUGGESTED = "sug-";
+
+/** A Kailangan line drawn from a low pantry item, not yet on the list. */
+export const isSuggested = (item: Pick<GroceryItemRow, "id">) => item.id.startsWith(SUGGESTED);
+
+/**
+ * Kailangan as the manager's Needed list has it (QA LM-15): every pantry item
+ * that's out or under its "Laging may" amount and isn't already on the list
+ * to buy, plus the lines added by hand. Same rule as the web's
+ * use-grocery-list.ts suggestions. `dismissed` holds the pantry ids she
+ * removed from Kailangan on this screen.
+ */
+export function pantrySuggestions(
+  pantryItems: PantryItemRow[],
+  groceryItems: Pick<GroceryItemRow, "pantryItemId" | "bought">[],
+  dismissed: ReadonlySet<string> = new Set(),
+): GroceryItemRow[] {
+  const listed = new Set(
+    groceryItems.filter((g) => !g.bought && g.pantryItemId).map((g) => g.pantryItemId as string),
+  );
+  return pantryItems
+    .filter((p) => needsBuying(p) && !listed.has(p.id) && !dismissed.has(p.id))
+    .map((p) => ({
+      id: `${SUGGESTED}${p.id}`,
+      name: p.name,
+      qty: restockQty(p),
+      unit: p.unit,
+      pantryItemId: p.id,
+      bought: false,
+      actualCost: null,
+      runId: null,
+    }));
 }

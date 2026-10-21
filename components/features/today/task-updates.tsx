@@ -68,10 +68,19 @@ export function TaskUpdates({ ticketId, myUserId }: { ticketId: string; myUserId
                   accessibilityLabel="Burahin ang update"
                   hitSlop={8}
                   onPress={() =>
-                    Alert.alert("Burahin ang update?", "Mawawala ito sa task para sa lahat.", [
-                      { text: "Huwag", style: "cancel" },
-                      { text: "Burahin", style: "destructive", onPress: () => remove.mutate(c.id) },
-                    ])
+                    Alert.alert(
+                      "Burahin ang update?",
+                      "Mawawala ito sa task para sa lahat.",
+                      [
+                        { text: "Huwag", style: "cancel" },
+                        {
+                          text: "Burahin",
+                          style: "destructive",
+                          onPress: () => remove.mutate(c.id),
+                        },
+                      ],
+                      { cancelable: true },
+                    )
                   }
                 >
                   <Ionicons name="trash-outline" size={16} color={colors.mutedInk} />

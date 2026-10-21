@@ -2,6 +2,7 @@ import { useState } from "react";
 import { StyleSheet, Text, View } from "react-native";
 import { router } from "expo-router";
 
+import { useT } from "@/lib/i18n/locale-context";
 import { colors } from "@/lib/theme";
 import { signOutHelper } from "@/services/api/auth";
 import { PrimaryButton } from "@/components/ui/primary-button";
@@ -9,10 +10,13 @@ import { PrimaryButton } from "@/components/ui/primary-button";
 /**
  * Two-tap sign-out. The first tap only asks, so a stray touch at the bottom
  * of My Pay can't log her out; signOutHelper refuses while offline actions
- * are still queued and the reason is shown inline.
+ * are still queued and the reason is shown inline. The question opens at the
+ * bottom of the screen, so `onConfirmShown` lets the screen scroll its
+ * buttons into view (QA LM-18).
  */
-export function SignOutButton() {
+export function SignOutButton({ onConfirmShown }: { onConfirmShown?: () => void } = {}) {
   const [confirming, setConfirming] = useState(false);
+  const t = useT();
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
@@ -23,7 +27,7 @@ export function SignOutButton() {
       await signOutHelper();
       router.replace("/(auth)/sign-in");
     } catch (err) {
-      setError(err instanceof Error ? err.message : "Hindi nakapag-sign out.");
+      setError(err instanceof Error ? err.message : t("signOut.failed"));
       setConfirming(false);
     } finally {
       setLoading(false);
@@ -34,18 +38,16 @@ export function SignOutButton() {
     <View style={styles.wrap}>
       {confirming ? (
         <>
-          <Text style={styles.prompt}>
-            Sigurado ka? Kailangan mo ang email at password mo para makabalik.
-          </Text>
-          <View style={styles.row}>
+          <Text style={styles.prompt}>{t("signOut.confirm")}</Text>
+          <View style={styles.row} onLayout={onConfirmShown}>
             <PrimaryButton
-              label="Huwag na"
+              label={t("signOut.cancel")}
               variant="secondary"
               style={styles.half}
               onPress={() => setConfirming(false)}
             />
             <PrimaryButton
-              label="Mag-sign out"
+              label={t("signOut.button")}
               style={styles.half}
               loading={loading}
               onPress={signOut}
@@ -54,7 +56,7 @@ export function SignOutButton() {
         </>
       ) : (
         <PrimaryButton
-          label="Mag-sign out"
+          label={t("signOut.button")}
           variant="secondary"
           onPress={() => setConfirming(true)}
         />

@@ -31,10 +31,15 @@ export function LeadRunCard({
 }) {
   const pending = run.status === "pending";
   const confirmDelete = () =>
-    Alert.alert(`Burahin ang ${run.title}?`, "Babalik sa Kailangan ang mga nakalista dito.", [
-      { text: "Kanselahin", style: "cancel" },
-      { text: "Burahin", style: "destructive", onPress: onDelete },
-    ]);
+    Alert.alert(
+      `Burahin ang ${run.title}?`,
+      "Babalik sa Kailangan ang mga nakalista dito.",
+      [
+        { text: "Kanselahin", style: "cancel" },
+        { text: "Burahin", style: "destructive", onPress: onDelete },
+      ],
+      { cancelable: true },
+    );
 
   return (
     <View style={styles.card}>
