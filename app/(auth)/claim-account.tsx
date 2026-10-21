@@ -7,7 +7,7 @@ import { colors } from "@/lib/theme";
 import { textParts } from "@/lib/i18n/translate";
 import { claimProfile } from "@/services/api/handshake";
 import { TextField } from "@/components/ui/text-field";
-import { KEYBOARD_BEHAVIOR } from "@/components/ui/keyboard-screen";
+import { KEYBOARD_BEHAVIOR, useKeyboardOffset } from "@/components/ui/keyboard-screen";
 import { PrimaryButton } from "@/components/ui/primary-button";
 
 const MIN_PASSWORD_LENGTH = 6;
@@ -28,6 +28,7 @@ function isValidEmail(value: string): boolean {
 export default function ClaimAccountScreen() {
   const { code } = useLocalSearchParams<{ code: string }>();
   const t = useT();
+  const keyboardOffset = useKeyboardOffset();
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
@@ -63,7 +64,11 @@ export default function ClaimAccountScreen() {
   };
 
   return (
-    <KeyboardAvoidingView style={styles.flex} behavior={KEYBOARD_BEHAVIOR}>
+    <KeyboardAvoidingView
+      style={styles.flex}
+      behavior={KEYBOARD_BEHAVIOR}
+      keyboardVerticalOffset={keyboardOffset}
+    >
       <ScrollView contentContainerStyle={styles.content} keyboardShouldPersistTaps="handled">
         <Text style={styles.eyebrow}>{t("claim.step")}</Text>
         <Text style={styles.title}>{t("claim.title")}</Text>

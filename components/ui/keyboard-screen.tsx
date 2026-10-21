@@ -6,6 +6,7 @@ import {
   StyleSheet,
   type ScrollViewProps,
 } from "react-native";
+import { useSafeAreaInsets } from "react-native-safe-area-context";
 
 /**
  * How a screen makes room for the keyboard. Android draws edge to edge now,
@@ -16,10 +17,26 @@ import {
  */
 export const KEYBOARD_BEHAVIOR = Platform.OS === "ios" ? "padding" : "height";
 
+/**
+ * How far a screen's root sits below the top of the window. The tab and
+ * sign-in layouts pad every screen down by the status bar, and without this
+ * the keyboard is measured that much short: the screen stayed 52 dp too tall
+ * and a button under the field she typed in stayed under the keyboard
+ * (device QA 2026-10-21, N-01).
+ */
+export function useKeyboardOffset(): number {
+  return useSafeAreaInsets().top;
+}
+
 /** A tab screen's root that stays clear of the keyboard. */
 export function KeyboardScreen({ children }: { children: ReactNode }) {
+  const keyboardOffset = useKeyboardOffset();
   return (
-    <KeyboardAvoidingView style={styles.flex} behavior={KEYBOARD_BEHAVIOR}>
+    <KeyboardAvoidingView
+      style={styles.flex}
+      behavior={KEYBOARD_BEHAVIOR}
+      keyboardVerticalOffset={keyboardOffset}
+    >
       {children}
     </KeyboardAvoidingView>
   );

@@ -13,7 +13,7 @@ import { router, useLocalSearchParams } from "expo-router";
 import { useT } from "@/lib/i18n/locale-context";
 import { colors } from "@/lib/theme";
 import { flagDiscrepancy } from "@/services/api/handshake";
-import { KEYBOARD_BEHAVIOR } from "@/components/ui/keyboard-screen";
+import { KEYBOARD_BEHAVIOR, useKeyboardOffset } from "@/components/ui/keyboard-screen";
 import { PrimaryButton } from "@/components/ui/primary-button";
 
 const FLAG_CATEGORIES = [
@@ -33,6 +33,7 @@ const FLAG_CATEGORIES = [
 export default function FlagTermsScreen() {
   const { code } = useLocalSearchParams<{ code: string }>();
   const t = useT();
+  const keyboardOffset = useKeyboardOffset();
   const [field, setField] = useState<(typeof FLAG_CATEGORIES)[number]["value"]>("wage");
   const [note, setNote] = useState("");
   const [loading, setLoading] = useState(false);
@@ -52,7 +53,11 @@ export default function FlagTermsScreen() {
   };
 
   return (
-    <KeyboardAvoidingView style={styles.flex} behavior={KEYBOARD_BEHAVIOR}>
+    <KeyboardAvoidingView
+      style={styles.flex}
+      behavior={KEYBOARD_BEHAVIOR}
+      keyboardVerticalOffset={keyboardOffset}
+    >
       <ScrollView contentContainerStyle={styles.content} keyboardShouldPersistTaps="handled">
         <Text style={styles.eyebrow}>{t("flag.eyebrow")}</Text>
         <Text style={styles.title}>{t("flag.title")}</Text>

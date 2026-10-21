@@ -46,11 +46,14 @@ export function PrivateScratchpad({
   householdId,
   userId,
   station,
+  onDraftFocus,
 }: {
   helperId: string;
   householdId: string;
   userId: string;
   station: Station;
+  /** When she starts typing a new note, so the screen can keep its button in view. */
+  onDraftFocus?: () => void;
 }) {
   const queryClient = useQueryClient();
   const [draft, setDraft] = useState("");
@@ -269,6 +272,7 @@ export function PrivateScratchpad({
         placeholder="Isulat ang gustong tandaan..."
         value={draft}
         onChangeText={setDraft}
+        onFocus={onDraftFocus}
         multiline
       />
 

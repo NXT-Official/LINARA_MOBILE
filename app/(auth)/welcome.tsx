@@ -6,7 +6,7 @@ import { useT } from "@/lib/i18n/locale-context";
 import { colors } from "@/lib/theme";
 import { LanguageMenu } from "@/components/features/account/language-menu";
 import { TextField } from "@/components/ui/text-field";
-import { KEYBOARD_BEHAVIOR } from "@/components/ui/keyboard-screen";
+import { KEYBOARD_BEHAVIOR, useKeyboardOffset } from "@/components/ui/keyboard-screen";
 import { PrimaryButton } from "@/components/ui/primary-button";
 
 const INVITE_CODE_LENGTH = 6;
@@ -21,6 +21,7 @@ const INVITE_CODE_LENGTH = 6;
 export default function WelcomeScreen() {
   const [code, setCode] = useState("");
   const t = useT();
+  const keyboardOffset = useKeyboardOffset();
   const [error, setError] = useState<string | null>(null);
 
   const submitCode = () => {
@@ -34,7 +35,11 @@ export default function WelcomeScreen() {
   };
 
   return (
-    <KeyboardAvoidingView style={styles.flex} behavior={KEYBOARD_BEHAVIOR}>
+    <KeyboardAvoidingView
+      style={styles.flex}
+      behavior={KEYBOARD_BEHAVIOR}
+      keyboardVerticalOffset={keyboardOffset}
+    >
       <ScrollView contentContainerStyle={styles.content} keyboardShouldPersistTaps="handled">
         <View style={styles.hero}>
           <Text style={styles.title}>Linara</Text>
