@@ -116,4 +116,6 @@ export const ja: Record<MessageKey, string> = {
   "signOut.confirm": "よろしいですか？戻るにはメールアドレスとパスワードが必要です。",
   "signOut.cancel": "やめる",
   "signOut.failed": "ログアウトできませんでした。",
+  "pay.disabled":
+    "給料と人事の機能は、法律に沿っていることを確認するため一時的に停止しています。記録は保存されています。",
 };

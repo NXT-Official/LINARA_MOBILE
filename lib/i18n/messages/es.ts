@@ -116,4 +116,6 @@ export const es: Record<MessageKey, string> = {
   "signOut.confirm": "¿Segura? Necesitarás tu correo y contraseña para volver a entrar.",
   "signOut.cancel": "Mejor no",
   "signOut.failed": "No se pudo cerrar sesión.",
+  "pay.disabled":
+    "Las funciones de sueldo y RR. HH. están desactivadas temporalmente mientras nos aseguramos de que cumplan la ley. Tus registros se conservan.",
 };

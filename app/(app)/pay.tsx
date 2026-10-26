@@ -4,6 +4,7 @@ import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 
 import { useT } from "@/lib/i18n/locale-context";
 import { KeyboardScrollView } from "@/components/ui/keyboard-screen";
+import { PAY_HR_ENABLED } from "@/lib/pay-hr";
 import { colors, fonts } from "@/lib/theme";
 import { getHouseholdCutoff } from "@/services/api/cutoff";
 import { getMyHelperProfile } from "@/services/api/helper-profile";
@@ -37,6 +38,7 @@ import { UnpaidPeriods } from "@/components/features/pay/unpaid-periods";
 import { PayslipHistory } from "@/components/features/pay/payslip-history";
 import { RestOwedCounter } from "@/components/features/pay/rest-owed-counter";
 import { ValeRequestForm } from "@/components/features/pay/vale-request-form";
+import { PayHrDisabledNotice } from "@/components/features/pay/pay-hr-disabled-notice";
 import { SignOutButton } from "@/components/features/account/sign-out-button";
 
 /**
@@ -224,26 +226,32 @@ export default function PayScreen() {
         <Text style={styles.errorText}>Hindi ma-load ang iyong sahod. Subukan ulit mamaya.</Text>
       ) : (
         <>
-          <PaymentConfirmations />
-          <PayoutAccountCard defaultName={profileQuery.data.name} />
-          <DigitalPayslip
-            monthlyRate={currentPeriod?.monthlyRate ?? profileQuery.data.monthlyRate}
-            paydayInterval={profileQuery.data.paydayInterval}
-            approvedValeTotal={approvedValeTotal}
-            cutoffStart={currentPeriod?.workedStart ?? cutoffQuery.data?.cutoffStart}
-            cutoffEnd={cutoffQuery.data?.cutoffEnd}
-            workedShare={workedShare}
-            unpaidLeave={unpaidLeaveQuery.data}
-            paid={(payslipsQuery.data ?? []).some(
-              (p) =>
-                p.kind === "regular" &&
-                p.payoutStatus === "succeeded" &&
-                p.cutoffEnd === cutoffQuery.data?.cutoffEnd,
-            )}
-          />
-          <UnpaidPeriods periods={periodsQuery.data ?? []} />
+          {PAY_HR_ENABLED ? (
+            <>
+              <PaymentConfirmations />
+              <PayoutAccountCard defaultName={profileQuery.data.name} />
+              <DigitalPayslip
+                monthlyRate={currentPeriod?.monthlyRate ?? profileQuery.data.monthlyRate}
+                paydayInterval={profileQuery.data.paydayInterval}
+                approvedValeTotal={approvedValeTotal}
+                cutoffStart={currentPeriod?.workedStart ?? cutoffQuery.data?.cutoffStart}
+                cutoffEnd={cutoffQuery.data?.cutoffEnd}
+                workedShare={workedShare}
+                unpaidLeave={unpaidLeaveQuery.data}
+                paid={(payslipsQuery.data ?? []).some(
+                  (p) =>
+                    p.kind === "regular" &&
+                    p.payoutStatus === "succeeded" &&
+                    p.cutoffEnd === cutoffQuery.data?.cutoffEnd,
+                )}
+              />
+              <UnpaidPeriods periods={periodsQuery.data ?? []} />
 
-          {!payslipsQuery.isLoading && <PayslipHistory payslips={payslipsQuery.data ?? []} />}
+              {!payslipsQuery.isLoading && <PayslipHistory payslips={payslipsQuery.data ?? []} />}
+            </>
+          ) : (
+            <PayHrDisabledNotice />
+          )}
 
           {ledgerQuery.isLoading ? (
             <View style={styles.loading}>
@@ -293,7 +301,7 @@ export default function PayScreen() {
             />
           )}
 
-          {valesQuery.isLoading ? (
+          {!PAY_HR_ENABLED ? null : valesQuery.isLoading ? (
             <View style={styles.loading}>
               <ActivityIndicator color={colors.pineTeal} />
             </View>

@@ -120,6 +120,8 @@ export const tl = {
   "signOut.confirm": "Sigurado ka? Kailangan mo ang email at password mo para makabalik.",
   "signOut.cancel": "Huwag na",
   "signOut.failed": "Hindi nakapag-sign out.",
+  "pay.disabled":
+    "Pansamantalang naka-off ang sahod at HR features habang sinisiguro naming sumusunod ito sa batas. Ligtas ang iyong mga record.",
 } as const;
 
 export type MessageKey = keyof typeof tl;

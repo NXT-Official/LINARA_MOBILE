@@ -107,4 +107,5 @@ export const zhCN: Record<MessageKey, string> = {
   "signOut.confirm": "确定吗？重新登录需要你的电子邮箱和密码。",
   "signOut.cancel": "算了",
   "signOut.failed": "无法退出登录。",
+  "pay.disabled": "工资和人事功能暂时停用，我们正在确保其符合法律规定。你的记录会被保留。",
 };
