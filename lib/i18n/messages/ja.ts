@@ -118,4 +118,5 @@ export const ja: Record<MessageKey, string> = {
   "signOut.failed": "ログアウトできませんでした。",
   "pay.disabled":
     "給料と人事の機能は、法律に沿っていることを確認するため一時的に停止しています。記録は保存されています。",
+  "plan.tabClosed": "今はこの家庭では使えません。",
 };

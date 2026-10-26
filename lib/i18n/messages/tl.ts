@@ -122,6 +122,7 @@ export const tl = {
   "signOut.failed": "Hindi nakapag-sign out.",
   "pay.disabled":
     "Pansamantalang naka-off ang sahod at HR features habang sinisiguro naming sumusunod ito sa batas. Ligtas ang iyong mga record.",
+  "plan.tabClosed": "Hindi bukas sa household mo ngayon.",
 } as const;
 
 export type MessageKey = keyof typeof tl;

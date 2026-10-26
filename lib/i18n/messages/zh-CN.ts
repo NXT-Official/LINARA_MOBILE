@@ -108,4 +108,5 @@ export const zhCN: Record<MessageKey, string> = {
   "signOut.cancel": "算了",
   "signOut.failed": "无法退出登录。",
   "pay.disabled": "工资和人事功能暂时停用，我们正在确保其符合法律规定。你的记录会被保留。",
+  "plan.tabClosed": "你所在的家庭目前没有开放此功能。",
 };

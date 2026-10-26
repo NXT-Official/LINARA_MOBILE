@@ -7,6 +7,7 @@ import { useQuery } from "@tanstack/react-query";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 
 import { useT } from "@/lib/i18n/locale-context";
+import { householdHas } from "@/lib/plan";
 import { colors } from "@/lib/theme";
 import { useSession } from "@/lib/session-context";
 import { getMyEmployments } from "@/services/api/employment";
@@ -22,16 +23,19 @@ function LockedTab({
   children,
   style,
   label,
+  reason = "bukas lang kapag may household ka",
 }: {
   children?: ReactNode;
   style?: StyleProp<ViewStyle>;
   label: string;
+  /** Why it's closed, read after the tab's name. */
+  reason?: string;
 }) {
   return (
     <View
       style={[style, styles.locked]}
       accessible
-      accessibilityLabel={`${label}, bukas lang kapag may household ka`}
+      accessibilityLabel={`${label}, ${reason}`}
       accessibilityState={{ disabled: true }}
     >
       {children}
@@ -92,6 +96,13 @@ export default function AppTabsLayout() {
     return <Redirect href="/(app)/record" />;
   }
 
+  // Her household's plan can leave Pantry closed (lib/plan.ts); a deep link
+  // there lands on Today instead.
+  const pantryOpen = householdHas("pantry");
+  if (employed && !pantryOpen && pathname === "/pantry") {
+    return <Redirect href="/(app)/today" />;
+  }
+
   const lockedButton = (label: string) =>
     employed
       ? {}
@@ -141,7 +152,19 @@ export default function AppTabsLayout() {
         options={{
           title: t("tabs.pantry"),
           tabBarIcon: ({ color, size }) => <Ionicons name="basket" size={size} color={color} />,
-          ...lockedButton(t("tabs.pantry")),
+          ...(employed && !pantryOpen
+            ? {
+                tabBarButton: (props: { children?: ReactNode; style?: StyleProp<ViewStyle> }) => (
+                  <LockedTab
+                    style={props.style}
+                    label={t("tabs.pantry")}
+                    reason={t("plan.tabClosed")}
+                  >
+                    {props.children}
+                  </LockedTab>
+                ),
+              }
+            : lockedButton(t("tabs.pantry"))),
         }}
       />
       <Tabs.Screen

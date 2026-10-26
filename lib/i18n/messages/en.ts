@@ -115,4 +115,5 @@ export const en: Record<MessageKey, string> = {
   "signOut.failed": "Couldn't sign out.",
   "pay.disabled":
     "Pay and HR features are temporarily disabled while we make sure they follow the law. Your records are kept.",
+  "plan.tabClosed": "Not open in your household right now.",
 };
