@@ -7,11 +7,12 @@ import { useQuery } from "@tanstack/react-query";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 
 import { useT } from "@/lib/i18n/locale-context";
-import { householdHas } from "@/lib/plan";
+import { featureOpen } from "@/lib/plan";
 import { colors } from "@/lib/theme";
 import { useSession } from "@/lib/session-context";
 import { getMyEmployments } from "@/services/api/employment";
 import { useAccountKind } from "@/hooks/use-account-kind";
+import { useHouseholdPlan } from "@/hooks/use-household-plan";
 import { StartupWait } from "@/components/ui/startup-wait";
 
 /**
@@ -72,6 +73,7 @@ export default function AppTabsLayout() {
     // A household can end her employment while the app is open.
     refetchInterval: 5 * 60_000,
   });
+  const householdPlanQuery = useHouseholdPlan();
 
   if (isLoading || (session && (employmentsQuery.isLoading || kindQuery.isLoading))) {
     return <StartupWait />;
@@ -98,7 +100,7 @@ export default function AppTabsLayout() {
 
   // Her household's plan can leave Pantry closed (lib/plan.ts); a deep link
   // there lands on Today instead.
-  const pantryOpen = householdHas("pantry");
+  const pantryOpen = featureOpen("pantry", householdPlanQuery.data);
   if (employed && !pantryOpen && pathname === "/pantry") {
     return <Redirect href="/(app)/today" />;
   }
