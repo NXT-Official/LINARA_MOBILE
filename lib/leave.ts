@@ -1,6 +1,6 @@
 import { parseIsoDate } from "./datetime-fields";
-
-const MONTHS = ["Ene", "Peb", "Mar", "Abr", "May", "Hun", "Hul", "Ago", "Set", "Okt", "Nob", "Dis"];
+import { tr } from "./i18n/instance";
+import { monthDay } from "./week";
 
 /**
  * Working days in [start, end], both YYYY-MM-DD: every day but her rest day.
@@ -33,7 +33,7 @@ export function canCancelLeave(
 
 const short = (iso: string) => {
   const d = parseIsoDate(iso);
-  return d ? `${MONTHS[d.getMonth()]} ${d.getDate()}` : iso;
+  return d ? monthDay(d) : iso;
 };
 
 /** "Okt 5" or "Okt 5 – Okt 7". */
@@ -74,7 +74,7 @@ export function leaveBlockReason(
   silLeft: number,
   restOwedMinutes: number,
 ): string | null {
-  if (kind === "sil" && days > silLeft) return `${silLeft} na lang ang SIL mo.`;
-  if (kind === "in_kind" && restOwedMinutes <= 0) return "Wala ka pang rest owed.";
+  if (kind === "sil" && days > silLeft) return tr("leaveBlock.silLeft", { count: silLeft });
+  if (kind === "in_kind" && restOwedMinutes <= 0) return tr("leaveBlock.noRestOwed");
   return null;
 }

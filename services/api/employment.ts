@@ -1,4 +1,5 @@
 import { supabase } from "@/services/supabase";
+import { tr } from "@/lib/i18n/instance";
 
 /**
  * One household she works or has worked for. A helper_profiles row is one
@@ -83,12 +84,12 @@ export async function joinHousehold(code: string): Promise<{ helperId: string }>
     .rpc("join_household_with_invite", { p_invite_code: code })
     .maybeSingle();
   if (error || !data) {
-    if (!error) throw new Error("Hindi nakasali. Subukan ulit.");
+    if (!error) throw new Error(tr("serviceError.joinFailed"));
     if (/still employed/i.test(error.message)) {
-      throw new Error("May household ka pa ngayon. Isa lang ang pwedeng aktibo sa isang panahon.");
+      throw new Error(tr("serviceError.stillEmployed"));
     }
     if (/not found|already claimed/i.test(error.message)) {
-      throw new Error("Hindi na magagamit ang code na ito. Humingi ng bago sa employer mo.");
+      throw new Error(tr("serviceError.codeUsed"));
     }
     throw new Error(error.message);
   }

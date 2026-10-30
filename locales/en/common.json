@@ -1,0 +1,128 @@
+{
+  "language": {
+    "current": "Language: {language}"
+  },
+  "tabs": {
+    "today": "Today",
+    "week": "My week",
+    "pantry": "Pantry",
+    "pay": "My pay",
+    "record": "My record"
+  },
+  "header": {
+    "pantry": "Pantry and market"
+  },
+  "common": {
+    "back": "Back",
+    "sendToManager": "Send to manager",
+    "email": "Email",
+    "emailPlaceholder": "e.g. rosa@gmail.com",
+    "password": "Password",
+    "haveAccount": "Have an account? Sign in",
+    "backToSignIn": "Back to sign in",
+    "tryAgain": "Try again",
+    "walaPangNapipili": "nothing picked yet",
+    "tapos": "Done",
+    "nagloLoad": "Loading"
+  },
+  "startup": {
+    "title": "This is taking a while",
+    "body": "The internet may be slow. Try again, or sign out and sign in again."
+  },
+  "signOut": {
+    "button": "Sign out",
+    "confirm": "Are you sure? You'll need your email and password to get back in.",
+    "cancel": "Never mind",
+    "failed": "Couldn't sign out."
+  },
+  "plan": {
+    "tabClosed": "Not open in your household right now."
+  },
+  "manager": {
+    "canTReachYourDashboard": "Can't reach your dashboard",
+    "checkYourInternetConnectionThen": "Check your internet connection, then try again. Your household's data is safe.",
+    "tryAgain": "Try again",
+    "signOut": "Sign out",
+    "tingnanAngEmailMo": "Check your email",
+    "nagpadalaKamiNgConfirmationLink": "We sent you a confirmation link. Open it, then sign in here with your email and password."
+  },
+  "leaveKind": {
+    "sil": "SIL",
+    "inKindShort": "day off in kind",
+    "unpaidShort": "unpaid",
+    "extraPaidShort": "paid day off",
+    "silHint": "Paid. Comes out of your SIL for this service year.",
+    "inKind": "Day off from rest owed",
+    "inKindHint": "Paid in time: comes from your rest owed.",
+    "unpaid": "Unpaid",
+    "unpaidHint": "Taken off the pay for that cutoff.",
+    "extraPaid": "Extra paid day off"
+  },
+  "request": {
+    "pending": "Waiting",
+    "approved": "Approved",
+    "declined": "Not approved",
+    "cancelled": "Cancelled"
+  },
+  "task": {
+    "done": "Done",
+    "doing": "Doing",
+    "onHold": "On hold",
+    "toDo": "To do",
+    "cancelled": "Cancelled"
+  },
+  "requestError": {
+    "offline": "No internet, so this wasn't sent yet. Try again when you have signal.",
+    "notSent": "Couldn't send. Try again later.",
+    "notEnoughRestOwed": "You don't have enough rest owed for these days. Choose SIL or Unpaid, or ask for fewer days.",
+    "notEnoughSil": "You don't have enough SIL left for these days.",
+    "silNotYet": "You don't have SIL yet. It starts after one year of service.",
+    "newServiceYear": "A new service year starts in the middle of this. Split it into two requests.",
+    "datePassed": "That date has passed. Pick another day.",
+    "overlaps": "You already have leave on those days.",
+    "restOffThatDay": "You already have rest off on that day. Cancel that first.",
+    "max90": "One request can be up to 90 days.",
+    "allRestDays": "All of those days are your rest days.",
+    "lastBeforeFirst": "The last day has to be on or after the first day.",
+    "noShiftHours": "Your shift hours aren't set yet, so rest owed can't be counted. Let your manager know.",
+    "alreadyStarted": "This leave has already started, so it can't be cancelled.",
+    "onPayslip": "This leave is already on a payslip, so it can't be cancelled.",
+    "alreadyDecided": "This request has already been decided."
+  },
+  "serviceError": {
+    "offline": "No internet. Connect first, then try again.",
+    "unreachable": "Can't reach Linara right now. Try again later.",
+    "wrongCredentials": "Wrong email or password. Please try again.",
+    "emailNotConfirmed": "Your email isn't confirmed yet. Open the link in your inbox first.",
+    "cantCheckAccount": "Can't check your account right now. Check your internet, then try again.",
+    "setupUnfinished": "This account isn't set up yet. Employer: sign in at {site} to finish setting up your household. Kasambahay: use your invite code under \"No account yet? Create one\" ➔ \"I'm a kasambahay\".",
+    "linkJustSent": "We just sent you a link. Wait a minute before asking again.",
+    "unsyncedSignOut_one": "{count} change hasn't synced yet. Connect to the internet before you sign out.",
+    "unsyncedSignOut_other": "{count} changes haven't synced yet. Connect to the internet before you sign out.",
+    "joinFailed": "Couldn't join. Try again.",
+    "stillEmployed": "You're still with a household. Only one can be active at a time.",
+    "codeUsed": "This code can't be used anymore. Ask your employer for a new one.",
+    "runNotCreated": "Couldn't make the run.",
+    "itemsNotMoved": "Couldn't add the items to the run. Try again.",
+    "itemsTaken": "What you picked is already bought or on another run. Pick again.",
+    "receiptNotSaved": "The receipt wasn't saved.",
+    "confirmEmailSent": "We sent a confirmation link to {email}. Open it, then come back here and tap the button again to finish.",
+    "emailTaken": "This email already has an account. Use your old password, or sign in and enter the code in My Record.",
+    "requestNotSent": "The request wasn't sent.",
+    "lastDayFuture": "Your last day has to be today or later.",
+    "mobileNumber": "Enter the 11-digit number, starting with 09.",
+    "shareUnavailable": "Sharing isn't available on this phone.",
+    "shareTitle": "Save or send your record"
+  },
+  "payMethod": {
+    "cash": "Cash",
+    "bank": "Bank transfer",
+    "other": "Other"
+  },
+  "notifications": {
+    "channel": "Tasks and schedule changes"
+  },
+  "tabLock": {
+    "noHousehold": "opens once you have a household"
+  }
+}

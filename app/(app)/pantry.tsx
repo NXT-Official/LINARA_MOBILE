@@ -1,5 +1,5 @@
 import { useCallback, useMemo, useState } from "react";
-import { ActivityIndicator, Pressable, StyleSheet, Text, View } from "react-native";
+import { ActivityIndicator, Pressable, StyleSheet, View } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import * as ImagePicker from "expo-image-picker";
@@ -34,7 +34,7 @@ import { ReceiptSnapCard } from "@/components/features/pantry/receipt-snap-card"
 import { ItemForm } from "@/components/features/pantry/item-form";
 import { ListFilter, matchesQuery } from "@/components/features/pantry/list-filter";
 import {
-  CATEGORY_LABEL,
+  CATEGORY_KEY,
   groupByPantryCategory,
   isSuggested,
   needsBuying,
@@ -48,19 +48,21 @@ import { LeadRunCard } from "@/components/features/pantry/lead-run-card";
 import { NewRunForm } from "@/components/features/pantry/new-run-form";
 import { PastRuns } from "@/components/features/pantry/past-runs";
 import { startOfToday } from "@/lib/today";
+import { Text } from "@/components/ui/text";
+import type { MessageKey } from "@/lib/i18n/instance";
 
 type PalengkeFilter = "all" | "to_buy" | "bought";
 type PantryFilter = "all" | "low" | PantryCategory;
 
-const PALENGKE_CHIPS: { key: PalengkeFilter; label: string }[] = [
-  { key: "all", label: "Lahat" },
-  { key: "to_buy", label: "Bibilhin" },
-  { key: "bought", label: "Nabili na" },
+const PALENGKE_CHIPS: { key: PalengkeFilter; label: MessageKey }[] = [
+  { key: "all", label: "pantry.chipAll" },
+  { key: "to_buy", label: "pantry.chipToBuy" },
+  { key: "bought", label: "pantry.chipBought" },
 ];
-const PANTRY_CHIPS: { key: PantryFilter; label: string }[] = [
-  { key: "all", label: "Lahat" },
-  { key: "low", label: "Paubos" },
-  ...PANTRY_CATEGORIES.map((c) => ({ key: c, label: CATEGORY_LABEL[c] })),
+const PANTRY_CHIPS: { key: PantryFilter; label: MessageKey }[] = [
+  { key: "all", label: "pantry.chipAll" },
+  { key: "low", label: "pantry.chipLow" },
+  ...PANTRY_CATEGORIES.map((c) => ({ key: c, label: CATEGORY_KEY[c] })),
 ];
 
 /**
@@ -156,15 +158,15 @@ export default function PantryScreen() {
   const snapMutation = useMutation({
     mutationFn: async (runId?: string) => {
       const householdId = house;
-      if (!householdId) throw new Error("Hindi pa na-load ang household. Subukan ulit.");
+      if (!householdId) throw new Error(t("pantry.hindiPaNaLoadAng"));
       const permission = await ImagePicker.requestCameraPermissionsAsync();
       if (!permission.granted) {
-        throw new Error("Kailangan ng camera access para makuhanan ang resibo.");
+        throw new Error(t("pantry.kailanganNgCameraAccessPara"));
       }
       const shot = await ImagePicker.launchCameraAsync({ quality: 0.9 });
       if (shot.canceled || !shot.assets?.[0]) return false;
       if (await isOffline()) {
-        throw new Error("Walang internet. Kunan ulit ang resibo kapag may signal na.");
+        throw new Error(t("pantry.walangInternetKunanUlitAng"));
       }
       const uploaded = await uploadEvidenceImage(
         shot.assets[0].uri,
@@ -179,7 +181,7 @@ export default function PantryScreen() {
       return queryClient.invalidateQueries({ queryKey: ["grocery-receipt-latest"] });
     },
     onError: (err) =>
-      setSnapError(err instanceof Error ? err.message : "Hindi na-save ang resibo."),
+      setSnapError(err instanceof Error ? err.message : t("pantry.hindiNaSaveAngResibo")),
   });
 
   const palengkeTicketQuery = useQuery({
@@ -305,7 +307,7 @@ export default function PantryScreen() {
     setCaptureError(null);
     const permission = await ImagePicker.requestCameraPermissionsAsync();
     if (!permission.granted) {
-      setCaptureError("Kailangan ng camera access para makakuha ng larawan ng resibo.");
+      setCaptureError(t("pantry.kailanganNgCameraAccessPara2"));
       return;
     }
 
@@ -337,9 +339,7 @@ export default function PantryScreen() {
           .catch(() => {});
       }
     } catch (err) {
-      setCaptureError(
-        err instanceof Error ? err.message : "Hindi na-upload ang larawan ng resibo.",
-      );
+      setCaptureError(err instanceof Error ? err.message : t("pantry.hindiNaUploadAngLarawan"));
     } finally {
       setUploading(false);
     }
@@ -365,16 +365,14 @@ export default function PantryScreen() {
           <ActivityIndicator color={colors.pineTeal} />
         </View>
       ) : noPalengke ? (
-        <Text style={styles.errorText}>
-          Walang internet, kaya hindi ma-load ang palengke list. Babalik ito kapag may signal na.
-        </Text>
+        <Text style={styles.errorText}>{t("pantry.walangInternetKayaHindiMa")}</Text>
       ) : (
         <>
           {!runsOn && budget !== null && <BudgetBar spent={spent} budget={budget} />}
 
           {runsOn && (readyRuns.length > 0 || leadRuns.length > 0) && (
             <View style={styles.section}>
-              <Text style={styles.sectionTitle}>Mga run</Text>
+              <Text style={styles.sectionTitle}>{t("pantry.mgaRun")}</Text>
               {readyRuns.map((run) => (
                 <RunCard
                   key={run.id}
@@ -411,27 +409,31 @@ export default function PantryScreen() {
           <View style={styles.section}>
             <View style={styles.sectionHead}>
               <Text style={styles.sectionTitle}>
-                {runsOn ? "Kailangan" : "Listahan sa palengke"}
+                {runsOn ? t("pantry.kailangan") : t("pantry.listahanSaPalengke")}
               </Text>
               <View style={styles.headButtons}>
                 {inCharge && runsOn && !creatingRun && realPool.some((g) => !g.bought) && (
                   <Pressable
+                    accessibilityRole="button"
+                    hitSlop={4}
                     onPress={() => setCreatingRun(true)}
                     style={styles.addButton}
-                    accessibilityLabel="Gumawa ng run mula sa Kailangan"
+                    accessibilityLabel={t("pantry.gumawaNgRunMulaSa")}
                   >
                     <Ionicons name="cart-outline" size={16} color={colors.pineTeal} />
-                    <Text style={styles.addButtonText}>Gumawa ng run</Text>
+                    <Text style={styles.addButtonText}>{t("pantry.gumawaNgRun")}</Text>
                   </Pressable>
                 )}
                 {inCharge && !addingGrocery && (
                   <Pressable
+                    accessibilityRole="button"
+                    hitSlop={4}
                     onPress={() => setAddingGrocery(true)}
                     style={styles.addButton}
-                    accessibilityLabel="Magdagdag sa palengke list"
+                    accessibilityLabel={t("pantry.magdagdagSaPalengkeList")}
                   >
                     <Ionicons name="add" size={16} color={colors.pineTeal} />
-                    <Text style={styles.addButtonText}>Magdagdag</Text>
+                    <Text style={styles.addButtonText}>{t("pantry.magdagdag")}</Text>
                   </Pressable>
                 )}
               </View>
@@ -473,12 +475,12 @@ export default function PantryScreen() {
                 items={[]}
                 emptyText={
                   filtering(palengkeSearch, palengkeFilter)
-                    ? "Walang tugma."
+                    ? t("pantry.walangTugma")
                     : pantryItems.length === 0
-                      ? "Kapag may laman na ang pantry, dito lalabas ang mga paubos na."
+                      ? t("pantry.kapagMayLamanNaAng")
                       : runsOn
-                        ? "Walang kailangang bilhin ngayon."
-                        : "Walang laman ang palengke list ngayon."
+                        ? t("pantry.walangKailangangBilhinNgayon")
+                        : t("pantry.walangLamanAngPalengkeList")
                 }
                 canEdit={inCharge}
                 savingId={edits.savingId}
@@ -521,7 +523,7 @@ export default function PantryScreen() {
 
       {runsOn && runs.recent.length > 0 && (
         <View style={styles.section}>
-          <Text style={styles.sectionTitle}>Mga natapos na run</Text>
+          <Text style={styles.sectionTitle}>{t("pantry.mgaNataposNaRun")}</Text>
           <PastRuns runs={runs.recent} spent={runs.recentSpent} />
         </View>
       )}
@@ -552,22 +554,22 @@ export default function PantryScreen() {
 
       <View style={styles.section}>
         <View style={styles.sectionHead}>
-          <Text style={styles.sectionTitle}>Laman ng pantry</Text>
+          <Text style={styles.sectionTitle}>{t("pantry.lamanNgPantry")}</Text>
           {inCharge && !addingPantry && (
             <Pressable
+              accessibilityRole="button"
+              hitSlop={4}
               onPress={() => setAddingPantry(true)}
               style={styles.addButton}
-              accessibilityLabel="Magdagdag sa pantry"
+              accessibilityLabel={t("pantry.magdagdagSaPantry")}
             >
               <Ionicons name="add" size={16} color={colors.pineTeal} />
-              <Text style={styles.addButtonText}>Magdagdag</Text>
+              <Text style={styles.addButtonText}>{t("pantry.magdagdag")}</Text>
             </Pressable>
           )}
         </View>
         {!inCharge && pantryItems.length > 0 && (
-          <Text style={styles.roleNote}>
-            Pindutin ang &quot;Ubos na&quot; kapag may naubos, at ililista ito sa palengke.
-          </Text>
+          <Text style={styles.roleNote}>{t("pantry.pindutinAngUbosNaKapag")}</Text>
         )}
         {inCharge && addingPantry && (
           <ItemForm
@@ -590,20 +592,18 @@ export default function PantryScreen() {
           />
         )}
         {noPantry ? (
-          <Text style={styles.errorText}>
-            Walang internet, kaya hindi ma-load ang pantry. Babalik ito kapag may signal na.
-          </Text>
+          <Text style={styles.errorText}>{t("pantry.walangInternetKayaHindiMa2")}</Text>
         ) : pantryQuery.isLoading ? (
           <View style={styles.loading}>
             <ActivityIndicator color={colors.pineTeal} />
           </View>
         ) : pantryQuery.isError ? (
-          <Text style={styles.errorText}>Hindi ma-load ang pantry list. Subukan ulit mamaya.</Text>
+          <Text style={styles.errorText}>{t("pantry.hindiMaLoadAngPantry")}</Text>
         ) : pantryItems.length === 0 && !inCharge ? (
           <PantryStockList
             items={[]}
             canManage={false}
-            emptyText="Wala pang laman ang pantry. Ang manager o ang namamahala ng pantry ang maglalagay."
+            emptyText={t("pantry.walaPangLamanAngPantry")}
             listedIds={listedPantryIds}
             savingId={edits.savingId}
             onStep={edits.stepPantry}
@@ -617,11 +617,11 @@ export default function PantryScreen() {
             canManage={inCharge}
             emptyText={
               filtering(pantrySearch, pantryFilter)
-                ? "Walang tugma."
+                ? t("pantry.walangTugma")
                 : pantryItems.length === 0
                   ? // No starter list any more (user, 2026-10-07): empty until items are added.
-                    "Wala pang laman ang pantry. Pindutin ang Magdagdag para maglagay."
-                  : "Walang laman sa pantry list."
+                    t("pantry.walaPangLamanAngPantry2")
+                  : t("pantry.walangLamanSaPantryList")
             }
             listedIds={listedPantryIds}
             savingId={edits.savingId}
@@ -677,7 +677,7 @@ const styles = StyleSheet.create({
     flexDirection: "row",
     alignItems: "center",
     gap: 4,
-    minHeight: 36,
+    minHeight: 44,
     borderRadius: 999,
     borderWidth: 1,
     borderColor: colors.pineTeal,
@@ -704,6 +704,6 @@ const styles = StyleSheet.create({
   },
   errorText: {
     fontSize: 13,
-    color: colors.terracottaGold,
+    color: colors.terracottaInk,
   },
 });

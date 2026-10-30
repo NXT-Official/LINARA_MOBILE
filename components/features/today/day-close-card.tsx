@@ -1,16 +1,19 @@
-import { StyleSheet, Text, View } from "react-native";
+import { StyleSheet, View } from "react-native";
 
 import { colors, fonts } from "@/lib/theme";
 import type { TodayProgress } from "@/services/api/tickets";
+import { Text } from "@/components/ui/text";
+import { useT } from "@/lib/i18n/locale-context";
+import type { MessageKey } from "@/lib/i18n/instance";
 
 export type CloseReason = "closed" | "rest_day" | "night" | "after_shift" | "all_done";
 
-const REST_LINE: Record<CloseReason, string> = {
-  closed: "Sarado na ang board para ngayong gabi. Ang mga bagong task ay para na bukas.",
-  rest_day: "Rest day mo ngayon. Pahinga ka.",
-  night: "Gabi na. Pahinga ka na.",
-  after_shift: "Tapos na ang shift mo. Pahinga ka na.",
-  all_done: "Lahat ng task mo ngayon, tapos na.",
+const REST_LINE: Record<CloseReason, MessageKey> = {
+  closed: "close.closed",
+  rest_day: "close.restDay",
+  night: "close.night",
+  after_shift: "close.afterShift",
+  all_done: "close.allDone",
 };
 
 /**
@@ -26,6 +29,7 @@ export function DayCloseCard({
   reason: CloseReason;
   progress: TodayProgress | undefined;
 }) {
+  const t = useT();
   const total = progress?.total ?? 0;
   const done = progress?.done ?? 0;
   const onHold = progress?.onHold ?? 0;
@@ -33,22 +37,20 @@ export function DayCloseCard({
 
   const headline =
     total === 0
-      ? "Walang task ngayon."
+      ? t("today.walangTaskNgayon")
       : done === total
-        ? `Ang galing mo ngayon — ${done} sa ${total}, tapos!`
-        : `${done} sa ${total} ang tapos ngayon.`;
+        ? t("today.angGalingMoNgayonSa", { done, total })
+        : t("today.saAngTaposNgayon", { done, total });
 
   return (
     <View style={styles.card} accessibilityRole="summary">
       <Text style={styles.headline}>{headline}</Text>
-      <Text style={styles.rest}>{REST_LINE[reason]}</Text>
+      <Text style={styles.rest}>{t(REST_LINE[reason])}</Text>
       {reason !== "all_done" && left > 0 ? (
-        <Text style={styles.note}>
-          May {left} pang natitira. Nasa listahan mo pa rin sila para sa susunod mong shift.
-        </Text>
+        <Text style={styles.note}>{t("today.leftForNextShift", { count: left })}</Text>
       ) : null}
       {onHold > 0 ? (
-        <Text style={styles.note}>{onHold} naka-hold. Nakikita ito ng manager sa Pass nila.</Text>
+        <Text style={styles.note}>{t("today.onHoldCount", { count: onHold })}</Text>
       ) : null}
     </View>
   );

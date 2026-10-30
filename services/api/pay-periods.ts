@@ -1,4 +1,5 @@
 import { supabase } from "@/services/supabase";
+import { tr } from "@/lib/i18n/instance";
 
 /**
  * One cutoff of one employment, from ../LINARA/supabase/add-pay-periods.sql's
@@ -54,9 +55,7 @@ export async function giveNotice(helperId: string, lastDay: string, note?: strin
   });
   if (error) {
     throw new Error(
-      /today or later/i.test(error.message)
-        ? "Ngayon o sa susunod na araw dapat ang huling araw mo."
-        : error.message,
+      /today or later/i.test(error.message) ? tr("serviceError.lastDayFuture") : error.message,
     );
   }
 }

@@ -1,10 +1,10 @@
 import { useState } from "react";
-import { ActivityIndicator, Alert, Pressable, StyleSheet, Text, View } from "react-native";
+import { ActivityIndicator, Alert, Pressable, StyleSheet, View } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 
 import { AI_ENABLED } from "@/lib/ai";
-import { colors } from "@/lib/theme";
+import { colors, fonts } from "@/lib/theme";
 import { TextField } from "@/components/ui/text-field";
 import { PrimaryButton } from "@/components/ui/primary-button";
 import { useAudioRecorder } from "@/hooks/use-audio-recorder";
@@ -21,6 +21,8 @@ import { createTicket } from "@/services/api/tickets";
 import { promoteVoiceTask, transcribeAudio } from "@/services/voice-pipeline";
 import { enqueueSyncAction } from "@/services/sqlite-queue";
 import { isOffline } from "@/lib/network";
+import { Text } from "@/components/ui/text";
+import { useT } from "@/lib/i18n/locale-context";
 
 /** A station name: each household keeps its own list (../LINARA/supabase/add-household-stations.sql). */
 type Station = string;
@@ -55,7 +57,10 @@ export function PrivateScratchpad({
   /** When she starts typing a new note, so the screen can keep its button in view. */
   onDraftFocus?: () => void;
 }) {
+  const t = useT();
   const queryClient = useQueryClient();
+  // Folded until she opens it, so Today leads with the work (audit 2026-10-29).
+  const [open, setOpen] = useState(false);
   const [draft, setDraft] = useState("");
   const [promotingId, setPromotingId] = useState<string | null>(null);
   const [editingId, setEditingId] = useState<string | null>(null);
@@ -146,8 +151,8 @@ export function PrivateScratchpad({
 
   const confirmDelete = (note: HelperNote) =>
     Alert.alert(
-      "Burahin ang tala?",
-      "Hindi na ito maibabalik.",
+      t("today.burahinAngTala2"),
+      t("today.hindiNaItoMaibabalik"),
       [
         { text: "Huwag", style: "cancel" },
         { text: "Burahin", style: "destructive", onPress: () => deleteMutation.mutate(note.id) },
@@ -167,146 +172,170 @@ export function PrivateScratchpad({
 
   return (
     <View style={styles.card}>
-      <Text style={styles.eyebrow}>Sariling tala</Text>
-      <Text style={styles.subtitle}>Sa&apos;yo lang &apos;to. Hindi ito makikita ng manager.</Text>
+      <Pressable
+        onPress={() => setOpen((o) => !o)}
+        accessibilityRole="button"
+        accessibilityState={{ expanded: open }}
+        style={styles.header}
+      >
+        <Ionicons name="lock-closed-outline" size={18} color={colors.pineTeal} />
+        <Text style={styles.title}>
+          {activeNotes.length > 0
+            ? t("today.notesTitleCount", { count: activeNotes.length })
+            : t("today.notesTitle")}
+        </Text>
+        <Ionicons name={open ? "chevron-up" : "chevron-down"} size={18} color={colors.mutedInk} />
+      </Pressable>
+      {open ? (
+        <>
+          <Text style={styles.subtitle}>{t("today.saYoLangToHindi")}</Text>
 
-      {notesQuery.isLoading ? (
-        <ActivityIndicator color={colors.pineTeal} />
-      ) : activeNotes.length > 0 ? (
-        <View style={styles.notesList}>
-          {activeNotes.map((note) => (
-            <View key={note.id} style={styles.noteRow}>
-              {editingId === note.id ? (
-                <>
-                  <TextField
-                    label="Ayusin ang tala"
-                    value={editText}
-                    onChangeText={setEditText}
-                    multiline
-                    autoFocus
-                  />
-                  <View style={styles.noteActions}>
-                    <PrimaryButton
-                      label="I-save"
-                      style={styles.actionButton}
-                      loading={saveEditMutation.isPending}
-                      disabled={editText.trim().length === 0}
-                      onPress={() =>
-                        saveEditMutation.mutate({ id: note.id, text: editText.trim() })
-                      }
-                    />
-                    <PrimaryButton
-                      label="Huwag na"
-                      variant="secondary"
-                      style={styles.actionButton}
-                      onPress={() => setEditingId(null)}
-                    />
-                  </View>
-                </>
-              ) : (
-                <>
-                  <Text style={styles.noteText}>{note.text}</Text>
-                  <View style={styles.noteActions}>
-                    {AI_ENABLED ? (
-                      <Pressable
-                        onPress={() => promoteMutation.mutate(note)}
-                        disabled={promotingId === note.id}
-                        style={styles.promoteButton}
-                      >
-                        {promotingId === note.id ? (
-                          <ActivityIndicator size="small" color={colors.pineTeal} />
-                        ) : (
-                          <>
-                            <Ionicons
-                              name="arrow-up-circle-outline"
-                              size={16}
-                              color={colors.pineTeal}
-                            />
-                            <Text style={styles.promoteText}>Gawing task</Text>
-                          </>
-                        )}
-                      </Pressable>
-                    ) : (
-                      <View />
-                    )}
-                    {/* A note still waiting to sync has no row to change yet. */}
-                    {note.id.startsWith("pending-") ? null : (
-                      <View style={styles.iconActions}>
-                        <Pressable
-                          onPress={() => {
-                            setEditText(note.text);
-                            setEditingId(note.id);
-                          }}
-                          accessibilityRole="button"
-                          accessibilityLabel="Ayusin ang tala"
-                          hitSlop={8}
-                          style={styles.iconButton}
-                        >
-                          <Ionicons name="create-outline" size={20} color={colors.mutedInk} />
-                        </Pressable>
-                        <Pressable
-                          onPress={() => confirmDelete(note)}
-                          accessibilityRole="button"
-                          accessibilityLabel="Burahin ang tala"
-                          hitSlop={8}
-                          style={styles.iconButton}
-                        >
-                          {deleteMutation.isPending && deleteMutation.variables === note.id ? (
-                            <ActivityIndicator size="small" color={colors.terracottaInk} />
-                          ) : (
-                            <Ionicons name="trash-outline" size={20} color={colors.terracottaInk} />
-                          )}
-                        </Pressable>
+          {notesQuery.isLoading ? (
+            <ActivityIndicator color={colors.pineTeal} />
+          ) : activeNotes.length > 0 ? (
+            <View style={styles.notesList}>
+              {activeNotes.map((note) => (
+                <View key={note.id} style={styles.noteRow}>
+                  {editingId === note.id ? (
+                    <>
+                      <TextField
+                        label={t("today.ayusinAngTala")}
+                        value={editText}
+                        onChangeText={setEditText}
+                        multiline
+                        autoFocus
+                      />
+                      <View style={styles.noteActions}>
+                        <PrimaryButton
+                          label={t("today.iSave")}
+                          style={styles.actionButton}
+                          loading={saveEditMutation.isPending}
+                          disabled={editText.trim().length === 0}
+                          onPress={() =>
+                            saveEditMutation.mutate({ id: note.id, text: editText.trim() })
+                          }
+                        />
+                        <PrimaryButton
+                          label={t("today.huwagNa")}
+                          variant="secondary"
+                          style={styles.actionButton}
+                          onPress={() => setEditingId(null)}
+                        />
                       </View>
-                    )}
-                  </View>
-                </>
-              )}
+                    </>
+                  ) : (
+                    <>
+                      <Text style={styles.noteText}>{note.text}</Text>
+                      <View style={styles.noteActions}>
+                        {AI_ENABLED ? (
+                          <Pressable
+                            accessibilityRole="button"
+                            hitSlop={8}
+                            onPress={() => promoteMutation.mutate(note)}
+                            disabled={promotingId === note.id}
+                            style={styles.promoteButton}
+                          >
+                            {promotingId === note.id ? (
+                              <ActivityIndicator size="small" color={colors.pineTeal} />
+                            ) : (
+                              <>
+                                <Ionicons
+                                  name="arrow-up-circle-outline"
+                                  size={16}
+                                  color={colors.pineTeal}
+                                />
+                                <Text style={styles.promoteText}>{t("today.gawingTask")}</Text>
+                              </>
+                            )}
+                          </Pressable>
+                        ) : (
+                          <View />
+                        )}
+                        {/* A note still waiting to sync has no row to change yet. */}
+                        {note.id.startsWith("pending-") ? null : (
+                          <View style={styles.iconActions}>
+                            <Pressable
+                              onPress={() => {
+                                setEditText(note.text);
+                                setEditingId(note.id);
+                              }}
+                              accessibilityRole="button"
+                              accessibilityLabel={t("today.ayusinAngTala")}
+                              hitSlop={8}
+                              style={styles.iconButton}
+                            >
+                              <Ionicons name="create-outline" size={20} color={colors.mutedInk} />
+                            </Pressable>
+                            <Pressable
+                              onPress={() => confirmDelete(note)}
+                              accessibilityRole="button"
+                              accessibilityLabel={t("today.burahinAngTala")}
+                              hitSlop={8}
+                              style={styles.iconButton}
+                            >
+                              {deleteMutation.isPending && deleteMutation.variables === note.id ? (
+                                <ActivityIndicator size="small" color={colors.terracottaInk} />
+                              ) : (
+                                <Ionicons
+                                  name="trash-outline"
+                                  size={20}
+                                  color={colors.terracottaInk}
+                                />
+                              )}
+                            </Pressable>
+                          </View>
+                        )}
+                      </View>
+                    </>
+                  )}
+                </View>
+              ))}
             </View>
-          ))}
-        </View>
-      ) : null}
+          ) : null}
 
-      <TextField
-        label="Bagong tala"
-        placeholder="Isulat ang gustong tandaan..."
-        value={draft}
-        onChangeText={setDraft}
-        onFocus={onDraftFocus}
-        multiline
-      />
+          <TextField
+            label={t("today.bagongTala")}
+            placeholder={t("today.isulatAngGustongTandaan")}
+            value={draft}
+            onChangeText={setDraft}
+            onFocus={onDraftFocus}
+            multiline
+          />
 
-      <View style={styles.actionsRow}>
-        <PrimaryButton
-          label="Magdagdag ng tala"
-          variant="secondary"
-          style={styles.actionButton}
-          loading={addTextMutation.isPending}
-          disabled={draft.trim().length === 0}
-          onPress={() => addTextMutation.mutate(draft.trim())}
-        />
+          <View style={styles.actionsRow}>
+            <PrimaryButton
+              label={t("today.magdagdagNgTala")}
+              variant="secondary"
+              style={styles.actionButton}
+              loading={addTextMutation.isPending}
+              disabled={draft.trim().length === 0}
+              onPress={() => addTextMutation.mutate(draft.trim())}
+            />
 
-        {AI_ENABLED && (
-          <Pressable
-            onPressIn={() => startRecording().catch(() => {})}
-            onPressOut={handleReleaseRecord}
-            style={[styles.recordButton, isRecording && styles.recordButtonActive]}
-          >
-            {addVoiceMutation.isPending ? (
-              <ActivityIndicator color={colors.cardCream} />
-            ) : (
-              <Ionicons
-                name={isRecording ? "mic" : "mic-outline"}
-                size={22}
-                color={colors.cardCream}
-              />
+            {AI_ENABLED && (
+              <Pressable
+                accessibilityRole="button"
+                accessibilityLabel={t("today.pindutinNangMatagalParaMag")}
+                accessibilityState={{ busy: isRecording || addVoiceMutation.isPending }}
+                onPressIn={() => startRecording().catch(() => {})}
+                onPressOut={handleReleaseRecord}
+                style={[styles.recordButton, isRecording && styles.recordButtonActive]}
+              >
+                {addVoiceMutation.isPending ? (
+                  <ActivityIndicator color={colors.cardCream} />
+                ) : (
+                  <Ionicons
+                    name={isRecording ? "mic" : "mic-outline"}
+                    size={22}
+                    color={isRecording ? colors.ink : colors.cardCream}
+                  />
+                )}
+              </Pressable>
             )}
-          </Pressable>
-        )}
-      </View>
-      {AI_ENABLED && (
-        <Text style={styles.recordHint}>Hawakan ang mic para mag-record ng voice note.</Text>
-      )}
+          </View>
+          {AI_ENABLED && <Text style={styles.recordHint}>{t("today.hawakanAngMicParaMag")}</Text>}
+        </>
+      ) : null}
     </View>
   );
 }
@@ -320,10 +349,17 @@ const styles = StyleSheet.create({
     borderColor: colors.border,
     gap: 12,
   },
-  eyebrow: {
-    fontSize: 13,
-    fontWeight: "700",
-    color: colors.terracottaGold,
+  header: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 8,
+    minHeight: 48,
+  },
+  title: {
+    flex: 1,
+    fontFamily: fonts.display,
+    fontSize: 17,
+    color: colors.ink,
   },
   subtitle: {
     fontSize: 13,

@@ -1,0 +1,127 @@
+{
+  "language": {
+    "current": "言語：{language}"
+  },
+  "tabs": {
+    "today": "今日",
+    "week": "今週",
+    "pantry": "食品庫",
+    "pay": "給料",
+    "record": "記録"
+  },
+  "header": {
+    "pantry": "食品庫と買い出し"
+  },
+  "common": {
+    "back": "戻る",
+    "sendToManager": "雇い主に送る",
+    "email": "メールアドレス",
+    "emailPlaceholder": "例：rosa@gmail.com",
+    "password": "パスワード",
+    "haveAccount": "アカウントをお持ちですか？ログイン",
+    "backToSignIn": "ログインに戻る",
+    "tryAgain": "もう一度試す",
+    "walaPangNapipili": "まだ選んでいません",
+    "tapos": "完了",
+    "nagloLoad": "読み込み中"
+  },
+  "startup": {
+    "title": "時間がかかっています",
+    "body": "インターネットが遅いかもしれません。もう一度試すか、ログアウトしてからログインし直してください。"
+  },
+  "signOut": {
+    "button": "ログアウト",
+    "confirm": "よろしいですか？戻るにはメールアドレスとパスワードが必要です。",
+    "cancel": "やめる",
+    "failed": "ログアウトできませんでした。"
+  },
+  "plan": {
+    "tabClosed": "今はこの家庭では使えません。"
+  },
+  "manager": {
+    "canTReachYourDashboard": "ダッシュボードを開けません",
+    "checkYourInternetConnectionThen": "インターネット接続を確認して、もう一度お試しください。ご家庭のデータは安全です。",
+    "tryAgain": "もう一度試す",
+    "signOut": "ログアウト",
+    "tingnanAngEmailMo": "メールを確認してください",
+    "nagpadalaKamiNgConfirmationLink": "確認用のリンクを送りました。開いてから、ここでメールアドレスとパスワードでログインしてください。"
+  },
+  "leaveKind": {
+    "sil": "SIL（勤続有給休暇）",
+    "inKindShort": "代休",
+    "unpaidShort": "無給",
+    "extraPaidShort": "有給の休み",
+    "silHint": "有給です。今の勤続年度の SIL から引かれます。",
+    "inKind": "たまった休息時間で休む",
+    "inKindHint": "時間で支払い：たまった休息時間から引かれます。",
+    "unpaid": "無給",
+    "unpaidHint": "その締め期間の給料から引かれます。",
+    "extraPaid": "追加の有給の休み"
+  },
+  "request": {
+    "pending": "待っています",
+    "approved": "承認されました",
+    "declined": "承認されませんでした",
+    "cancelled": "取り消しました"
+  },
+  "task": {
+    "done": "完了",
+    "doing": "作業中",
+    "onHold": "保留中",
+    "toDo": "これから",
+    "cancelled": "取り消し"
+  },
+  "requestError": {
+    "offline": "インターネットがないので、まだ送られていません。電波があるときにもう一度試してください。",
+    "notSent": "送れませんでした。あとでもう一度試してください。",
+    "notEnoughRestOwed": "この日数分のたまった休息時間が足りません。SIL か無給を選ぶか、日数を減らしてください。",
+    "notEnoughSil": "この日数分の SIL が残っていません。",
+    "silNotYet": "まだ SIL がありません。勤続1年後から始まります。",
+    "newServiceYear": "途中で新しい勤続年度が始まります。2つの申請に分けてください。",
+    "datePassed": "その日付はもう過ぎています。別の日を選んでください。",
+    "overlaps": "その日はすでに休みがあります。",
+    "restOffThatDay": "その日はすでに休息の予定があります。先にそれを取り消してください。",
+    "max90": "1回の申請は90日までです。",
+    "allRestDays": "その日はすべてあなたの休日です。",
+    "lastBeforeFirst": "最終日は初日と同じ日か、それより後にしてください。",
+    "noShiftHours": "勤務時間がまだ設定されていないので、たまった休息時間を計算できません。管理者に伝えてください。",
+    "alreadyStarted": "この休みはもう始まっているので、取り消せません。",
+    "onPayslip": "この休みはすでに給与明細に入っているので、取り消せません。",
+    "alreadyDecided": "この申請はもう決まっています。"
+  },
+  "serviceError": {
+    "offline": "インターネットがありません。接続してからもう一度試してください。",
+    "unreachable": "今は Linara につながりません。あとでもう一度試してください。",
+    "wrongCredentials": "メールアドレスかパスワードが違います。もう一度お試しください。",
+    "emailNotConfirmed": "メールアドレスがまだ確認されていません。先に受信箱のリンクを開いてください。",
+    "cantCheckAccount": "今はアカウントを確認できません。インターネットを確認して、もう一度試してください。",
+    "setupUnfinished": "このアカウントはまだ設定が終わっていません。雇用主の方：{site} にログインして家庭の設定を終えてください。家事労働者の方：「アカウントがない？作成する」➔「家事労働者です」で招待コードを使ってください。",
+    "linkJustSent": "リンクを送ったところです。1分待ってからもう一度お願いします。",
+    "unsyncedSignOut": "まだ同期されていないものが {count} 件あります。ログアウトする前にインターネットにつないでください。",
+    "joinFailed": "参加できませんでした。もう一度試してください。",
+    "stillEmployed": "今も別の家庭で働いています。同時に参加できるのは1つだけです。",
+    "codeUsed": "このコードはもう使えません。雇用主に新しいコードをもらってください。",
+    "runNotCreated": "買い出しを作れませんでした。",
+    "itemsNotMoved": "買うものを買い出しに入れられませんでした。もう一度試してください。",
+    "itemsTaken": "選んだものはもう買ったか、別の買い出しに入っています。選び直してください。",
+    "receiptNotSaved": "レシートが保存されませんでした。",
+    "confirmEmailSent": "{email} に確認用のリンクを送りました。開いてからここに戻り、もう一度ボタンを押して完了してください。",
+    "emailTaken": "このメールアドレスはすでにアカウントがあります。前のパスワードを使うか、ログインして「わたしの記録」でコードを入力してください。",
+    "requestNotSent": "申請が送られませんでした。",
+    "lastDayFuture": "最終日は今日以降にしてください。",
+    "mobileNumber": "09 で始まる11桁の番号を入れてください。",
+    "shareUnavailable": "この電話では共有できません。",
+    "shareTitle": "記録を保存するか送る"
+  },
+  "payMethod": {
+    "cash": "現金",
+    "bank": "銀行振込",
+    "other": "その他"
+  },
+  "notifications": {
+    "channel": "タスクと予定の変更"
+  },
+  "tabLock": {
+    "noHousehold": "家庭に参加すると開きます"
+  }
+}

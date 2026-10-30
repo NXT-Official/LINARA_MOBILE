@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { Alert, Pressable, StyleSheet, Text, TextInput, View } from "react-native";
+import { Alert, Pressable, StyleSheet, View } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
 
 import { colors } from "@/lib/theme";
@@ -7,6 +7,8 @@ import { parseAmount } from "@/lib/money";
 import type { GroceryItemRow } from "@/services/api/grocery";
 
 import { ItemForm, type ItemFormValues } from "./item-form";
+import { Text, TextInput } from "@/components/ui/text";
+import { useT } from "@/lib/i18n/locale-context";
 
 /**
  * Keyed by `item.actualCost` from the parent map (see PalengkeChecklist
@@ -22,6 +24,7 @@ function CostField({
   item: GroceryItemRow;
   onCost: (cost: number | null) => void;
 }) {
+  const t = useT();
   const [draft, setDraft] = useState(item.actualCost != null ? String(item.actualCost) : "");
 
   const commit = () => {
@@ -38,7 +41,7 @@ function CostField({
 
   return (
     <View style={styles.costField}>
-      <Text style={styles.costPeso}>₱</Text>
+      <Text style={styles.costPeso}>{t("pantry.text")}</Text>
       <TextInput
         value={draft}
         onChangeText={setDraft}
@@ -62,7 +65,7 @@ function CostField({
  */
 export function PalengkeChecklist({
   items,
-  emptyText = "Walang laman ang palengke list ngayon.",
+  emptyText,
   canEdit,
   savingId,
   onToggle,
@@ -82,20 +85,21 @@ export function PalengkeChecklist({
   onEdit: (item: GroceryItemRow, values: ItemFormValues, done: () => void) => void;
   onRemove: (item: GroceryItemRow) => void;
 }) {
+  const t = useT();
   const [editingId, setEditingId] = useState<string | null>(null);
 
   if (items.length === 0) {
     return (
       <View style={styles.emptyCard}>
-        <Text style={styles.emptyText}>{emptyText}</Text>
+        <Text style={styles.emptyText}>{emptyText ?? t("pantry.walangLamanAngPalengkeList")}</Text>
       </View>
     );
   }
 
   const confirmRemove = (item: GroceryItemRow) =>
     Alert.alert(
-      `Tanggalin ang ${item.name}?`,
-      "Mawawala ito sa palengke list.",
+      t("pantry.tanggalinAng", { name: item.name }),
+      t("pantry.mawawalaItoSaPalengkeList"),
       [
         { text: "Kanselahin", style: "cancel" },
         { text: "Tanggalin", style: "destructive", onPress: () => onRemove(item) },
@@ -119,6 +123,7 @@ export function PalengkeChecklist({
         ) : (
           <View key={item.id} style={styles.row}>
             <Pressable
+              hitSlop={11}
               onPress={() => onToggle(item)}
               accessibilityRole="checkbox"
               accessibilityState={{ checked: item.bought }}
@@ -129,10 +134,11 @@ export function PalengkeChecklist({
             </Pressable>
 
             <Pressable
+              accessibilityRole={item.bought || !canEdit ? undefined : "button"}
               style={styles.itemInfo}
               disabled={item.bought || !canEdit}
               onPress={() => setEditingId(item.id)}
-              accessibilityHint={item.bought || !canEdit ? undefined : "Ayusin ang item"}
+              accessibilityHint={item.bought || !canEdit ? undefined : t("pantry.ayusinAngItem")}
             >
               <Text style={[styles.itemName, item.bought && styles.itemNameBought]}>
                 {item.name}
@@ -150,9 +156,10 @@ export function PalengkeChecklist({
               />
             ) : canEdit ? (
               <Pressable
+                accessibilityRole="button"
                 onPress={() => confirmRemove(item)}
                 hitSlop={8}
-                accessibilityLabel={`Tanggalin ang ${item.name}`}
+                accessibilityLabel={t("pantry.tanggalinAng2", { name: item.name })}
                 style={styles.iconButton}
               >
                 <Ionicons name="trash-outline" size={18} color={colors.mutedInk} />

@@ -1,19 +1,25 @@
 import type { GroceryItemRow } from "@/services/api/grocery";
 import type { PantryCategory, PantryItemRow } from "@/services/api/pantry";
 
+import { tr, type MessageKey } from "./i18n/instance";
+
 /**
  * Pantry wording and the shelf order, kept in step with the web's
  * ../LINARA/src/features/pantry/pantry.utils.ts (neither app can import the
  * other). The labels here are hers, in Filipino; the stored categories stay
  * as pantry_items' CHECK has them.
  */
-export const CATEGORY_LABEL: Record<PantryCategory, string> = {
-  "Rice & grains": "Bigas at butil",
-  Fresh: "Sariwa",
-  Pantry: "Tuyong paninda at sawsawan",
-  Cleaning: "Panlinis",
-  Baby: "Para sa baby",
+/** Each shelf's name, as a catalog key (its words are in locales/). */
+export const CATEGORY_KEY: Record<PantryCategory, MessageKey> = {
+  "Rice & grains": "pantryCategory.rice",
+  Fresh: "pantryCategory.fresh",
+  Pantry: "pantryCategory.pantry",
+  Cleaning: "pantryCategory.cleaning",
+  Baby: "pantryCategory.baby",
 };
+
+/** A shelf's name in the language she's using now. */
+export const categoryLabel = (c: PantryCategory): string => tr(CATEGORY_KEY[c]);
 
 export type StockState = "out" | "low" | "ok";
 
@@ -31,9 +37,9 @@ export function stockState(item: Pick<PantryItemRow, "qty" | "par">): StockState
 /** Out or low: what the "Paubos" filter shows. */
 export const needsBuying = (item: Pick<PantryItemRow, "qty" | "par">) => stockState(item) !== "ok";
 
-export const STOCK_LABEL: Record<Exclude<StockState, "ok">, string> = {
-  out: "Ubos",
-  low: "Paubos",
+export const STOCK_KEY: Record<Exclude<StockState, "ok">, MessageKey> = {
+  out: "stock.out",
+  low: "stock.low",
 };
 
 /**
@@ -86,8 +92,8 @@ export function groupByPantryCategory<T extends { pantryItemId?: string | null }
 ): { section: GrocerySection; items: T[] }[] {
   const categoryOf = new Map(pantry.map((p) => [p.id, p.category]));
   const sections: { section: GrocerySection; items: T[] }[] = [
-    ...order.map((c) => ({ section: { key: c, label: CATEGORY_LABEL[c] }, items: [] as T[] })),
-    { section: { key: "other" as const, label: "Iba pa" }, items: [] as T[] },
+    ...order.map((c) => ({ section: { key: c, label: categoryLabel(c) }, items: [] as T[] })),
+    { section: { key: "other" as const, label: tr("pantryCategory.other") }, items: [] as T[] },
   ];
   for (const item of items) {
     const category = item.pantryItemId ? categoryOf.get(item.pantryItemId) : undefined;

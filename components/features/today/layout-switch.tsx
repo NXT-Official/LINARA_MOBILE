@@ -1,12 +1,15 @@
-import { Pressable, StyleSheet, Text, View } from "react-native";
+import { Pressable, StyleSheet, View } from "react-native";
 
 import { colors } from "@/lib/theme";
 import type { TodayLayout } from "@/hooks/use-today-layout";
+import { Text } from "@/components/ui/text";
+import { useT } from "@/lib/i18n/locale-context";
+import type { MessageKey } from "@/lib/i18n/instance";
 
-const OPTIONS: { key: TodayLayout; label: string }[] = [
-  { key: "focus", label: "Isa-isa" },
-  { key: "list", label: "Listahan" },
-  { key: "timeline", label: "Oras" },
+const OPTIONS: { key: TodayLayout; label: MessageKey }[] = [
+  { key: "focus", label: "layout.focus" },
+  { key: "list", label: "layout.list" },
+  { key: "timeline", label: "layout.timeline" },
 ];
 
 /** Her choice of how Today shows the day. */
@@ -17,19 +20,25 @@ export function LayoutSwitch({
   value: TodayLayout;
   onChange: (next: TodayLayout) => void;
 }) {
+  const t = useT();
   return (
-    <View style={styles.wrap} accessibilityRole="tablist" accessibilityLabel="Ayos ng Ngayon">
+    <View
+      style={styles.wrap}
+      accessibilityRole="tablist"
+      accessibilityLabel={t("today.ayosNgNgayon")}
+    >
       {OPTIONS.map((o) => {
         const on = o.key === value;
         return (
           <Pressable
+            hitSlop={{ top: 4, bottom: 4 }}
             key={o.key}
             onPress={() => onChange(o.key)}
             accessibilityRole="tab"
             accessibilityState={{ selected: on }}
             style={[styles.option, on && styles.optionOn]}
           >
-            <Text style={[styles.text, on && styles.textOn]}>{o.label}</Text>
+            <Text style={[styles.text, on && styles.textOn]}>{t(o.label)}</Text>
           </Pressable>
         );
       })}
@@ -52,7 +61,7 @@ const styles = StyleSheet.create({
     borderRadius: 9,
     paddingHorizontal: 12,
     paddingVertical: 6,
-    minHeight: 32,
+    minHeight: 44,
     justifyContent: "center",
   },
   optionOn: {

@@ -1,4 +1,5 @@
 import { supabase } from "@/services/supabase";
+import { tr } from "@/lib/i18n/instance";
 
 /** How Linara itself pays out (Xendit). */
 export type PayoutChannelCode = "PH_GCASH" | "PH_PAYMAYA";
@@ -13,13 +14,21 @@ export type PayoutStatus = "pending_send" | "processing" | "succeeded" | "failed
 /** Her answer to a payment recorded outside Linara; null for a Xendit payout. */
 export type HelperAck = "pending" | "confirmed" | "disputed";
 
-export const METHOD_LABEL: Record<PaymentMethod, string> = {
-  PH_GCASH: "GCash",
-  PH_PAYMAYA: "Maya",
-  CASH: "Cash",
-  BANK_TRANSFER: "Bank transfer",
-  OTHER: "Iba pa",
-};
+/** How she was paid, in her language; GCash and Maya keep their names. */
+export function methodLabel(method: string | null | undefined): string {
+  switch (method) {
+    case "PH_GCASH":
+      return "GCash";
+    case "PH_PAYMAYA":
+      return "Maya";
+    case "CASH":
+      return tr("payMethod.cash");
+    case "BANK_TRANSFER":
+      return tr("payMethod.bank");
+    default:
+      return tr("payMethod.other");
+  }
+}
 
 export interface Payslip {
   id: string;

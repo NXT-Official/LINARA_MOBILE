@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { Pressable, StyleSheet, Text, View } from "react-native";
+import { Pressable, StyleSheet, View } from "react-native";
 
 import { colors, fonts } from "@/lib/theme";
 import { formatHoursMinutes } from "@/lib/format";
@@ -16,37 +16,40 @@ import { PrimaryButton } from "@/components/ui/primary-button";
 import type { Leave, LeaveKind, LeaveReason, LeaveStatus, SilBalance } from "@/services/api/leave";
 
 import { RequestDisclosure } from "./request-disclosure";
+import { Text } from "@/components/ui/text";
+import { useT } from "@/lib/i18n/locale-context";
+import type { MessageKey } from "@/lib/i18n/instance";
 
 /** What she can ask for. An extra paid day is the household's to give, so it's recorded, not asked. */
-const ASKABLE: { kind: LeaveKind; label: string; hint: string }[] = [
-  { kind: "sil", label: "SIL", hint: "May bayad. Bawas sa SIL mo ngayong taon ng serbisyo." },
+const ASKABLE: { kind: LeaveKind; label: MessageKey; hint: MessageKey }[] = [
+  { kind: "sil", label: "leaveKind.sil", hint: "leaveKind.silHint" },
   {
     kind: "in_kind",
-    label: "Day off mula sa rest owed",
-    hint: "Bayad sa oras: galing sa rest owed mo.",
+    label: "leaveKind.inKind",
+    hint: "leaveKind.inKindHint",
   },
-  { kind: "unpaid", label: "Walang bayad", hint: "Ibabawas sa sahod ng cutoff na iyon." },
+  { kind: "unpaid", label: "leaveKind.unpaid", hint: "leaveKind.unpaidHint" },
 ];
 
-const KIND_LABEL: Record<LeaveKind, string> = {
-  sil: "SIL",
-  in_kind: "Day off mula sa rest owed",
-  unpaid: "Walang bayad",
-  extra_paid: "Dagdag na bayad na day off",
+const KIND_LABEL: Record<LeaveKind, MessageKey> = {
+  sil: "leaveKind.sil",
+  in_kind: "leaveKind.inKind",
+  unpaid: "leaveKind.unpaid",
+  extra_paid: "leaveKind.extraPaid",
 };
 
-const REASONS: { reason: LeaveReason; label: string }[] = [
-  { reason: "vacation", label: "Bakasyon" },
-  { reason: "sick", label: "May sakit" },
-  { reason: "family", label: "Pamilya" },
-  { reason: "other", label: "Iba pa" },
+const REASONS: { reason: LeaveReason; label: MessageKey }[] = [
+  { reason: "vacation", label: "leaveReason.vacation" },
+  { reason: "sick", label: "leaveReason.sick" },
+  { reason: "family", label: "leaveReason.family" },
+  { reason: "other", label: "leaveReason.other" },
 ];
 
-const STATUS_LABEL: Record<LeaveStatus, string> = {
-  pending: "Hinihintay",
-  approved: "Aprubado",
-  declined: "Hindi pumayag",
-  cancelled: "Kanselado",
+const STATUS_LABEL: Record<LeaveStatus, MessageKey> = {
+  pending: "request.pending",
+  approved: "request.approved",
+  declined: "request.declined",
+  cancelled: "request.cancelled",
 };
 
 /**
@@ -93,6 +96,7 @@ export function LeaveRequestForm({
   /** The row a cancel or answer is in flight for. */
   busyId: string | null;
 }) {
+  const t = useT();
   const [pickedKind, setKind] = useState<LeaveKind | null>(null);
   const [reason, setReason] = useState<LeaveReason>("vacation");
   const [startDate, setStartDate] = useState("");
@@ -129,30 +133,40 @@ export function LeaveRequestForm({
 
   return (
     <View style={styles.card}>
-      <Text style={styles.eyebrow}>Mga leave</Text>
+      <Text style={styles.cardTitle} accessibilityRole="header">
+        {t("pay.mgaLeave")}
+      </Text>
       <Text style={styles.hint}>
         {sil?.yearEnd
-          ? `SIL: ${silLeft} araw pa hanggang ${leaveDatesLabel(sil.yearEnd, sil.yearEnd)}.`
+          ? t("pay.silLeft", {
+              days: silLeft,
+              count: silLeft,
+              date: leaveDatesLabel(sil.yearEnd, sil.yearEnd),
+            })
           : sil?.eligibleFrom
-            ? `Ang SIL mo ay magsisimula sa ${leaveDatesLabel(sil.eligibleFrom, sil.eligibleFrom)}.`
-            : "Ang SIL ay pagkatapos ng isang taon ng serbisyo."}{" "}
-        Rest owed: {formatHoursMinutes(restOwedMinutes)}.
+            ? t("pay.silStarts", { date: leaveDatesLabel(sil.eligibleFrom, sil.eligibleFrom) })
+            : t("pay.angSilAyPagkataposNg")}{" "}
+        {t("pay.restOwedLine", { time: formatHoursMinutes(restOwedMinutes) })}
       </Text>
 
       {toConfirm.map((l) => (
         <View key={l.id} style={styles.confirm}>
           <Text style={styles.confirmTitle}>
-            Itinala ng manager: {KIND_LABEL[l.kind]}, {leaveDatesLabel(l.startDate, l.endDate)} (
-            {l.days} araw). Tama ba?
+            {t("pay.managerRecorded", {
+              kind: t(KIND_LABEL[l.kind]),
+              dates: leaveDatesLabel(l.startDate, l.endDate),
+              days: l.days,
+              count: l.days,
+            })}
           </Text>
           <View style={styles.chips}>
             <PrimaryButton
-              label="Tama"
+              label={t("pay.tama")}
               onPress={() => onAck(l.id, "confirmed")}
               loading={busyId === l.id}
             />
             <PrimaryButton
-              label="Hindi tama"
+              label={t("pay.hindiTama")}
               variant="secondary"
               onPress={() => onAck(l.id, "disputed")}
               disabled={busyId === l.id}
@@ -167,11 +181,16 @@ export function LeaveRequestForm({
             <View key={l.id} style={styles.row}>
               <View style={styles.rowLeft}>
                 <Text style={styles.rowTitle}>
-                  {KIND_LABEL[l.kind]} · {leaveDatesLabel(l.startDate, l.endDate)} · {l.days} araw
+                  {t("pay.leaveRow", {
+                    kind: t(KIND_LABEL[l.kind]),
+                    dates: leaveDatesLabel(l.startDate, l.endDate),
+                    days: l.days,
+                    count: l.days,
+                  })}
                 </Text>
                 {l.declineReason ? <Text style={styles.rowMeta}>{l.declineReason}</Text> : null}
                 {l.helperAck === "disputed" ? (
-                  <Text style={styles.rowMeta}>Sinabi mong hindi ito tama.</Text>
+                  <Text style={styles.rowMeta}>{t("pay.sinabiMongHindiItoTama")}</Text>
                 ) : null}
               </View>
               {canCancelLeave(l, householdToday) ? (
@@ -180,43 +199,47 @@ export function LeaveRequestForm({
                   disabled={busyId === l.id}
                   hitSlop={8}
                   accessibilityRole="button"
-                  accessibilityLabel={`Kanselahin ang leave sa ${leaveDatesLabel(l.startDate, l.endDate)}`}
+                  accessibilityLabel={t("pay.kanselahinAngLeaveSa", {
+                    v1: leaveDatesLabel(l.startDate, l.endDate),
+                  })}
                   style={styles.cancelButton}
                 >
-                  <Text style={styles.cancelText}>{busyId === l.id ? "…" : "Kanselahin"}</Text>
+                  <Text style={styles.cancelText}>
+                    {busyId === l.id ? "…" : t("pay.kanselahin")}
+                  </Text>
                 </Pressable>
               ) : (
-                <Text style={styles.status}>{STATUS_LABEL[l.status]}</Text>
+                <Text style={styles.status}>{t(STATUS_LABEL[l.status])}</Text>
               )}
             </View>
           ))}
         </View>
       )}
       {error ? <Text style={styles.warning}>{error}</Text> : null}
-      <RequestDisclosure open={open} onOpenChange={setOpen} openLabel="Humiling ng leave">
+      <RequestDisclosure open={open} onOpenChange={setOpen} openLabel={t("pay.humilingNgLeave")}>
         {/* Labelled like the fields below, so a missing pick has a name (QA F-LM-007). */}
-        <Text style={styles.fieldLabel}>Paano babayaran?</Text>
+        <Text style={styles.fieldLabel}>{t("pay.paanoBabayaran")}</Text>
         <View style={styles.chips} accessibilityRole="radiogroup">
           {ASKABLE.map((a) => (
             <Chip
               key={a.kind}
-              label={a.label}
+              label={t(a.label)}
               selected={kind === a.kind}
               onPress={() => setKind(a.kind)}
             />
           ))}
         </View>
         <Text style={styles.hint}>
-          {ASKABLE.find((a) => a.kind === kind)?.hint ?? "Pumili kung paano babayaran ang leave."}
+          {t(ASKABLE.find((a) => a.kind === kind)?.hint ?? "pay.pumiliKungPaanoBabayaranAng")}
         </Text>
         {kind === "in_kind" && blocked ? <Text style={styles.warning}>{blocked}</Text> : null}
 
-        <Text style={styles.fieldLabel}>Dahilan</Text>
+        <Text style={styles.fieldLabel}>{t("pay.dahilan")}</Text>
         <View style={styles.chips} accessibilityRole="radiogroup">
           {REASONS.map((r) => (
             <Chip
               key={r.reason}
-              label={r.label}
+              label={t(r.label)}
               selected={reason === r.reason}
               onPress={() => setReason(r.reason)}
             />
@@ -224,45 +247,45 @@ export function LeaveRequestForm({
         </View>
 
         <DateTimeField
-          label="Unang araw"
+          label={t("pay.unangAraw")}
           mode="date"
           value={startDate}
           onChange={(v) => {
             setStartDate(v);
             if (endDate && endDate < v) setEndDate(v);
           }}
-          placeholder="Pumili ng petsa"
+          placeholder={t("pay.pumiliNgPetsa")}
           minimumIsoDate={householdToday}
         />
         <DateTimeField
-          label="Huling araw"
+          label={t("pay.hulingAraw")}
           mode="date"
           value={endDate}
           onChange={setEndDate}
-          placeholder="Kung isang araw lang, iwanang blangko"
+          placeholder={t("pay.kungIsangArawLangIwanang")}
           minimumIsoDate={startDate || householdToday}
         />
         <TextField
-          label="Tala (kung meron)"
+          label={t("pay.talaKungMeron")}
           value={note}
           onChangeText={setNote}
-          placeholder="Piyesta"
+          placeholder={t("pay.piyesta")}
         />
 
         {startDate ? (
           <Text style={styles.preview}>
             {days === 0
-              ? "Rest day mo lahat ng araw na iyon."
+              ? t("pay.restDayMoLahatNg")
               : `${days} araw${kind === "sil" && blocked ? `. ${blocked}` : ""}`}
           </Text>
         ) : null}
 
         {kind === null && days > 0 ? (
-          <Text style={styles.warning}>Pumili muna sa &quot;Paano babayaran?&quot; sa itaas.</Text>
+          <Text style={styles.warning}>{t("pay.pumiliMunaSaPaanoBabayaran")}</Text>
         ) : null}
         {sendError ? <Text style={styles.warning}>{sendError}</Text> : null}
         <PrimaryButton
-          label={submitting ? "Sinesend..." : "Ipadala sa manager"}
+          label={submitting ? t("pay.sinesend") : t("pay.ipadalaSaManager")}
           onPress={handleSubmit}
           disabled={!canSubmit}
         />
@@ -282,9 +305,10 @@ function Chip({
 }) {
   return (
     <Pressable
+      hitSlop={4}
       onPress={onPress}
       accessibilityRole="radio"
-      accessibilityState={{ selected }}
+      accessibilityState={{ checked: selected }}
       style={[styles.chip, selected && styles.chipSelected]}
     >
       <Text style={[styles.chipText, selected && styles.chipTextSelected]}>{label}</Text>
@@ -301,10 +325,12 @@ const styles = StyleSheet.create({
     borderColor: colors.border,
     gap: 10,
   },
-  eyebrow: {
-    fontSize: 13,
-    fontWeight: "700",
-    color: colors.terracottaGold,
+  // The card's own title, like the rest of the app's cards (was a small
+  // coloured label above nothing: an eyebrow, audit 2026-10-29).
+  cardTitle: {
+    fontFamily: fonts.display,
+    fontSize: 17,
+    color: colors.ink,
   },
   hint: {
     fontSize: 13,

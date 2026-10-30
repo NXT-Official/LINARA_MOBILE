@@ -5,7 +5,6 @@ import {
   type NativeScrollEvent,
   ScrollView,
   StyleSheet,
-  Text,
   View,
   useWindowDimensions,
 } from "react-native";
@@ -13,6 +12,7 @@ import {
 import { colors } from "@/lib/theme";
 import { useSopSlides } from "@/hooks/use-sop-slides";
 import type { FocusTaskSop } from "@/services/api/tickets";
+import { Text } from "@/components/ui/text";
 
 /**
  * Swipable House Standard (SOP) slide deck inside the Active Focus Card

@@ -16,16 +16,26 @@ export const colors = {
   ink: "#1C2E2C",
   mutedInk: "#5C6B69",
   border: "#E4DCCB",
+  /** ../LINARA DESIGN.md "Late": emergencies and over budget. Fill / tint / words, as there. */
+  statusLate: "#C43B15",
+  statusLateSoft: "#FFDACD",
+  statusLateInk: "#8C1E00",
+  /** The on-shift dot on the pine header: light enough to read against pine. */
+  shiftDot: "#8FE3C4",
 } as const;
 
 /**
- * Custom typography (roadmap Story 11 step 4): Fraunces for display
- * headers/figures, Nunito Sans for everything else. Loaded via `useFonts`
- * in app/_layout.tsx; these family names must match the keys passed there.
+ * Typography matching the web dashboard (../LINARA/DESIGN.md): Literata for
+ * headings and figures, Nunito Sans for everything read or tapped, Fraunces
+ * only for the "linara" wordmark. Loaded via `useFonts` in app/_layout.tsx;
+ * these family names must match the keys passed there. Body text gets its
+ * family from components/ui/text.tsx, so screens only set a weight.
  */
 export const fonts = {
-  display: "Fraunces_600SemiBold",
-  displayBold: "Fraunces_700Bold",
+  display: "Literata_400Regular",
+  displayBold: "Literata_600SemiBold",
+  wordmark: "Fraunces_600SemiBold",
   body: "NunitoSans_400Regular",
+  bodySemiBold: "NunitoSans_600SemiBold",
   bodyBold: "NunitoSans_700Bold",
 } as const;

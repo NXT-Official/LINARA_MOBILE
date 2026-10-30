@@ -1,20 +1,13 @@
 import { useState } from "react";
-import {
-  KeyboardAvoidingView,
-  Pressable,
-  ScrollView,
-  StyleSheet,
-  Text,
-  TextInput,
-  View,
-} from "react-native";
+import { KeyboardAvoidingView, Pressable, ScrollView, StyleSheet, View } from "react-native";
 import { router, useLocalSearchParams } from "expo-router";
 
 import { useT } from "@/lib/i18n/locale-context";
-import { colors } from "@/lib/theme";
+import { colors, fonts } from "@/lib/theme";
 import { flagDiscrepancy } from "@/services/api/handshake";
 import { KEYBOARD_BEHAVIOR, useKeyboardOffset } from "@/components/ui/keyboard-screen";
 import { PrimaryButton } from "@/components/ui/primary-button";
+import { Text, TextInput } from "@/components/ui/text";
 
 const FLAG_CATEGORIES = [
   { value: "wage", label: "flag.wage" },
@@ -64,11 +57,13 @@ export default function FlagTermsScreen() {
         <Text style={styles.subtitle}>{t("flag.subtitle")}</Text>
 
         <Text style={styles.label}>{t("flag.which")}</Text>
-        <View style={styles.categoryRow}>
+        <View style={styles.categoryRow} accessibilityRole="radiogroup">
           {FLAG_CATEGORIES.map((category) => {
             const selected = category.value === field;
             return (
               <Pressable
+                accessibilityRole="radio"
+                accessibilityState={{ checked: selected }}
                 key={category.value}
                 onPress={() => setField(category.value)}
                 style={[styles.categoryChip, selected && styles.categoryChipSelected]}
@@ -130,11 +125,11 @@ const styles = StyleSheet.create({
   eyebrow: {
     fontSize: 13,
     fontWeight: "700",
-    color: colors.terracottaGold,
+    color: colors.terracottaInk,
   },
   title: {
     fontSize: 22,
-    fontWeight: "700",
+    fontFamily: fonts.displayBold,
     color: colors.ink,
   },
   subtitle: {
@@ -190,7 +185,7 @@ const styles = StyleSheet.create({
   },
   errorText: {
     fontSize: 13,
-    color: colors.terracottaGold,
+    color: colors.terracottaInk,
   },
   actions: {
     flexDirection: "row",

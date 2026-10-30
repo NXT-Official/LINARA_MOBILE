@@ -14,6 +14,7 @@ import { getMyEmployments } from "@/services/api/employment";
 import { useAccountKind } from "@/hooks/use-account-kind";
 import { useHouseholdPlan } from "@/hooks/use-household-plan";
 import { StartupWait } from "@/components/ui/startup-wait";
+import { Text } from "@/components/ui/text";
 
 /**
  * A tab she can see but not open: no household means no board, pantry, week
@@ -24,13 +25,13 @@ function LockedTab({
   children,
   style,
   label,
-  reason = "bukas lang kapag may household ka",
+  reason,
 }: {
   children?: ReactNode;
   style?: StyleProp<ViewStyle>;
   label: string;
   /** Why it's closed, read after the tab's name. */
-  reason?: string;
+  reason: string;
 }) {
   return (
     <View
@@ -110,7 +111,7 @@ export default function AppTabsLayout() {
       ? {}
       : {
           tabBarButton: (props: { children?: ReactNode; style?: StyleProp<ViewStyle> }) => (
-            <LockedTab style={props.style} label={label}>
+            <LockedTab style={props.style} label={label} reason={t("tabLock.noHousehold")}>
               {props.children}
             </LockedTab>
           ),
@@ -118,6 +119,10 @@ export default function AppTabsLayout() {
 
   return (
     <Tabs
+      // Back from another tab returns to Today before it leaves the app.
+      // Between households Today sends her straight back to My Record, so
+      // Back there just leaves (no loop between the two).
+      backBehavior={employed ? "firstRoute" : "none"}
       screenOptions={{
         headerShown: false,
         sceneStyle: { paddingTop: insets.top, backgroundColor: colors.sand },
@@ -128,7 +133,13 @@ export default function AppTabsLayout() {
           borderTopColor: colors.border,
         },
         // DESIGN.md's smallest size; the navigator's default label is smaller.
-        tabBarLabelStyle: { fontSize: 13 },
+        // Five labels share the bar, so they grow with her font setting only
+        // up to 1.15x: at 1.3x "Linggo ko" and "Record ko" were cut off.
+        tabBarLabel: ({ color, children }) => (
+          <Text style={[styles.tabLabel, { color }]} numberOfLines={1} maxFontSizeMultiplier={1.15}>
+            {children}
+          </Text>
+        ),
       }}
     >
       <Tabs.Screen
@@ -191,6 +202,9 @@ export default function AppTabsLayout() {
 }
 
 const styles = StyleSheet.create({
+  tabLabel: {
+    fontSize: 13,
+  },
   locked: {
     flex: 1,
     alignItems: "center",

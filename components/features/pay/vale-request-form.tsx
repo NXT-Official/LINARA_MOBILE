@@ -1,7 +1,7 @@
 import { useState } from "react";
-import { StyleSheet, Text, View } from "react-native";
+import { StyleSheet, View } from "react-native";
 
-import { colors } from "@/lib/theme";
+import { colors, fonts } from "@/lib/theme";
 import { formatPeso } from "@/lib/format";
 import { parseAmount } from "@/lib/money";
 import { TextField } from "@/components/ui/text-field";
@@ -9,11 +9,14 @@ import { PrimaryButton } from "@/components/ui/primary-button";
 import type { ValeRequest } from "@/services/api/vales";
 
 import { RequestDisclosure } from "./request-disclosure";
+import { Text } from "@/components/ui/text";
+import { useT } from "@/lib/i18n/locale-context";
+import type { MessageKey } from "@/lib/i18n/instance";
 
-const STATUS_LABEL: Record<ValeRequest["status"], string> = {
-  pending: "Hinihintay",
-  approved: "Aprubado",
-  declined: "Hindi pumayag",
+const STATUS_LABEL: Record<ValeRequest["status"], MessageKey> = {
+  pending: "request.pending",
+  approved: "request.approved",
+  declined: "request.declined",
 };
 
 /**
@@ -33,6 +36,7 @@ export function ValeRequestForm({
   onSubmit: (amount: number, reason: string) => Promise<void>;
   submitting: boolean;
 }) {
+  const t = useT();
   const [amount, setAmount] = useState("");
   const [reason, setReason] = useState("");
   const [open, setOpen] = useState(false);
@@ -40,7 +44,7 @@ export function ValeRequestForm({
 
   const parsedAmount = parseAmount(amount);
   const amountError =
-    amount.trim() !== "" && parsedAmount === null ? "Ilagay ang halaga, hal. 1,500." : null;
+    amount.trim() !== "" && parsedAmount === null ? t("pay.ilagayAngHalagaHal1") : null;
   const canSubmit = parsedAmount !== null && parsedAmount > 0 && reason.trim().length > 0;
 
   const handleSubmit = async () => {
@@ -61,7 +65,9 @@ export function ValeRequestForm({
 
   return (
     <View style={styles.card}>
-      <Text style={styles.eyebrow}>Mga vale</Text>
+      <Text style={styles.cardTitle} accessibilityRole="header">
+        {t("pay.mgaVale")}
+      </Text>
 
       {openRequests.length > 0 ? (
         <View style={styles.list}>
@@ -82,16 +88,16 @@ export function ValeRequestForm({
                     vale.status === "declined" ? styles.badgeTextDeclined : null,
                   ]}
                 >
-                  {STATUS_LABEL[vale.status]}
+                  {t(STATUS_LABEL[vale.status])}
                 </Text>
               </View>
             </View>
           ))}
         </View>
       ) : null}
-      <RequestDisclosure open={open} onOpenChange={setOpen} openLabel="Humiling ng vale">
+      <RequestDisclosure open={open} onOpenChange={setOpen} openLabel={t("pay.humilingNgVale")}>
         <TextField
-          label="Halaga (₱)"
+          label={t("pay.halaga")}
           value={amount}
           onChangeText={setAmount}
           keyboardType="decimal-pad"
@@ -99,15 +105,15 @@ export function ValeRequestForm({
           error={amountError}
         />
         <TextField
-          label="Dahilan"
+          label={t("pay.dahilan")}
           value={reason}
           onChangeText={setReason}
-          placeholder="Gamot para sa anak"
+          placeholder={t("pay.gamotParaSaAnak")}
           multiline
         />
         {sendError ? <Text style={styles.sendError}>{sendError}</Text> : null}
         <PrimaryButton
-          label="Ipadala sa manager"
+          label={t("pay.ipadalaSaManager")}
           onPress={handleSubmit}
           disabled={!canSubmit}
           loading={submitting}
@@ -126,10 +132,12 @@ const styles = StyleSheet.create({
     borderColor: colors.border,
     gap: 10,
   },
-  eyebrow: {
-    fontSize: 13,
-    fontWeight: "700",
-    color: colors.terracottaGold,
+  // The card's own title, like the rest of the app's cards (was a small
+  // coloured label above nothing: an eyebrow, audit 2026-10-29).
+  cardTitle: {
+    fontFamily: fonts.display,
+    fontSize: 17,
+    color: colors.ink,
   },
   list: {
     gap: 8,

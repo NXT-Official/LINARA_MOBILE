@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { StyleSheet, Text, View } from "react-native";
+import { StyleSheet, View } from "react-native";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 
 import { colors, fonts } from "@/lib/theme";
@@ -8,15 +8,19 @@ import { formatCutoffRange } from "@/lib/cutoff";
 import {
   acknowledgePayment,
   getPaymentsAwaitingMe,
-  METHOD_LABEL,
+  methodLabel,
   type Payslip,
 } from "@/services/api/payslips";
 import { PrimaryButton } from "@/components/ui/primary-button";
 import { TextField } from "@/components/ui/text-field";
+import { Text } from "@/components/ui/text";
+import { useT } from "@/lib/i18n/locale-context";
+import { textParts } from "@/lib/i18n/translate";
+import { intlLocale } from "@/lib/i18n/instance";
 
 const day = (ymd: string) => {
   const [y, m, d] = ymd.split("-").map(Number);
-  return new Date(y, m - 1, d).toLocaleDateString("en-PH", { month: "short", day: "numeric" });
+  return new Date(y, m - 1, d).toLocaleDateString(intlLocale(), { month: "short", day: "numeric" });
 };
 
 /**
@@ -28,6 +32,7 @@ const day = (ymd: string) => {
  * still be answered.
  */
 export function PaymentConfirmations() {
+  const t = useT();
   const queryClient = useQueryClient();
   const awaitingQuery = useQuery({
     queryKey: ["payments-awaiting-me"],
@@ -52,38 +57,50 @@ export function PaymentConfirmations() {
 
   const label = (p: Payslip) =>
     p.kind === "thirteenth_month"
-      ? `13th-month pay ${p.cutoffEnd.slice(0, 4)}`
+      ? t("pay.13thMonthPay", { v1: p.cutoffEnd.slice(0, 4) })
       : formatCutoffRange(p.cutoffStart, p.cutoffEnd);
 
   return (
     <View style={styles.card} accessibilityRole="alert">
-      <Text style={styles.title}>Natanggap mo ba ang bayad?</Text>
+      <Text style={styles.title}>{t("pay.natanggapMoBaAngBayad")}</Text>
       {awaiting.map((p) => (
         <View key={p.id} style={styles.item}>
           <Text style={styles.line}>
-            Sabi ng employer mo, binayaran ka ng{" "}
-            <Text style={styles.strong}>{formatPeso(p.netPay)}</Text> (
-            {METHOD_LABEL[p.payoutChannelCode] ?? "iba pa"}) para sa {label(p)}
-            {p.paidOn ? `, noong ${day(p.paidOn)}` : ""}.
+            {/* The amount stays bold wherever the language puts it. */}
+            {textParts(
+              t("pay.employerSaysPaid", {
+                method: methodLabel(p.payoutChannelCode),
+                period: label(p),
+                paidOn: p.paidOn ? t("pay.paidOn", { date: day(p.paidOn) }) : "",
+              }),
+            ).map((part, i) =>
+              typeof part === "string" ? (
+                part
+              ) : (
+                <Text key={i} style={styles.strong}>
+                  {formatPeso(p.netPay)}
+                </Text>
+              ),
+            )}
           </Text>
           {p.manualNote ? <Text style={styles.note}>“{p.manualNote}”</Text> : null}
           {disputing === p.id ? (
             <>
               <TextField
-                label="Ano ang nangyari? (kung meron)"
+                label={t("pay.anoAngNangyariKungMeron")}
                 value={note}
                 onChangeText={setNote}
-                placeholder="Hal. ₱500 lang ang natanggap ko"
+                placeholder={t("pay.hal500LangAngNatanggap")}
                 maxLength={300}
                 multiline
               />
               <PrimaryButton
-                label="Sabihin sa employer"
+                label={t("pay.sabihinSaEmployer")}
                 loading={answer.isPending}
                 onPress={() => answer.mutate({ id: p.id, received: false })}
               />
               <PrimaryButton
-                label="Bumalik"
+                label={t("pay.bumalik")}
                 variant="secondary"
                 onPress={() => setDisputing(null)}
               />
@@ -91,13 +108,13 @@ export function PaymentConfirmations() {
           ) : (
             <View style={styles.actions}>
               <PrimaryButton
-                label="Oo, natanggap ko"
+                label={t("pay.ooNatanggapKo")}
                 style={styles.action}
                 loading={answer.isPending && answer.variables?.id === p.id}
                 onPress={() => answer.mutate({ id: p.id, received: true })}
               />
               <PrimaryButton
-                label="Hindi ko natanggap"
+                label={t("pay.hindiKoNatanggap")}
                 variant="secondary"
                 style={styles.action}
                 onPress={() => {
@@ -111,7 +128,9 @@ export function PaymentConfirmations() {
       ))}
       {answer.isError ? (
         <Text style={styles.error}>
-          {answer.error instanceof Error ? answer.error.message : "Hindi naipadala. Subukan ulit."}
+          {answer.error instanceof Error
+            ? answer.error.message
+            : t("pay.hindiNaipadalaSubukanUlit")}
         </Text>
       ) : null}
     </View>

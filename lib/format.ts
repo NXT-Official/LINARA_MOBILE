@@ -1,11 +1,12 @@
-import { DAY_NAMES } from "./week";
+import { tr } from "./i18n/instance";
+import { dayNames, monthsShort } from "./week";
 
 /**
  * `weekly_rest_day` is 0-6 (Sunday = 0), matching helper_profiles' CHECK
  * constraint. In Filipino, like Linggo ko and Record ko (KNOWN_GAPS.md O54).
  */
 export function weekdayName(weeklyRestDay: number): string {
-  return DAY_NAMES[weeklyRestDay] ?? "—";
+  return dayNames()[weeklyRestDay] ?? "—";
 }
 
 /** Formats a Postgres TIME string ("HH:MM:SS") as "6:00 AM". */
@@ -45,22 +46,14 @@ export function formatHoursMinutes(totalMinutes: number): string {
   return `${hours}h ${minutes}m`;
 }
 
-const MONTHS_FIL = [
-  "Ene",
-  "Peb",
-  "Mar",
-  "Abr",
-  "May",
-  "Hun",
-  "Hul",
-  "Ago",
-  "Set",
-  "Okt",
-  "Nob",
-  "Dis",
-];
-
-/** "Okt 8, 2026": the date as the rest of the app writes it, in Filipino (QA LM-14). */
+/**
+ * "Okt 8, 2026": the date as the rest of the app writes it (QA LM-14), in the
+ * language and order she's using now (locales/<lang>/dates.json).
+ */
 export function formatDateFil(d: Date): string {
-  return `${MONTHS_FIL[d.getMonth()]} ${d.getDate()}, ${d.getFullYear()}`;
+  return tr("dates.date", {
+    month: monthsShort()[d.getMonth()],
+    day: d.getDate(),
+    year: d.getFullYear(),
+  });
 }

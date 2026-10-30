@@ -27,3 +27,20 @@ export function parseLocale(raw: string | null | undefined): Locale {
 export function localeLabel(locale: Locale): string {
   return (LOCALES.find((l) => l.code === locale) ?? LOCALES[0]).label;
 }
+
+/**
+ * Her first language when she hasn't picked one: the phone's, but only for
+ * the languages a helper's phone is set to because she reads them better.
+ * Many Filipino phones are set to English, and the app has always spoken
+ * Taglish to helpers, so English and anything unknown start in Taglish.
+ */
+export function localeFromDevice(tags: readonly string[]): Locale {
+  for (const tag of tags) {
+    const lower = tag.toLowerCase();
+    if (lower.startsWith("es")) return "es";
+    if (lower.startsWith("zh")) return "zh-CN";
+    if (lower.startsWith("ja")) return "ja";
+    if (lower.startsWith("fil") || lower.startsWith("tl") || lower.startsWith("en")) return "tl";
+  }
+  return DEFAULT_LOCALE;
+}

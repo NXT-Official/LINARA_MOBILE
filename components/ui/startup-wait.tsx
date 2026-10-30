@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { ActivityIndicator, StyleSheet, Text, View } from "react-native";
+import { ActivityIndicator, StyleSheet, View } from "react-native";
 
 import { useT } from "@/lib/i18n/locale-context";
 import { colors, fonts } from "@/lib/theme";
@@ -9,6 +9,7 @@ import { TIMED_OUT, withinTime } from "@/lib/time-limit";
 import { supabase } from "@/services/supabase";
 import { signOutHelper } from "@/services/api/auth";
 import { PrimaryButton } from "@/components/ui/primary-button";
+import { Text } from "@/components/ui/text";
 
 // How long the spinner shows before she's offered a way out.
 const STALL_MS = 12_000;

@@ -1,0 +1,129 @@
+{
+  "language": {
+    "current": "Idioma: {language}"
+  },
+  "tabs": {
+    "today": "Hoy",
+    "week": "Mi semana",
+    "pantry": "Despensa",
+    "pay": "Mi sueldo",
+    "record": "Mi historial"
+  },
+  "header": {
+    "pantry": "Despensa y mercado"
+  },
+  "common": {
+    "back": "Volver",
+    "sendToManager": "Enviar al encargado",
+    "email": "Correo",
+    "emailPlaceholder": "p. ej. rosa@gmail.com",
+    "password": "Contraseña",
+    "haveAccount": "¿Ya tienes cuenta? Inicia sesión",
+    "backToSignIn": "Volver a iniciar sesión",
+    "tryAgain": "Reintentar",
+    "walaPangNapipili": "nada elegido aún",
+    "tapos": "Listo",
+    "nagloLoad": "Cargando"
+  },
+  "startup": {
+    "title": "Esto está tardando",
+    "body": "Puede que el internet esté lento. Inténtalo de nuevo, o cierra sesión y vuelve a entrar."
+  },
+  "signOut": {
+    "button": "Cerrar sesión",
+    "confirm": "¿Segura? Necesitarás tu correo y contraseña para volver a entrar.",
+    "cancel": "Mejor no",
+    "failed": "No se pudo cerrar sesión."
+  },
+  "plan": {
+    "tabClosed": "No está disponible en tu hogar por ahora."
+  },
+  "manager": {
+    "canTReachYourDashboard": "No se puede abrir tu panel",
+    "checkYourInternetConnectionThen": "Revisa tu conexión a internet y vuelve a intentarlo. Los datos de tu hogar están a salvo.",
+    "tryAgain": "Intentar de nuevo",
+    "signOut": "Cerrar sesión",
+    "tingnanAngEmailMo": "Revisa tu correo",
+    "nagpadalaKamiNgConfirmationLink": "Te enviamos un enlace de confirmación. Ábrelo y luego inicia sesión aquí con tu correo y contraseña."
+  },
+  "leaveKind": {
+    "sil": "SIL",
+    "inKindShort": "día libre compensado",
+    "unpaidShort": "sin goce de sueldo",
+    "extraPaidShort": "día libre pagado",
+    "silHint": "Pagado. Se descuenta de tu SIL de este año de servicio.",
+    "inKind": "Día libre con el descanso pendiente",
+    "inKindHint": "Pagado en tiempo: sale de tu descanso pendiente.",
+    "unpaid": "Sin goce de sueldo",
+    "unpaidHint": "Se descuenta del pago de ese corte.",
+    "extraPaid": "Día libre pagado adicional"
+  },
+  "request": {
+    "pending": "En espera",
+    "approved": "Aprobado",
+    "declined": "No aprobado",
+    "cancelled": "Cancelado"
+  },
+  "task": {
+    "done": "Hecha",
+    "doing": "En curso",
+    "onHold": "En pausa",
+    "toDo": "Por hacer",
+    "cancelled": "Cancelada"
+  },
+  "requestError": {
+    "offline": "No hay internet, así que todavía no se envió. Inténtalo de nuevo cuando tengas señal.",
+    "notSent": "No se pudo enviar. Inténtalo más tarde.",
+    "notEnoughRestOwed": "No tienes suficiente descanso pendiente para estos días. Elige SIL o Sin goce de sueldo, o pide menos días.",
+    "notEnoughSil": "Ya no te queda suficiente SIL para estos días.",
+    "silNotYet": "Aún no tienes SIL. Empieza después de un año de servicio.",
+    "newServiceYear": "Un nuevo año de servicio empieza en medio de esto. Divídelo en dos solicitudes.",
+    "datePassed": "Esa fecha ya pasó. Elige otro día.",
+    "overlaps": "Ya tienes un permiso en esos días.",
+    "restOffThatDay": "Ya tienes un descanso ese día. Cancélalo primero.",
+    "max90": "Una solicitud puede ser de hasta 90 días.",
+    "allRestDays": "Todos esos días son tus días de descanso.",
+    "lastBeforeFirst": "El último día tiene que ser el primer día o después.",
+    "noShiftHours": "Tu horario aún no está definido, así que no se puede contar el descanso pendiente. Avísale a tu encargado.",
+    "alreadyStarted": "Este permiso ya empezó, así que no se puede cancelar.",
+    "onPayslip": "Este permiso ya está en un recibo de pago, así que no se puede cancelar.",
+    "alreadyDecided": "Esta solicitud ya fue decidida."
+  },
+  "serviceError": {
+    "offline": "No hay internet. Conéctate primero y vuelve a intentarlo.",
+    "unreachable": "No se puede conectar con Linara ahora. Inténtalo más tarde.",
+    "wrongCredentials": "Correo o contraseña incorrectos. Inténtalo de nuevo, por favor.",
+    "emailNotConfirmed": "Tu correo aún no está confirmado. Primero abre el enlace en tu bandeja de entrada.",
+    "cantCheckAccount": "No se puede revisar tu cuenta ahora. Revisa tu internet y vuelve a intentarlo.",
+    "setupUnfinished": "Esta cuenta aún no está configurada. Empleador: inicia sesión en {site} para terminar de configurar tu hogar. Kasambahay: usa tu código de invitación en \"¿Aún no tienes cuenta? Crea una\" ➔ \"Soy kasambahay\".",
+    "linkJustSent": "Acabamos de enviarte un enlace. Espera un minuto antes de pedir otro.",
+    "unsyncedSignOut_one": "{count} cambio aún no se sincroniza. Conéctate a internet antes de cerrar sesión.",
+    "unsyncedSignOut_many": "{count} cambios aún no se sincronizan. Conéctate a internet antes de cerrar sesión.",
+    "unsyncedSignOut_other": "{count} cambios aún no se sincronizan. Conéctate a internet antes de cerrar sesión.",
+    "joinFailed": "No se pudo unir. Inténtalo de nuevo.",
+    "stillEmployed": "Todavía estás con un hogar. Solo puede haber uno activo a la vez.",
+    "codeUsed": "Este código ya no se puede usar. Pide uno nuevo a tu empleador.",
+    "runNotCreated": "No se pudo crear la compra.",
+    "itemsNotMoved": "No se pudieron agregar los artículos a la compra. Inténtalo de nuevo.",
+    "itemsTaken": "Lo que elegiste ya se compró o está en otra compra. Elige otra vez.",
+    "receiptNotSaved": "No se guardó el recibo.",
+    "confirmEmailSent": "Enviamos un enlace de confirmación a {email}. Ábrelo, vuelve aquí y toca el botón otra vez para terminar.",
+    "emailTaken": "Este correo ya tiene una cuenta. Usa tu contraseña anterior, o inicia sesión e ingresa el código en Mi registro.",
+    "requestNotSent": "No se envió la solicitud.",
+    "lastDayFuture": "Tu último día tiene que ser hoy o después.",
+    "mobileNumber": "Ingresa el número de 11 dígitos que empieza con 09.",
+    "shareUnavailable": "Compartir no está disponible en este teléfono.",
+    "shareTitle": "Guarda o envía tu registro"
+  },
+  "payMethod": {
+    "cash": "Efectivo",
+    "bank": "Transferencia bancaria",
+    "other": "Otro"
+  },
+  "notifications": {
+    "channel": "Tareas y cambios de horario"
+  },
+  "tabLock": {
+    "noHousehold": "se abre cuando tengas un hogar"
+  }
+}

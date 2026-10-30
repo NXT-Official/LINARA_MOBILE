@@ -1,5 +1,5 @@
 import { useRef, useState } from "react";
-import { ActivityIndicator, Keyboard, ScrollView, StyleSheet, Text, View } from "react-native";
+import { Keyboard, ScrollView, StyleSheet, View } from "react-native";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 
 import { KeyboardScreen } from "@/components/ui/keyboard-screen";
@@ -46,6 +46,12 @@ import type { TaskEdit } from "@/components/features/today/edit-task-form";
 import { enqueueSyncAction } from "@/services/sqlite-queue";
 import { uploadEvidenceImage } from "@/services/media-upload";
 import { isOffline } from "@/lib/network";
+import { Text } from "@/components/ui/text";
+import { Skeleton } from "@/components/ui/skeleton";
+import { LoadError } from "@/components/ui/load-error";
+import { usePullRefresh } from "@/hooks/use-pull-refresh";
+import { useT } from "@/lib/i18n/locale-context";
+import { intlLocale } from "@/lib/i18n/instance";
 
 /**
  * Today tab (roadmap Story 7). Hosts the Dignity Header (Story 5), the
@@ -54,9 +60,11 @@ import { isOffline } from "@/lib/network";
  * listeners invalidating the relevant query.
  */
 export default function TodayScreen() {
+  const t = useT();
   const queryClient = useQueryClient();
   const [ackingId, setAckingId] = useState<string | null>(null);
   const scrollRef = useRef<ScrollView>(null);
+  const pull = usePullRefresh();
 
   // Android only scrolls the note field itself above the keyboard, leaving
   // "Magdagdag ng tala" under it. The notes are last on the screen, so once
@@ -248,9 +256,7 @@ export default function TodayScreen() {
         queryClient.setQueryData(["focus-task", helperId], context.previous);
       }
       setCompleteError(
-        vars.photoUri
-          ? "Hindi na-upload ang litrato. Subukan ulit, o alisin ang litrato at i-Done."
-          : "Hindi na-save. Subukan ulit.",
+        vars.photoUri ? t("today.hindiNaUploadAngLitrato") : t("today.hindiNaSaveSubukanUlit"),
       );
     },
     onSuccess: (result) => {
@@ -299,13 +305,16 @@ export default function TodayScreen() {
   const editMutation = useMutation({
     mutationFn: async ({ task, edit }: { task: FocusTask; edit: TaskEdit }) => {
       if (await isOffline()) {
-        throw new Error("Kailangan ng internet para i-save ito.");
+        throw new Error(t("today.kailanganNgInternetParaI"));
       }
       await editMyTicket(task.id, edit);
       if (new Date(edit.scheduledStart).getTime() !== new Date(task.scheduledStart).getTime()) {
         await addTaskComment(
           task.id,
-          `Inilipat ko sa ${whenLabel(edit.scheduledStart)} (dati ${whenLabel(task.scheduledStart)}).`,
+          t("today.inilipatKoSaDati", {
+            v1: whenLabel(edit.scheduledStart),
+            v2: whenLabel(task.scheduledStart),
+          }),
         ).catch((err) =>
           console.warn("[today] Couldn't post the move note:", (err as Error).message),
         );
@@ -320,7 +329,7 @@ export default function TodayScreen() {
   const editError = editMutation.isError
     ? editMutation.error.message.startsWith("Kailangan")
       ? editMutation.error.message
-      : "Hindi na-save. Subukan ulit."
+      : t("today.hindiNaSaveSubukanUlit")
     : null;
 
   const ackMutation = useMutation({
@@ -371,15 +380,16 @@ export default function TodayScreen() {
         style={styles.screen}
         contentContainerStyle={styles.content}
         keyboardShouldPersistTaps="handled"
+        refreshControl={pull.control}
       >
         {profileQuery.isLoading ? (
-          <View style={styles.loading}>
-            <ActivityIndicator color={colors.pineTeal} />
-          </View>
+          <Skeleton />
         ) : profileQuery.isError || !profileQuery.data ? (
-          <Text style={styles.errorText}>
-            Hindi ma-load ang shift mo. Hilahin pababa para i-refresh mamaya, po.
-          </Text>
+          <LoadError
+            message={t("today.hindiMaLoadAngShift")}
+            onRetry={() => void profileQuery.refetch()}
+            retrying={profileQuery.isFetching}
+          />
         ) : (
           <>
             <DignityHeader
@@ -391,8 +401,6 @@ export default function TodayScreen() {
               }}
               onOff={() => helperId && setOffMutation.mutate()}
             />
-
-            <MovedTasksBanner helperId={profileQuery.data.id} />
 
             <QuickUtosFeed
               // With more than one house, say which one is asking.
@@ -408,13 +416,13 @@ export default function TodayScreen() {
             <LayoutSwitch value={layout} onChange={setLayout} />
 
             {layout !== "focus" ? null : focusTaskQuery.isLoading ? (
-              <View style={styles.loading}>
-                <ActivityIndicator color={colors.pineTeal} />
-              </View>
+              <Skeleton header={false} />
             ) : focusTaskQuery.isError ? (
-              <Text style={styles.errorText}>
-                Hindi ma-load ang task mo ngayon. Subukan ulit mamaya.
-              </Text>
+              <LoadError
+                message={t("today.hindiMaLoadAngTask")}
+                onRetry={() => void focusTaskQuery.refetch()}
+                retrying={focusTaskQuery.isFetching}
+              />
             ) : (
               <>
                 {closeReason ? (
@@ -428,8 +436,8 @@ export default function TodayScreen() {
                     {closeReason ? (
                       <Text style={styles.afterHoursNote}>
                         {focusTask.status === "in_progress"
-                          ? "Tapusin mo lang itong sinimulan mo."
-                          : "Ipinadala ito kahit off-shift ka. Kapag tinapos mo, naka-log ito bilang rest owed."}
+                          ? t("today.tapusinMoLangItongSinimulan")
+                          : t("today.ipinadalaItoKahitOffShift")}
                       </Text>
                     ) : null}
                     <PlaceTag
@@ -473,23 +481,30 @@ export default function TodayScreen() {
                   </>
                 ) : !closeReason && !allDone ? (
                   <View style={styles.emptyCard}>
-                    <Text style={styles.emptyText}>Walang task ngayon. Magandang break, po!</Text>
+                    <Text style={styles.emptyText}>
+                      {t("today.walangTaskNgayonMagandangBreak")}
+                    </Text>
                   </View>
                 ) : null}
               </>
             )}
 
-            <TodayTaskList
-              helperId={profileQuery.data.id}
-              householdId={profileQuery.data.householdId}
-              myUserId={profileQuery.data.userId}
-              onChanged={refreshToday}
-              places={places}
-              variant={layout === "timeline" ? "timeline" : "list"}
-              emptyText={
-                layout === "focus" ? undefined : "Walang task ngayon. Magandang break, po!"
-              }
-            />
+            {/* After the task to do now: a manager moved one of hers. */}
+            <MovedTasksBanner helperId={profileQuery.data.id} />
+
+            {/* Isa-isa already steps through the day one task at a time; the
+                whole list is its own layout (audit 2026-10-29). */}
+            {layout === "focus" ? null : (
+              <TodayTaskList
+                helperId={profileQuery.data.id}
+                householdId={profileQuery.data.householdId}
+                myUserId={profileQuery.data.userId}
+                onChanged={refreshToday}
+                places={places}
+                variant={layout === "timeline" ? "timeline" : "list"}
+                emptyText={t("today.walangTaskNgayonMagandangBreak")}
+              />
+            )}
 
             <TeamDay places={places} helperId={profileQuery.data.id} />
 
@@ -513,7 +528,7 @@ function whenLabel(iso: string): string {
   const time = formatClockTime(iso);
   return toIsoDate(at) === toIsoDate(new Date())
     ? time
-    : `${at.toLocaleDateString(undefined, { month: "short", day: "numeric" })}, ${time}`;
+    : `${at.toLocaleDateString(intlLocale(), { month: "short", day: "numeric" })}, ${time}`;
 }
 
 const styles = StyleSheet.create({
@@ -527,10 +542,6 @@ const styles = StyleSheet.create({
   content: {
     padding: 16,
     gap: 16,
-  },
-  loading: {
-    paddingVertical: 40,
-    alignItems: "center",
   },
   errorText: {
     fontSize: 14,

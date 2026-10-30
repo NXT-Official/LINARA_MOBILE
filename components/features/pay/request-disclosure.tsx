@@ -1,8 +1,10 @@
-import type { ReactNode } from "react";
-import { Pressable, StyleSheet, Text, View } from "react-native";
+import { useEffect, type ReactNode } from "react";
+import { BackHandler, Pressable, StyleSheet, View } from "react-native";
 
 import { colors, fonts } from "@/lib/theme";
 import { PrimaryButton } from "@/components/ui/primary-button";
+import { Text } from "@/components/ui/text";
+import { useT } from "@/lib/i18n/locale-context";
 
 /**
  * The fields of a request form on My Pay, folded behind one button until she
@@ -26,6 +28,18 @@ export function RequestDisclosure({
   disabled?: boolean;
   children: ReactNode;
 }) {
+  const t = useT();
+  // Back folds an open form, like its own "Huwag na lang", instead of
+  // leaving the app with her typing still on screen.
+  useEffect(() => {
+    if (!open) return;
+    const sub = BackHandler.addEventListener("hardwareBackPress", () => {
+      onOpenChange(false);
+      return true;
+    });
+    return () => sub.remove();
+  }, [open, onOpenChange]);
+
   if (!open) {
     return (
       <PrimaryButton
@@ -46,7 +60,7 @@ export function RequestDisclosure({
         accessibilityRole="button"
         style={styles.close}
       >
-        <Text style={styles.closeText}>Huwag na lang</Text>
+        <Text style={styles.closeText}>{t("pay.huwagNaLang")}</Text>
       </Pressable>
     </View>
   );

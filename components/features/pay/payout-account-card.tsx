@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { Image, Pressable, StyleSheet, Text, View } from "react-native";
+import { Image, Pressable, StyleSheet, View } from "react-native";
 import * as ImagePicker from "expo-image-picker";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 
@@ -12,6 +12,8 @@ import {
   saveMyPayoutAccount,
   type PayoutMethod,
 } from "@/services/api/payout-account";
+import { Text } from "@/components/ui/text";
+import { useT } from "@/lib/i18n/locale-context";
 
 const WALLET: Record<PayoutMethod, string> = { PH_GCASH: "GCash", PH_PAYMAYA: "Maya" };
 
@@ -22,6 +24,7 @@ const WALLET: Record<PayoutMethod, string> = { PH_GCASH: "GCash", PH_PAYMAYA: "M
  * O35). Only she can change it, so nobody else can redirect her pay.
  */
 export function PayoutAccountCard({ defaultName }: { defaultName: string }) {
+  const t = useT();
   const queryClient = useQueryClient();
   const accountQuery = useQuery({ queryKey: ["my-payout-account"], queryFn: getMyPayoutAccount });
   const account = accountQuery.data ?? null;
@@ -79,34 +82,31 @@ export function PayoutAccountCard({ defaultName }: { defaultName: string }) {
   if (!editing) {
     return (
       <View style={styles.card}>
-        <Text style={styles.eyebrow}>Saan ipapadala ang sahod ko</Text>
+        <Text style={styles.cardTitle} accessibilityRole="header">
+          {t("pay.saanIpapadalaAngSahodKo")}
+        </Text>
         {account ? (
           <>
             <Text style={styles.value}>
               {WALLET[account.method]} · {spacedMobileNumber(account.accountNumber)}
             </Text>
-            <Text style={styles.hint}>Pangalan: {account.accountName}</Text>
+            <Text style={styles.hint}>{t("pay.accountName", { name: account.accountName })}</Text>
             {account.qrUrl && (
               <Image
                 source={{ uri: account.qrUrl }}
                 style={styles.qr}
                 resizeMode="contain"
-                accessibilityLabel={`QR ng ${WALLET[account.method]} mo`}
+                accessibilityLabel={t("pay.qrNgMo", { v1: WALLET[account.method] })}
               />
             )}
-            <Text style={styles.hint}>
-              Dito ipapadala ng employer mo ang sahod mo. Ikaw lang ang makakapagpalit nito.
-            </Text>
-            <PrimaryButton label="Palitan" onPress={startEditing} />
+            <Text style={styles.hint}>{t("pay.ditoIpapadalaNgEmployerMo")}</Text>
+            <PrimaryButton label={t("pay.palitan")} onPress={startEditing} />
           </>
         ) : (
           <>
-            <Text style={styles.hint}>
-              Ilagay ang GCash o Maya mo para malaman ng employer mo kung saan ipapadala ang sahod
-              mo. Ikaw lang ang makakapagpalit nito.
-            </Text>
+            <Text style={styles.hint}>{t("pay.ilagayAngGcashOMaya2")}</Text>
             <PrimaryButton
-              label="Ilagay ang GCash o Maya ko"
+              label={t("pay.ilagayAngGcashOMaya")}
               onPress={startEditing}
               loading={accountQuery.isLoading}
             />
@@ -118,10 +118,13 @@ export function PayoutAccountCard({ defaultName }: { defaultName: string }) {
 
   return (
     <View style={styles.card}>
-      <Text style={styles.eyebrow}>Saan ipapadala ang sahod ko</Text>
+      <Text style={styles.cardTitle} accessibilityRole="header">
+        {t("pay.saanIpapadalaAngSahodKo")}
+      </Text>
       <View style={styles.chips} accessibilityRole="radiogroup">
         {(["PH_GCASH", "PH_PAYMAYA"] as const).map((m) => (
           <Pressable
+            hitSlop={4}
             key={m}
             onPress={() => setMethod(m)}
             accessibilityRole="radio"
@@ -139,18 +142,16 @@ export function PayoutAccountCard({ defaultName }: { defaultName: string }) {
         value={number}
         onChangeText={setNumber}
         keyboardType="phone-pad"
-        placeholder="0917 123 4567"
-        error={number.length > 0 && !numberOk ? "11 digits, nagsisimula sa 09." : null}
+        placeholder={t("pay.09171234567")}
+        error={number.length > 0 && !numberOk ? t("pay.11DigitsNagsisimulaSa09") : null}
       />
       <TextField
-        label="Pangalan sa account"
+        label={t("pay.pangalanSaAccount")}
         value={name}
         onChangeText={setName}
-        placeholder="Gaya ng nakalagay sa GCash"
+        placeholder={t("pay.gayaNgNakalagaySaGcash")}
       />
-      <Text style={styles.hint}>
-        Ito ang makikita ng employer mo bago magpadala, kaya dapat pareho sa {WALLET[method]} mo.
-      </Text>
+      <Text style={styles.hint}>{t("pay.sameAsWallet", { wallet: WALLET[method] })}</Text>
 
       {shownQr ? (
         <View style={styles.qrRow}>
@@ -158,11 +159,11 @@ export function PayoutAccountCard({ defaultName }: { defaultName: string }) {
             source={{ uri: shownQr }}
             style={styles.qr}
             resizeMode="contain"
-            accessibilityLabel="QR code"
+            accessibilityLabel={t("pay.qrCode")}
           />
           <View style={styles.qrActions}>
             <Pressable onPress={pickQr} accessibilityRole="button">
-              <Text style={styles.link}>Ibang QR</Text>
+              <Text style={styles.link}>{t("pay.ibangQr")}</Text>
             </Pressable>
             <Pressable
               onPress={() => {
@@ -171,25 +172,25 @@ export function PayoutAccountCard({ defaultName }: { defaultName: string }) {
               }}
               accessibilityRole="button"
             >
-              <Text style={styles.link}>Alisin</Text>
+              <Text style={styles.link}>{t("pay.alisin")}</Text>
             </Pressable>
           </View>
         </View>
       ) : (
         <Pressable onPress={pickQr} accessibilityRole="button" style={styles.addQr}>
-          <Text style={styles.link}>+ Idagdag ang QR ng {WALLET[method]} mo (puwedeng hindi)</Text>
+          <Text style={styles.link}>{t("pay.addQr", { wallet: WALLET[method] })}</Text>
         </Pressable>
       )}
 
       {error && <Text style={styles.error}>{error}</Text>}
       <PrimaryButton
-        label="I-save"
+        label={t("pay.iSave")}
         onPress={() => save.mutate()}
         disabled={!canSave}
         loading={save.isPending}
       />
       <Pressable onPress={() => setEditing(false)} accessibilityRole="button">
-        <Text style={[styles.link, styles.cancel]}>Huwag na</Text>
+        <Text style={[styles.link, styles.cancel]}>{t("pay.huwagNa")}</Text>
       </Pressable>
     </View>
   );
@@ -204,10 +205,12 @@ const styles = StyleSheet.create({
     borderColor: colors.border,
     gap: 10,
   },
-  eyebrow: {
-    fontSize: 13,
-    fontWeight: "700",
-    color: colors.terracottaGold,
+  // The card's own title, like the rest of the app's cards (was a small
+  // coloured label above nothing: an eyebrow, audit 2026-10-29).
+  cardTitle: {
+    fontFamily: fonts.display,
+    fontSize: 17,
+    color: colors.ink,
   },
   value: {
     fontSize: 18,
@@ -274,6 +277,6 @@ const styles = StyleSheet.create({
   },
   error: {
     fontSize: 13,
-    color: colors.terracottaGold,
+    color: colors.terracottaInk,
   },
 });

@@ -6,6 +6,7 @@ import { queryClient } from "@/lib/query-client";
 import { clearSavedRecord } from "@/lib/query-persist";
 import { getQueuedActions } from "@/services/sqlite-queue";
 import { supabase } from "@/services/supabase";
+import { tr } from "@/lib/i18n/instance";
 
 /** Which half of the app an account opens: the helper tabs, or the manager dashboard. */
 export type AccountKind = "helper" | "manager";
@@ -18,11 +19,7 @@ const MANAGER_USER_TYPES = ["primary_manager", "co_manager", "remote_admin"];
  * java.net.UnknownHostException: ..."), KNOWN_GAPS.md O54.
  */
 const unreachable = (error: { status?: number }) =>
-  new Error(
-    error.status === 0
-      ? "Walang internet. Kumonekta muna, tapos subukan ulit."
-      : "Hindi maabot ang Linara ngayon. Subukan ulit mamaya.",
-  );
+  new Error(error.status === 0 ? tr("serviceError.offline") : tr("serviceError.unreachable"));
 
 /**
  * The signed-in account's kind, from `user_profiles.user_type`.
@@ -66,10 +63,10 @@ export async function signIn(email: string, password: string): Promise<AccountKi
   const { error } = await supabase.auth.signInWithPassword({ email: email.trim(), password });
   if (error) {
     if (error.code === "invalid_credentials") {
-      throw new Error("Mali ang email o password. Subukan ulit, po.");
+      throw new Error(tr("serviceError.wrongCredentials"));
     }
     if (error.code === "email_not_confirmed") {
-      throw new Error("Hindi pa na-confirm ang email mo. Buksan muna ang link sa inbox mo.");
+      throw new Error(tr("serviceError.emailNotConfirmed"));
     }
     if (isAuthRetryableFetchError(error)) throw unreachable(error);
     throw new Error(error.message);
@@ -81,14 +78,14 @@ export async function signIn(email: string, password: string): Promise<AccountKi
     kind = await getAccountKind();
   } catch {
     await supabase.auth.signOut();
-    throw new Error(
-      "Hindi ma-check ang account mo ngayon. Tingnan ang internet, tapos subukan ulit.",
-    );
+    throw new Error(tr("serviceError.cantCheckAccount"));
   }
   if (!kind) {
     await supabase.auth.signOut();
     throw new Error(
-      `Hindi pa tapos ang setup ng account na ito. Employer: mag-log in sa ${MANAGER_DASHBOARD_URL.replace(/^https?:\/\//, "")} para tapusin ang household setup. Kasambahay: gamitin ang invite code mo sa "Wala pang account? Gumawa ng account" ➔ "Kasambahay ako".`,
+      tr("serviceError.setupUnfinished", {
+        site: MANAGER_DASHBOARD_URL.replace(/^https?:\/\//, ""),
+      }),
     );
   }
   return kind;
@@ -111,9 +108,7 @@ export async function requestPasswordReset(email: string): Promise<void> {
       error.code === "over_email_send_rate_limit" ||
       /rate limit|security purposes/i.test(error.message)
     ) {
-      throw new Error(
-        "Kakapadala lang namin ng link. Maghintay ng isang minuto bago humingi ulit.",
-      );
+      throw new Error(tr("serviceError.linkJustSent"));
     }
     if (isAuthRetryableFetchError(error)) throw unreachable(error);
     throw new Error(error.message);
@@ -134,9 +129,7 @@ export async function countUnsyncedActions(): Promise<number> {
 export async function signOutHelper(): Promise<void> {
   const unsynced = await countUnsyncedActions();
   if (unsynced > 0) {
-    throw new Error(
-      `May ${unsynced} pang hindi na-sync. Kumonekta muna sa internet bago mag-sign out.`,
-    );
+    throw new Error(tr("serviceError.unsyncedSignOut", { count: unsynced }));
   }
   // While still signed in: the token row is hers, and only she can remove it.
   await unregisterForPush();

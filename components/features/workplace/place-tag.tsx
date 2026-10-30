@@ -1,9 +1,10 @@
-import { StyleSheet, Text, View } from "react-native";
+import { StyleSheet, View } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
 
 import { colors } from "@/lib/theme";
 import type { Workplaces } from "@/hooks/use-workplaces";
 import type { PlaceRef } from "@/services/api/workplaces";
+import { Text } from "@/components/ui/text";
 
 /**
  * Where a task is: "Main House → School" for a trip, or the house's name when

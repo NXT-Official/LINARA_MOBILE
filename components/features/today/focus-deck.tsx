@@ -1,8 +1,10 @@
 import { useEffect, useRef, useState, type ReactNode } from "react";
-import { Animated, PanResponder, Pressable, StyleSheet, Text, View } from "react-native";
+import { Animated, PanResponder, Pressable, StyleSheet, View } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
 
 import { colors } from "@/lib/theme";
+import { Text } from "@/components/ui/text";
+import { useT } from "@/lib/i18n/locale-context";
 
 // How far a drag has to go to count as a swipe to the next or previous task.
 const SWIPE_DISTANCE = 60;
@@ -26,6 +28,7 @@ export function FocusDeck({
   onIndexChange: (next: number) => void;
   children: ReactNode;
 }) {
+  const t = useT();
   // The responder is built once; it reads the latest props from `latest`.
   const latest = useRef({ count, index, onIndexChange });
   useEffect(() => {
@@ -78,20 +81,20 @@ export function FocusDeck({
             onPress={() => deck.goTo(index - 1)}
             disabled={index === 0}
             accessibilityRole="button"
-            accessibilityLabel="Nakaraang task"
+            accessibilityLabel={t("today.nakaraangTask")}
             hitSlop={8}
             style={[styles.arrow, index === 0 && styles.arrowOff]}
           >
             <Ionicons name="chevron-back" size={22} color={colors.pineTeal} />
           </Pressable>
           <Text style={styles.position} accessibilityLiveRegion="polite">
-            Task {index + 1} sa {count} · i-swipe para lumipat
+            {t("today.deckPosition", { n: index + 1, count })}
           </Text>
           <Pressable
             onPress={() => deck.goTo(index + 1)}
             disabled={index === count - 1}
             accessibilityRole="button"
-            accessibilityLabel="Susunod na task"
+            accessibilityLabel={t("today.susunodNaTask")}
             hitSlop={8}
             style={[styles.arrow, index === count - 1 && styles.arrowOff]}
           >

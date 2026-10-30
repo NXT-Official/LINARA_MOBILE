@@ -119,7 +119,7 @@ const DATE = (iso: string) =>
  */
 export function recordShareText(r: RecordSummary): string {
   return [
-    `Work record from Linara — ${r.name}`,
+    `Work record from Linara: ${r.name}`,
     `Role: ${r.station}${r.employment ? ` (${r.employment})` : ""}`,
     `On record since: ${DATE(r.recordSince)}`,
     `Tasks completed: ${r.tasksDone}`,

@@ -1,8 +1,10 @@
-import { Pressable, StyleSheet, Text, View } from "react-native";
+import { Pressable, StyleSheet, View } from "react-native";
 
 import { colors } from "@/lib/theme";
 import { utosAnswers } from "@/lib/utos";
 import type { QuickUtoItem } from "@/services/api/quick-utos";
+import { Text } from "@/components/ui/text";
+import { useT } from "@/lib/i18n/locale-context";
 
 function formatTimeOfDay(iso: string): string {
   return new Date(iso).toLocaleTimeString([], { hour: "numeric", minute: "2-digit" });
@@ -22,50 +24,55 @@ export function UtosChip({
   onAck: (id: string, ack: "seen" | "done") => void;
   acking: boolean;
 }) {
+  const t = useT();
   return (
     <View style={[styles.chip, utos.emergency && styles.chipEmergency]}>
       <View style={styles.header}>
         <Text style={styles.content}>{utos.content}</Text>
         {utos.emergency && (
           <View style={styles.emergencyBadge}>
-            <Text style={styles.emergencyBadgeText}>Emergency</Text>
+            <Text style={styles.emergencyBadgeText}>{t("today.emergency")}</Text>
           </View>
         )}
       </View>
       <Text style={styles.meta}>
-        {formatTimeOfDay(utos.createdAt)} · mula kay {utos.senderName}
-        {utos.afterHours ? " · Lampas sa oras" : ""}
+        {t("today.utosMeta", { time: formatTimeOfDay(utos.createdAt), name: utos.senderName })}
+        {utos.afterHours ? t("today.lampasSaOras") : ""}
       </Text>
 
       {utos.waiting ? (
-        <Text style={styles.waitingText}>Naghihintay — makikita mo &apos;to pagbalik mo.</Text>
+        <Text style={styles.waitingText}>{t("today.naghihintayMakikitaMoToPagbalik")}</Text>
       ) : (
         <View style={styles.actions}>
           {utosAnswers(utos.ackState).includes("seen") ? (
             <Pressable
               disabled={acking}
               onPress={() => onAck(utos.id, "seen")}
+              accessibilityRole="button"
+              accessibilityState={{ disabled: acking }}
               style={({ pressed }) => [
                 styles.actionButton,
                 styles.secondaryButton,
                 pressed && styles.pressed,
               ]}
             >
-              <Text style={styles.secondaryButtonText}>Sige</Text>
+              <Text style={styles.secondaryButtonText}>{t("today.sige")}</Text>
             </Pressable>
           ) : (
-            <Text style={styles.seenText}>Nakita mo na. Pindutin kapag tapos na.</Text>
+            <Text style={styles.seenText}>{t("today.nakitaMoNaPindutinKapag")}</Text>
           )}
           <Pressable
             disabled={acking}
             onPress={() => onAck(utos.id, "done")}
+            accessibilityRole="button"
+            accessibilityState={{ disabled: acking }}
             style={({ pressed }) => [
               styles.actionButton,
               styles.primaryButton,
               pressed && styles.pressed,
             ]}
           >
-            <Text style={styles.primaryButtonText}>Tapos na</Text>
+            <Text style={styles.primaryButtonText}>{t("today.taposNa")}</Text>
           </Pressable>
         </View>
       )}
@@ -74,21 +81,19 @@ export function UtosChip({
 }
 
 const styles = StyleSheet.create({
+  // One quiet card like the rest of Today; an emergency gets a full Late
+  // border and its badge, not a coloured stripe down one side.
   chip: {
-    borderRadius: 18,
-    borderLeftWidth: 4,
-    borderLeftColor: colors.terracottaGold,
+    borderRadius: 20,
+    borderWidth: 1,
+    borderColor: colors.border,
     backgroundColor: colors.cardCream,
-    padding: 12,
+    padding: 14,
     gap: 6,
-    shadowColor: "#000",
-    shadowOpacity: 0.12,
-    shadowRadius: 8,
-    shadowOffset: { width: 0, height: 3 },
-    elevation: 4,
   },
   chipEmergency: {
-    borderLeftColor: "#C24E30",
+    borderWidth: 1.5,
+    borderColor: colors.statusLate,
   },
   header: {
     flexDirection: "row",
@@ -104,14 +109,14 @@ const styles = StyleSheet.create({
   },
   emergencyBadge: {
     borderRadius: 999,
-    backgroundColor: "rgba(194,78,48,0.12)",
-    paddingHorizontal: 8,
+    backgroundColor: colors.statusLateSoft,
+    paddingHorizontal: 10,
     paddingVertical: 2,
   },
   emergencyBadgeText: {
     fontSize: 13,
     fontWeight: "700",
-    color: "#C24E30",
+    color: colors.statusLateInk,
   },
   meta: {
     fontSize: 13,
@@ -135,7 +140,7 @@ const styles = StyleSheet.create({
   },
   actionButton: {
     flex: 1,
-    minHeight: 40,
+    minHeight: 48,
     borderRadius: 999,
     alignItems: "center",
     justifyContent: "center",

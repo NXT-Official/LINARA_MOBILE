@@ -1,13 +1,7 @@
-import {
-  StyleSheet,
-  Text,
-  TextInput,
-  View,
-  type TextInputProps,
-  type ViewStyle,
-} from "react-native";
+import { StyleSheet, View, type TextInputProps, type ViewStyle } from "react-native";
 
 import { colors } from "@/lib/theme";
+import { Text, TextInput } from "@/components/ui/text";
 
 /**
  * Labeled text input shared by the onboarding forms (welcome, flag-terms,
@@ -65,12 +59,13 @@ const styles = StyleSheet.create({
     fontSize: 16,
     color: colors.ink,
   },
+  // terracottaInk: plain terracottaGold is 2.3:1 on cream, too faint for an error.
   inputError: {
-    borderColor: colors.terracottaGold,
+    borderColor: colors.terracottaInk,
   },
   error: {
     fontSize: 13,
-    color: colors.terracottaGold,
+    color: colors.terracottaInk,
   },
   hint: {
     fontSize: 13,

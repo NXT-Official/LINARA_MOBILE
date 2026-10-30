@@ -1,5 +1,5 @@
 import { isOffline } from "@/lib/network";
-import { OFFLINE_SEND, requestErrorMessage } from "@/lib/request-error";
+import { offlineSendText, requestErrorMessage } from "@/lib/request-error";
 import { supabase } from "@/services/supabase";
 
 export interface ValeRequest {
@@ -59,7 +59,7 @@ export async function getMyVales(helperId: string): Promise<ValeRequest[]> {
  * message the form shows while keeping what she typed (QA LM-16).
  */
 export async function requestVale(helperId: string, amount: number, reason: string): Promise<void> {
-  if (await isOffline()) throw new Error(OFFLINE_SEND);
+  if (await isOffline()) throw new Error(offlineSendText());
   const { error } = await supabase
     .from("vales")
     .insert({ helper_id: helperId, amount, reason, status: "pending" });

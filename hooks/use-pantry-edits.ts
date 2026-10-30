@@ -10,6 +10,7 @@ import {
 } from "@/services/api/grocery";
 import { restockQty } from "@/lib/pantry";
 import { addPantryItem, updatePantryItem, type PantryItemRow } from "@/services/api/pantry";
+import { useT } from "@/lib/i18n/locale-context";
 
 /**
  * Her side of keeping the pantry and the palengke list (client feedback,
@@ -17,6 +18,7 @@ import { addPantryItem, updatePantryItem, type PantryItemRow } from "@/services/
  * the grocery edits (services/sqlite-queue.ts).
  */
 export function usePantryEdits(householdId: string | null) {
+  const t = useT();
   const queryClient = useQueryClient();
   const [savingId, setSavingId] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
@@ -46,7 +48,7 @@ export function usePantryEdits(householdId: string | null) {
 
   const needHousehold = () => {
     if (householdId) return householdId;
-    throw new Error("Hindi pa na-load ang household. Subukan ulit.");
+    throw new Error(t("pantry.hindiPaNaLoadAng"));
   };
 
   const addGrocery = async (values: ItemFormValues) =>
@@ -56,7 +58,7 @@ export function usePantryEdits(householdId: string | null) {
         await addGroceryItem(needHousehold(), values);
         await refreshGroceries();
       },
-      "Hindi naidagdag sa listahan.",
+      t("pantry.hindiNaidagdagSaListahan"),
     );
 
   const editGrocery = (item: GroceryItemRow, values: ItemFormValues, done: () => void) =>
@@ -67,7 +69,7 @@ export function usePantryEdits(householdId: string | null) {
         await refreshGroceries();
         done();
       },
-      "Hindi na-save.",
+      t("pantry.hindiNaSave"),
     );
 
   const removeGrocery = (item: GroceryItemRow) =>
@@ -77,7 +79,7 @@ export function usePantryEdits(householdId: string | null) {
         await deleteGroceryItem(item.id);
         await refreshGroceries();
       },
-      "Hindi natanggal.",
+      t("pantry.hindiNatanggal"),
     );
 
   const listPantryItem = (item: PantryItemRow) =>
@@ -92,7 +94,7 @@ export function usePantryEdits(householdId: string | null) {
         });
         await refreshGroceries();
       },
-      "Hindi nailista.",
+      t("pantry.hindiNailista"),
     );
 
   const addPantry = async (values: ItemFormValues) =>
@@ -108,7 +110,7 @@ export function usePantryEdits(householdId: string | null) {
         });
         await refreshPantry();
       },
-      "Hindi naidagdag sa pantry.",
+      t("pantry.hindiNaidagdagSaPantry"),
     );
 
   /**
@@ -131,7 +133,7 @@ export function usePantryEdits(householdId: string | null) {
         }
         await Promise.all([refreshPantry(), refreshGroceries()]);
       },
-      "Hindi na-save.",
+      t("pantry.hindiNaSave"),
     );
 
   const editPantry = (item: PantryItemRow, values: ItemFormValues, done: () => void) =>
@@ -148,7 +150,7 @@ export function usePantryEdits(householdId: string | null) {
         await refreshPantry();
         done();
       },
-      "Hindi na-save.",
+      t("pantry.hindiNaSave"),
     );
 
   // − and + update the count on screen right away, then save.
@@ -162,7 +164,7 @@ export function usePantryEdits(householdId: string | null) {
       );
     },
     onError: (err) => {
-      fail("Hindi na-save ang bilang.")(err);
+      fail(t("pantry.hindiNaSaveAngBilang"))(err);
       void refreshPantry();
     },
   });

@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { Pressable, StyleSheet, Text, View } from "react-native";
+import { Pressable, StyleSheet, View } from "react-native";
 
 import { colors, fonts } from "@/lib/theme";
 import { formatHoursMinutes } from "@/lib/format";
@@ -10,16 +10,19 @@ import { PrimaryButton } from "@/components/ui/primary-button";
 import type { RestOffRequest, RestOffStatus } from "@/services/api/rest-off";
 
 import { RequestDisclosure } from "./request-disclosure";
+import { Text } from "@/components/ui/text";
+import { useT } from "@/lib/i18n/locale-context";
+import type { MessageKey } from "@/lib/i18n/instance";
 
-const STATUS_LABEL: Record<RestOffStatus, string> = {
-  pending: "Hinihintay",
-  approved: "Aprubado",
-  declined: "Hindi pumayag",
-  cancelled: "Kanselado",
+const STATUS_LABEL: Record<RestOffStatus, MessageKey> = {
+  pending: "request.pending",
+  approved: "request.approved",
+  declined: "request.declined",
+  cancelled: "request.cancelled",
 };
 
 const STATUS_COLOR: Record<RestOffStatus, string> = {
-  pending: colors.terracottaGold,
+  pending: colors.terracottaInk,
   approved: colors.pineTeal,
   declined: colors.mutedInk,
   cancelled: colors.mutedInk,
@@ -59,6 +62,7 @@ export function RestOffRequestForm({
   cancellingId?: string | null;
   householdToday?: string;
 }) {
+  const t = useT();
   const [restDate, setRestDate] = useState("");
   const [startTime, setStartTime] = useState("");
   const [endTime, setEndTime] = useState("");
@@ -111,10 +115,17 @@ export function RestOffRequestForm({
 
   return (
     <View style={styles.card}>
-      <Text style={styles.eyebrow}>Mga day off</Text>
+      <Text style={styles.cardTitle} accessibilityRole="header">
+        {t("pay.mgaDayOff")}
+      </Text>
       <Text style={styles.hint}>
-        {formatHoursMinutes(uncommitted)} ang pwede mong hilingin
-        {pendingMinutes > 0 ? ` (${formatHoursMinutes(pendingMinutes)} naghihintay)` : ""}.
+        {t("pay.restOffAvailable", {
+          time: formatHoursMinutes(uncommitted),
+          waiting:
+            pendingMinutes > 0
+              ? t("pay.restOffWaiting", { time: formatHoursMinutes(pendingMinutes) })
+              : "",
+        })}
       </Text>
       {recent.length > 0 && (
         <View style={styles.list}>
@@ -140,16 +151,16 @@ export function RestOffRequestForm({
                   disabled={cancellingId === r.id}
                   hitSlop={8}
                   accessibilityRole="button"
-                  accessibilityLabel={`Kanselahin ang request para sa ${r.restDate}`}
+                  accessibilityLabel={t("pay.kanselahinAngRequestParaSa", { restDate: r.restDate })}
                   style={styles.cancelButton}
                 >
                   <Text style={styles.cancelText}>
-                    {cancellingId === r.id ? "…" : "Kanselahin"}
+                    {cancellingId === r.id ? "…" : t("pay.kanselahin")}
                   </Text>
                 </Pressable>
               ) : (
                 <Text style={[styles.status, { color: STATUS_COLOR[r.status] }]}>
-                  {STATUS_LABEL[r.status]}
+                  {t(STATUS_LABEL[r.status])}
                 </Text>
               )}
             </View>
@@ -159,12 +170,14 @@ export function RestOffRequestForm({
       <RequestDisclosure
         open={open}
         onOpenChange={setOpen}
-        openLabel="Humiling ng day off"
+        openLabel={t("pay.humilingNgDayOff")}
         disabled={uncommitted <= 0}
       >
         {isPastDate ? (
           <Text style={styles.warning}>
-            Lumipas na ang petsang iyon{householdToday ? ` (ngayon: ${householdToday})` : ""}.
+            {t("pay.datePassed", {
+              today: householdToday ? t("pay.datePassedToday", { date: householdToday }) : "",
+            })}
           </Text>
         ) : null}
 
@@ -173,11 +186,11 @@ export function RestOffRequestForm({
             see lib/datetime-fields.ts, which converts without ever passing
             through UTC. */}
         <DateTimeField
-          label="Petsa"
+          label={t("pay.petsa")}
           mode="date"
           value={restDate}
           onChange={setRestDate}
-          placeholder="Pumili ng petsa"
+          placeholder={t("pay.pumiliNgPetsa")}
           // The server refuses a past date against household_today() anyway; this
           // stops the picker offering one in the first place. Falls back to
           // unrestricted while the household date is still loading rather than
@@ -185,35 +198,35 @@ export function RestOffRequestForm({
           minimumIsoDate={householdToday}
         />
         <DateTimeField
-          label="Simula"
+          label={t("pay.simula")}
           mode="time"
           value={startTime}
           onChange={setStartTime}
-          placeholder="Anong oras magsisimula?"
+          placeholder={t("pay.anongOrasMagsisimula")}
         />
         <DateTimeField
-          label="Katapusan"
+          label={t("pay.katapusan")}
           mode="time"
           value={endTime}
           onChange={setEndTime}
-          placeholder="Anong oras matatapos?"
+          placeholder={t("pay.anongOrasMatatapos")}
         />
         <TextField
-          label="Dahilan (kung meron)"
+          label={t("pay.dahilanKungMeron")}
           value={note}
           onChangeText={setNote}
-          placeholder="Doktor"
+          placeholder={t("pay.doktor")}
         />
 
         {validShape && minutesAsked > 0 && (
           <Text style={styles.preview}>
             {formatHoursMinutes(minutesAsked)}
-            {minutesAsked > uncommitted ? " — sobra sa natitira mong oras." : ""}
+            {minutesAsked > uncommitted ? t("pay.sobraSaNatitiraMongOras") : ""}
           </Text>
         )}
 
         <PrimaryButton
-          label={submitting ? "Sinesend..." : "Ipadala sa manager"}
+          label={submitting ? t("pay.sinesend") : t("pay.ipadalaSaManager")}
           onPress={handleSubmit}
           disabled={!canSubmit}
         />
@@ -231,10 +244,12 @@ const styles = StyleSheet.create({
     borderColor: colors.border,
     gap: 10,
   },
-  eyebrow: {
-    fontSize: 13,
-    fontWeight: "700",
-    color: colors.terracottaGold,
+  // The card's own title, like the rest of the app's cards (was a small
+  // coloured label above nothing: an eyebrow, audit 2026-10-29).
+  cardTitle: {
+    fontFamily: fonts.display,
+    fontSize: 17,
+    color: colors.ink,
   },
   hint: {
     fontSize: 13,
@@ -275,7 +290,7 @@ const styles = StyleSheet.create({
   warning: {
     fontSize: 13,
     fontFamily: fonts.bodyBold,
-    color: colors.terracottaGold,
+    color: colors.terracottaInk,
   },
   cancelButton: {
     paddingHorizontal: 10,

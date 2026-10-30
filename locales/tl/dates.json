@@ -1,0 +1,39 @@
+{
+  "dates": {
+    "days": ["Linggo", "Lunes", "Martes", "Miyerkules", "Huwebes", "Biyernes", "Sabado"],
+    "monthsShort": [
+      "Ene",
+      "Peb",
+      "Mar",
+      "Abr",
+      "May",
+      "Hun",
+      "Hul",
+      "Ago",
+      "Set",
+      "Okt",
+      "Nob",
+      "Dis"
+    ],
+    "monthsLong": [
+      "Enero",
+      "Pebrero",
+      "Marso",
+      "Abril",
+      "Mayo",
+      "Hunyo",
+      "Hulyo",
+      "Agosto",
+      "Setyembre",
+      "Oktubre",
+      "Nobyembre",
+      "Disyembre"
+    ],
+    "date": "{month} {day}, {year}",
+    "monthDay": "{month} {day}",
+    "weekdayMonthDay": "{weekday}, {month} {day}",
+    "monthYear": "{month} {year}",
+    "range": "{from} – {to}",
+    "daysShort": ["Lin", "Lun", "Mar", "Miy", "Huw", "Biy", "Sab"]
+  }
+}

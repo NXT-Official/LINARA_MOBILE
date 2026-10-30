@@ -1,20 +1,12 @@
 import { useCallback, useEffect, useRef, useState } from "react";
-import {
-  ActivityIndicator,
-  Alert,
-  BackHandler,
-  Linking,
-  StyleSheet,
-  Text,
-  View,
-} from "react-native";
+import { ActivityIndicator, Alert, BackHandler, Linking, StyleSheet, View } from "react-native";
 import { Redirect, router, useLocalSearchParams } from "expo-router";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { WebView, type WebViewMessageEvent, type WebViewNavigation } from "react-native-webview";
 import type { Session } from "@supabase/supabase-js";
 
 import { MANAGER_DASHBOARD_URL } from "@/lib/env";
-import { colors } from "@/lib/theme";
+import { colors, fonts } from "@/lib/theme";
 import { useSession } from "@/lib/session-context";
 import { queryClient } from "@/lib/query-client";
 import { clearSavedRecord } from "@/lib/query-persist";
@@ -22,6 +14,8 @@ import { supabase } from "@/services/supabase";
 import { signOutHelper } from "@/services/api/auth";
 import { PrimaryButton } from "@/components/ui/primary-button";
 import { StartupWait } from "@/components/ui/startup-wait";
+import { Text } from "@/components/ui/text";
+import { useT } from "@/lib/i18n/locale-context";
 
 // The web dashboard keeps its session under these localStorage keys, not
 // Supabase's own storage -- must match ../LINARA/src/features/people/hooks/use-session.ts.
@@ -180,6 +174,7 @@ function startFor(session: Session | null) {
 }
 
 function Dashboard({ session }: { session: Session | null }) {
+  const t = useT();
   const webRef = useRef<WebView>(null);
   const canGoBackRef = useRef(false);
   // The token the page is using right now, so a refresh here reaches it once.
@@ -291,8 +286,8 @@ function Dashboard({ session }: { session: Session | null }) {
         if (session) return;
         if (message.notice === "confirm-email") {
           Alert.alert(
-            "Tingnan ang email mo",
-            "Nagpadala kami ng confirmation link. Buksan iyon, tapos mag-sign in dito gamit ang email at password mo.",
+            t("manager.tingnanAngEmailMo"),
+            t("manager.nagpadalaKamiNgConfirmationLink"),
             undefined,
             { cancelable: true },
           );
@@ -321,7 +316,7 @@ function Dashboard({ session }: { session: Session | null }) {
       recoveriesRef.current += 1;
       pushSession(data.session, `${MANAGER_DASHBOARD_URL}/manager/pass`);
     },
-    [session, signOut, pushSession, ordinaryBack],
+    [session, signOut, pushSession, ordinaryBack, t],
   );
 
   // Keep the dashboard in the app; anything else (a help link, say) opens outside it.
@@ -336,12 +331,10 @@ function Dashboard({ session }: { session: Session | null }) {
   if (loadFailed) {
     return (
       <SafeAreaView style={styles.center}>
-        <Text style={styles.title}>{"Can't reach your dashboard"}</Text>
-        <Text style={styles.body}>
-          {"Check your internet connection, then try again. Your household's data is safe."}
-        </Text>
+        <Text style={styles.title}>{t("manager.canTReachYourDashboard")}</Text>
+        <Text style={styles.body}>{t("manager.checkYourInternetConnectionThen")}</Text>
         <PrimaryButton
-          label="Try again"
+          label={t("manager.tryAgain")}
           onPress={() => {
             recoveriesRef.current = 0;
             pageTokenRef.current = session?.access_token ?? null;
@@ -350,7 +343,9 @@ function Dashboard({ session }: { session: Session | null }) {
             setWebKey((k) => k + 1);
           }}
         />
-        {session ? <PrimaryButton label="Sign out" variant="secondary" onPress={signOut} /> : null}
+        {session ? (
+          <PrimaryButton label={t("manager.signOut")} variant="secondary" onPress={signOut} />
+        ) : null}
       </SafeAreaView>
     );
   }
@@ -406,7 +401,7 @@ const styles = StyleSheet.create({
   },
   title: {
     fontSize: 22,
-    fontWeight: "700",
+    fontFamily: fonts.displayBold,
     color: colors.pineTeal,
   },
   body: {

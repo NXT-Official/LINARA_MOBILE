@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { KeyboardAvoidingView, Pressable, ScrollView, StyleSheet, Text, View } from "react-native";
+import { KeyboardAvoidingView, Pressable, ScrollView, StyleSheet, View } from "react-native";
 import { router, useLocalSearchParams } from "expo-router";
 import { Ionicons } from "@expo/vector-icons";
 
@@ -10,6 +10,7 @@ import { requestPasswordReset } from "@/services/api/auth";
 import { TextField } from "@/components/ui/text-field";
 import { KEYBOARD_BEHAVIOR, useKeyboardOffset } from "@/components/ui/keyboard-screen";
 import { PrimaryButton } from "@/components/ui/primary-button";
+import { Text } from "@/components/ui/text";
 
 /** Supabase lets one address ask again only after this long. */
 const RESEND_AFTER_SECONDS = 60;
@@ -151,7 +152,7 @@ const styles = StyleSheet.create({
   flex: { flex: 1, backgroundColor: colors.sand },
   content: { flexGrow: 1, justifyContent: "center", padding: 24, gap: 16 },
   hero: { marginBottom: 8, gap: 8 },
-  title: { fontSize: 28, fontWeight: "700", color: colors.pineTeal },
+  title: { fontSize: 28, fontFamily: fonts.displayBold, color: colors.pineTeal },
   subtitle: { fontSize: 15, lineHeight: 22, color: colors.mutedInk },
   sentCard: {
     alignItems: "center",

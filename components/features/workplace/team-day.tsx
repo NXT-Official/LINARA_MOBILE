@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { ActivityIndicator, Pressable, StyleSheet, Text, View } from "react-native";
+import { ActivityIndicator, Pressable, StyleSheet, View } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
 import { useQuery } from "@tanstack/react-query";
 
@@ -10,12 +10,15 @@ import type { Workplaces } from "@/hooks/use-workplaces";
 import { getTeamDay, type TeamDayTask } from "@/services/api/workplaces";
 
 import { PlaceTag } from "./place-tag";
+import { Text } from "@/components/ui/text";
+import { useT } from "@/lib/i18n/locale-context";
+import type { MessageKey } from "@/lib/i18n/instance";
 
-const STATUS: Record<TeamDayTask["status"], string> = {
-  todo: "Gagawin",
-  in_progress: "Ginagawa",
-  blocked: "Naka-hold",
-  done: "Tapos na",
+const STATUS: Record<TeamDayTask["status"], MessageKey> = {
+  todo: "task.toDo",
+  in_progress: "task.doing",
+  blocked: "task.onHold",
+  done: "task.done",
 };
 
 /**
@@ -25,6 +28,7 @@ const STATUS: Record<TeamDayTask["status"], string> = {
  * Closed until she opens it; nothing at all if she's on no team.
  */
 export function TeamDay({ places, helperId }: { places: Workplaces; helperId: string }) {
+  const t = useT();
   const [open, setOpen] = useState(false);
   const onTeam = places.workplaces.some((w) => w.teamId);
   const query = useQuery({
@@ -36,10 +40,10 @@ export function TeamDay({ places, helperId }: { places: Workplaces; helperId: st
   if (!onTeam) return null;
 
   const tasks = (query.data ?? []).filter(
-    (t) => places.house === "all" || t.householdId === places.house,
+    (task) => places.house === "all" || task.householdId === places.house,
   );
   const byTeam = new Map<string, TeamDayTask[]>();
-  for (const t of tasks) byTeam.set(t.teamName, [...(byTeam.get(t.teamName) ?? []), t]);
+  for (const task of tasks) byTeam.set(task.teamName, [...(byTeam.get(task.teamName) ?? []), task]);
 
   return (
     <View style={styles.card}>
@@ -50,33 +54,38 @@ export function TeamDay({ places, helperId }: { places: Workplaces; helperId: st
         style={styles.header}
       >
         <Ionicons name="people-outline" size={18} color={colors.pineTeal} />
-        <Text style={styles.title}>Ang team ko ngayon</Text>
+        <Text style={styles.title}>{t("today.angTeamKoNgayon")}</Text>
         <Ionicons name={open ? "chevron-up" : "chevron-down"} size={18} color={colors.mutedInk} />
       </Pressable>
       {open &&
         (query.isLoading ? (
           <ActivityIndicator color={colors.pineTeal} />
         ) : query.isError ? (
-          <Text style={styles.muted}>Hindi ma-load ngayon. Subukan ulit mamaya.</Text>
+          <Text style={styles.muted}>{t("today.hindiMaLoadNgayonSubukan")}</Text>
         ) : tasks.length === 0 ? (
-          <Text style={styles.muted}>Wala pang task ang team mo ngayon.</Text>
+          <Text style={styles.muted}>{t("today.walaPangTaskAngTeam")}</Text>
         ) : (
           [...byTeam.entries()].map(([team, list]) => (
             <View key={team} style={styles.group}>
               <Text style={styles.team}>{team}</Text>
-              {list.map((t) => (
-                <View key={t.id} style={styles.row}>
-                  <Text style={styles.time}>{formatClockTime(t.scheduledStart)}</Text>
+              {list.map((task) => (
+                <View key={task.id} style={styles.row}>
+                  <Text style={styles.time}>{formatClockTime(task.scheduledStart)}</Text>
                   <View style={styles.body}>
                     <Text
-                      style={[styles.taskTitle, t.status === "done" && styles.done]}
+                      style={[styles.taskTitle, task.status === "done" && styles.done]}
                       numberOfLines={2}
                     >
-                      {t.helperName}: {t.title}
+                      {task.helperName}: {task.title}
                     </Text>
-                    <PlaceTag places={places} householdId={t.householdId} from={t.from} to={t.to} />
+                    <PlaceTag
+                      places={places}
+                      householdId={task.householdId}
+                      from={task.from}
+                      to={task.to}
+                    />
                   </View>
-                  <Text style={styles.status}>{STATUS[t.status]}</Text>
+                  <Text style={styles.status}>{t(STATUS[task.status])}</Text>
                 </View>
               ))}
             </View>
@@ -99,7 +108,7 @@ const styles = StyleSheet.create({
     flexDirection: "row",
     alignItems: "center",
     gap: 8,
-    minHeight: 32,
+    minHeight: 48,
   },
   title: {
     flex: 1,

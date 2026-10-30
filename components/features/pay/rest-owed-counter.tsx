@@ -1,8 +1,9 @@
-import { StyleSheet, Text, View } from "react-native";
-import { Ionicons } from "@expo/vector-icons";
+import { StyleSheet, View } from "react-native";
 
 import { colors, fonts } from "@/lib/theme";
 import { formatHoursMinutes } from "@/lib/format";
+import { Text } from "@/components/ui/text";
+import { useT } from "@/lib/i18n/locale-context";
 
 /**
  * Rest Owed Counter (roadmap Story 11 step 3 / plan.md 3.2): a live total of
@@ -13,15 +14,13 @@ import { formatHoursMinutes } from "@/lib/format";
  * counter deliberately stays a time balance rather than inventing one.
  */
 export function RestOwedCounter({ minutes }: { minutes: number }) {
+  const t = useT();
   return (
     <View style={styles.card}>
-      <View style={styles.iconWrap}>
-        <Ionicons name="time-outline" size={20} color={colors.pineTeal} />
-      </View>
       <View style={styles.textCol}>
-        <Text style={styles.eyebrow}>Rest owed mo</Text>
+        <Text style={styles.eyebrow}>{t("pay.restOwedMo")}</Text>
         <Text style={styles.value}>{formatHoursMinutes(minutes)}</Text>
-        <Text style={styles.hint}>Pahingang naipon mula sa trabaho lampas sa shift</Text>
+        <Text style={styles.hint}>{t("pay.pahingangNaiponMulaSaTrabaho")}</Text>
       </View>
     </View>
   );
@@ -37,14 +36,6 @@ const styles = StyleSheet.create({
     backgroundColor: colors.cardCream,
     borderWidth: 1,
     borderColor: colors.border,
-  },
-  iconWrap: {
-    width: 40,
-    height: 40,
-    borderRadius: 20,
-    alignItems: "center",
-    justifyContent: "center",
-    backgroundColor: colors.sand,
   },
   textCol: {
     flex: 1,

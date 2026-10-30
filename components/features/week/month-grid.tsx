@@ -1,7 +1,10 @@
-import { Pressable, StyleSheet, Text, View } from "react-native";
+import { Pressable, StyleSheet, View } from "react-native";
 
 import { colors } from "@/lib/theme";
-import { DAY_NAMES, type WeekDay, type WeekTicket } from "@/lib/week";
+import { type WeekDay, type WeekTicket } from "@/lib/week";
+import { trList } from "@/lib/i18n/instance";
+import { Text } from "@/components/ui/text";
+import { useT } from "@/lib/i18n/locale-context";
 
 const DOTS = 3;
 
@@ -20,12 +23,13 @@ export function MonthGrid<T extends WeekTicket>({
   month: number;
   onOpenDay: (date: Date) => void;
 }) {
+  const t = useT();
   return (
     <View style={styles.card}>
       <View style={styles.row}>
-        {DAY_NAMES.map((name) => (
+        {trList("dates.daysShort").map((name) => (
           <Text key={name} style={styles.weekday} accessibilityElementsHidden>
-            {name.slice(0, 3)}
+            {name}
           </Text>
         ))}
       </View>
@@ -40,11 +44,11 @@ export function MonthGrid<T extends WeekTicket>({
             day.leave.some((l) => l.status === "approved");
           const summary = [
             day.label,
-            day.isRestDay ? "rest day" : null,
-            approvedOff ? "may day off" : null,
+            day.isRestDay ? t("week.restDay2") : null,
+            approvedOff ? t("week.mayDayOff") : null,
             day.tickets.length === 0
-              ? "walang naka-schedule"
-              : `${day.tickets.length} task${open < day.tickets.length ? `, ${open} pa ang gagawin` : ""}`,
+              ? t("week.walangNakaSchedule2")
+              : `${day.tickets.length} task${open < day.tickets.length ? t("week.paAngGagawin", { open }) : ""}`,
           ]
             .filter(Boolean)
             .join(", ");

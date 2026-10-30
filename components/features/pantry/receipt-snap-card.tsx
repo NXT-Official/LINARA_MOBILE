@@ -1,11 +1,14 @@
-import { Image, StyleSheet, Text, View } from "react-native";
+import { Image, StyleSheet, View } from "react-native";
 
 import { colors } from "@/lib/theme";
 import { PrimaryButton } from "@/components/ui/primary-button";
 import type { GroceryReceipt } from "@/services/api/grocery";
+import { Text } from "@/components/ui/text";
+import { useT } from "@/lib/i18n/locale-context";
+import { intlLocale } from "@/lib/i18n/instance";
 
 const when = (iso: string) =>
-  new Date(iso).toLocaleString("fil-PH", {
+  new Date(iso).toLocaleString(intlLocale(), {
     month: "short",
     day: "numeric",
     hour: "numeric",
@@ -33,13 +36,12 @@ export function ReceiptSnapCard({
   error: string | null;
   onSnap: () => void;
 }) {
+  const t = useT();
   return (
     <View style={styles.card}>
-      <Text style={styles.title}>Resibo</Text>
+      <Text style={styles.title}>{t("pantry.resibo")}</Text>
       <Text style={styles.sub}>
-        {runOpen
-          ? "Para sa run? Kunan sa card ng run sa itaas. Dito ang resibo ng binili nang walang run."
-          : "Pagkatapos mamili, kunan ng larawan ang resibo. Makikita ito ng manager."}
+        {runOpen ? t("pantry.paraSaRunKunanSa") : t("pantry.pagkataposMamiliKunanNgLarawan")}
       </Text>
       {latest && (
         <View style={styles.latest}>
@@ -48,12 +50,14 @@ export function ReceiptSnapCard({
             style={styles.thumb}
             accessibilityIgnoresInvertColors
           />
-          <Text style={styles.latestText}>Huling resibo · {when(latest.createdAt)}</Text>
+          <Text style={styles.latestText}>
+            {t("pantry.latestReceipt", { when: when(latest.createdAt) })}
+          </Text>
         </View>
       )}
       {error ? <Text style={styles.error}>{error}</Text> : null}
       <PrimaryButton
-        label={latest ? "Kunan ang bagong resibo" : "Kunan ng resibo"}
+        label={latest ? t("pantry.kunanAngBagongResibo") : t("pantry.kunanNgResibo")}
         variant="secondary"
         loading={saving}
         onPress={onSnap}

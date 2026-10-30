@@ -1,11 +1,14 @@
-import { Pressable, ScrollView, StyleSheet, Text, TextInput, View } from "react-native";
+import { Pressable, ScrollView, StyleSheet, View } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
 
 import { colors } from "@/lib/theme";
+import { Text, TextInput } from "@/components/ui/text";
+import { useT } from "@/lib/i18n/locale-context";
+import type { MessageKey } from "@/lib/i18n/instance";
 
 export interface FilterChip<K extends string> {
   key: K;
-  label: string;
+  label: MessageKey;
 }
 
 /**
@@ -25,6 +28,7 @@ export function ListFilter<K extends string>({
   active: K;
   onChip: (key: K) => void;
 }) {
+  const t = useT();
   return (
     <View style={styles.wrap}>
       <View style={styles.search}>
@@ -32,17 +36,18 @@ export function ListFilter<K extends string>({
         <TextInput
           value={query}
           onChangeText={onQuery}
-          placeholder="Hanapin…"
+          placeholder={t("pantry.hanapin")}
           placeholderTextColor={colors.mutedInk}
           autoCorrect={false}
           style={styles.searchInput}
-          accessibilityLabel="Hanapin"
+          accessibilityLabel={t("pantry.hanapin2")}
         />
         {query ? (
           <Pressable
+            accessibilityRole="button"
             onPress={() => onQuery("")}
-            hitSlop={8}
-            accessibilityLabel="Burahin ang hinahanap"
+            hitSlop={16}
+            accessibilityLabel={t("pantry.burahinAngHinahanap")}
           >
             <Ionicons name="close-circle" size={16} color={colors.mutedInk} />
           </Pressable>
@@ -57,12 +62,14 @@ export function ListFilter<K extends string>({
           const on = chip.key === active;
           return (
             <Pressable
+              accessibilityRole="button"
+              hitSlop={{ top: 8, bottom: 8 }}
               key={chip.key}
               onPress={() => onChip(chip.key)}
               accessibilityState={{ selected: on }}
               style={[styles.chip, on && styles.chipOn]}
             >
-              <Text style={[styles.chipText, on && styles.chipTextOn]}>{chip.label}</Text>
+              <Text style={[styles.chipText, on && styles.chipTextOn]}>{t(chip.label)}</Text>
             </Pressable>
           );
         })}

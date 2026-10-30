@@ -1,0 +1,127 @@
+{
+  "language": {
+    "current": "语言：{language}"
+  },
+  "tabs": {
+    "today": "今天",
+    "week": "我的一周",
+    "pantry": "储藏室",
+    "pay": "我的工资",
+    "record": "我的记录"
+  },
+  "header": {
+    "pantry": "储藏室和采购"
+  },
+  "common": {
+    "back": "返回",
+    "sendToManager": "发送给雇主",
+    "email": "电子邮箱",
+    "emailPlaceholder": "例如 rosa@gmail.com",
+    "password": "密码",
+    "haveAccount": "已有账户？登录",
+    "backToSignIn": "返回登录",
+    "tryAgain": "重试",
+    "walaPangNapipili": "还没有选择",
+    "tapos": "完成",
+    "nagloLoad": "正在加载"
+  },
+  "startup": {
+    "title": "加载时间较长",
+    "body": "网络可能较慢。请重试，或退出后重新登录。"
+  },
+  "signOut": {
+    "button": "退出登录",
+    "confirm": "确定吗？重新登录需要你的电子邮箱和密码。",
+    "cancel": "算了",
+    "failed": "无法退出登录。"
+  },
+  "plan": {
+    "tabClosed": "你所在的家庭目前没有开放此功能。"
+  },
+  "manager": {
+    "canTReachYourDashboard": "无法打开你的管理页面",
+    "checkYourInternetConnectionThen": "请检查网络连接，然后重试。你家的数据是安全的。",
+    "tryAgain": "重试",
+    "signOut": "退出登录",
+    "tingnanAngEmailMo": "请查看你的邮箱",
+    "nagpadalaKamiNgConfirmationLink": "我们给你发了确认链接。打开它，然后用你的邮箱和密码在这里登录。"
+  },
+  "leaveKind": {
+    "sil": "SIL（服务奖励假）",
+    "inKindShort": "调休日",
+    "unpaidShort": "无薪",
+    "extraPaidShort": "带薪休息日",
+    "silHint": "带薪。从你本服务年度的 SIL 中扣除。",
+    "inKind": "用欠你的休息时间换休息日",
+    "inKindHint": "以时间支付：从欠你的休息时间中扣。",
+    "unpaid": "无薪",
+    "unpaidHint": "从那个结算期的工资中扣除。",
+    "extraPaid": "额外带薪休息日"
+  },
+  "request": {
+    "pending": "等待中",
+    "approved": "已批准",
+    "declined": "未批准",
+    "cancelled": "已取消"
+  },
+  "task": {
+    "done": "已完成",
+    "doing": "进行中",
+    "onHold": "暂停",
+    "toDo": "待办",
+    "cancelled": "已取消"
+  },
+  "requestError": {
+    "offline": "没有网络，所以还没发送。有信号时再试一次。",
+    "notSent": "没能发送。请稍后再试。",
+    "notEnoughRestOwed": "欠你的休息时间不够这些天。请选择 SIL 或无薪，或者减少天数。",
+    "notEnoughSil": "你剩下的 SIL 不够这些天。",
+    "silNotYet": "你还没有 SIL。服务满一年后才开始。",
+    "newServiceYear": "中间开始了新的服务年度。请分成两个申请。",
+    "datePassed": "那个日期已经过了。请选别的日子。",
+    "overlaps": "那几天你已经有假了。",
+    "restOffThatDay": "那天你已经有休息安排了。请先取消它。",
+    "max90": "一次申请最多 90 天。",
+    "allRestDays": "那几天都是你的休息日。",
+    "lastBeforeFirst": "最后一天必须在第一天当天或之后。",
+    "noShiftHours": "你的上班时间还没设定，所以没法计算欠你的休息时间。请告诉你的管理人。",
+    "alreadyStarted": "这次请假已经开始，不能取消了。",
+    "onPayslip": "这次请假已经在工资单上，不能取消了。",
+    "alreadyDecided": "这个申请已经有结果了。"
+  },
+  "serviceError": {
+    "offline": "没有网络。请先连接，然后再试。",
+    "unreachable": "现在连不上 Linara。请稍后再试。",
+    "wrongCredentials": "邮箱或密码不对。请再试一次。",
+    "emailNotConfirmed": "你的邮箱还没确认。请先打开收件箱里的链接。",
+    "cantCheckAccount": "现在无法检查你的账号。请检查网络，然后再试。",
+    "setupUnfinished": "这个账号还没设置好。雇主：请在 {site} 登录，完成家庭设置。家政人员：在“还没有账号？创建账号”➔“我是家政人员”中使用你的邀请码。",
+    "linkJustSent": "我们刚给你发了链接。请等一分钟再重新申请。",
+    "unsyncedSignOut": "还有 {count} 项没有同步。退出前请先连上网络。",
+    "joinFailed": "没能加入。请再试一次。",
+    "stillEmployed": "你现在还在一个家庭里工作。同一时间只能有一个。",
+    "codeUsed": "这个邀请码不能再用了。请向雇主要一个新的。",
+    "runNotCreated": "没能创建采购。",
+    "itemsNotMoved": "没能把要买的东西加进采购。请再试一次。",
+    "itemsTaken": "你选的东西已经买了或在别的采购里。请重新选择。",
+    "receiptNotSaved": "收据没有保存。",
+    "confirmEmailSent": "我们已把确认链接发到 {email}。打开它，然后回到这里再点一次按钮完成。",
+    "emailTaken": "这个邮箱已经有账号了。请用你以前的密码，或者登录后在“我的记录”里输入邀请码。",
+    "requestNotSent": "申请没有发送。",
+    "lastDayFuture": "你的最后一天必须是今天或以后。",
+    "mobileNumber": "请输入以 09 开头的 11 位号码。",
+    "shareUnavailable": "这部手机不能分享。",
+    "shareTitle": "保存或发送你的记录"
+  },
+  "payMethod": {
+    "cash": "现金",
+    "bank": "银行转账",
+    "other": "其他"
+  },
+  "notifications": {
+    "channel": "任务和日程变动"
+  },
+  "tabLock": {
+    "noHousehold": "有了家庭后才能打开"
+  }
+}

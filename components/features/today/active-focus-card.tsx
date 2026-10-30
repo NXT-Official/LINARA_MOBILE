@@ -1,28 +1,31 @@
 import { useState } from "react";
-import { Image, Pressable, StyleSheet, Text, View } from "react-native";
+import { Image, Pressable, StyleSheet, View } from "react-native";
 import * as ImagePicker from "expo-image-picker";
 
-import { colors } from "@/lib/theme";
+import { colors, fonts } from "@/lib/theme";
 import { formatTimeSpan } from "@/lib/format";
 import type { FocusTask } from "@/services/api/tickets";
 import { PrimaryButton } from "@/components/ui/primary-button";
 import { TextField } from "@/components/ui/text-field";
 import { SopCarousel } from "@/components/features/today/sop-carousel";
 import { EditTaskForm, type TaskEdit } from "@/components/features/today/edit-task-form";
+import { Text } from "@/components/ui/text";
+import { useT } from "@/lib/i18n/locale-context";
+import type { MessageKey } from "@/lib/i18n/instance";
 
-const STATUS_LABEL: Record<FocusTask["status"], string> = {
-  todo: "Hindi pa sinisimulan",
-  in_progress: "Ginagawa ngayon",
-  blocked: "Naka-hold",
-  done: "Tapos na",
-  cancelled: "Kinansela",
+const STATUS_LABEL: Record<FocusTask["status"], MessageKey> = {
+  todo: "focusStatus.todo",
+  in_progress: "focusStatus.doing",
+  blocked: "focusStatus.onHold",
+  done: "focusStatus.done",
+  cancelled: "focusStatus.cancelled",
 };
 
 /** One tap for the usual reasons; anything else she can type. */
 const CANT_NOW_REASONS = [
-  "Kulang ang gamit",
-  "Kailangan ko ng paliwanag",
-  "May iba pang pinapagawa sa akin",
+  "cantNow.missingSupplies",
+  "cantNow.needExplanation",
+  "cantNow.otherWork",
 ] as const;
 
 /**
@@ -64,20 +67,21 @@ export function ActiveFocusCard({
   isEditing: boolean;
   editError: string | null;
 }) {
+  const t = useT();
   const [photoUri, setPhotoUri] = useState<string | null>(null);
   const [photoError, setPhotoError] = useState<string | null>(null);
   const [askingWhy, setAskingWhy] = useState(false);
   const [picked, setPicked] = useState<string | null>(null);
   const [typed, setTyped] = useState("");
   const [editing, setEditing] = useState(false);
-  const reason = typed.trim() || picked;
+  const reason = typed.trim() || (picked ? t(picked as MessageKey) : null);
   const open = task.status === "todo" || task.status === "in_progress" || task.status === "blocked";
 
   const takePhoto = async () => {
     setPhotoError(null);
     const permission = await ImagePicker.requestCameraPermissionsAsync();
     if (!permission.granted) {
-      setPhotoError("Kailangan ng camera access para makakuha ng litrato.");
+      setPhotoError(t("today.kailanganNgCameraAccessPara"));
       return;
     }
     const result = await ImagePicker.launchCameraAsync({ mediaTypes: "images", quality: 0.9 });
@@ -94,23 +98,21 @@ export function ActiveFocusCard({
 
   return (
     <View style={styles.card}>
-      <Text style={styles.eyebrow}>Focus ngayon</Text>
+      <Text style={styles.eyebrow}>{t("today.focusNgayon")}</Text>
       <Text style={styles.title}>{task.title}</Text>
       {task.createdById === myUserId ? (
-        <Text style={styles.from}>Ikaw ang nagdagdag nito</Text>
+        <Text style={styles.from}>{t("today.ikawAngNagdagdagNito")}</Text>
       ) : task.createdByName ? (
-        <Text style={styles.from}>Mula kay {task.createdByName}</Text>
+        <Text style={styles.from}>{t("today.fromName", { name: task.createdByName })}</Text>
       ) : null}
       <Text style={styles.status}>
-        {STATUS_LABEL[task.status]} · {formatTimeSpan(task.scheduledStart, task.durationMinutes)}
+        {t(STATUS_LABEL[task.status])} · {formatTimeSpan(task.scheduledStart, task.durationMinutes)}
       </Text>
 
       {task.status === "blocked" && (
         <View style={styles.holdNote}>
           {task.blockReason ? <Text style={styles.holdReason}>“{task.blockReason}”</Text> : null}
-          <Text style={styles.holdHint}>
-            Nakikita na ito ng manager sa Pass nila. Babalik ito sa listahan mo kapag naayos na.
-          </Text>
+          <Text style={styles.holdHint}>{t("today.nakikitaNaItoNgManager")}</Text>
         </View>
       )}
 
@@ -119,7 +121,7 @@ export function ActiveFocusCard({
       {task.sop ? <SopCarousel sop={task.sop} /> : null}
 
       {task.status === "todo" && (
-        <PrimaryButton label="Simulan" loading={isStarting} onPress={onStart} />
+        <PrimaryButton label={t("today.simulan")} loading={isStarting} onPress={onStart} />
       )}
       {task.status === "in_progress" && (
         <>
@@ -128,26 +130,26 @@ export function ActiveFocusCard({
               <Image
                 source={{ uri: photoUri }}
                 style={styles.photo}
-                accessibilityLabel="Litrato ng natapos"
+                accessibilityLabel={t("today.litratoNgNatapos")}
               />
               <Pressable
                 onPress={() => setPhotoUri(null)}
                 accessibilityRole="button"
                 style={styles.linkButton}
               >
-                <Text style={styles.linkText}>Alisin ang litrato</Text>
+                <Text style={styles.linkText}>{t("today.alisinAngLitrato")}</Text>
               </Pressable>
             </View>
           ) : (
             <PrimaryButton
-              label="Ipakita ang natapos mo (kung meron)"
+              label={t("today.ipakitaAngNataposMoKung")}
               variant="secondary"
               onPress={takePhoto}
             />
           )}
           {photoError ? <Text style={styles.error}>{photoError}</Text> : null}
           <PrimaryButton
-            label={photoUri ? "Tapos na, kasama ang litrato" : "Tapos na"}
+            label={photoUri ? t("today.taposNaKasamaAngLitrato") : t("today.taposNa")}
             loading={isCompleting}
             onPress={() => onComplete(photoUri)}
           />
@@ -157,7 +159,7 @@ export function ActiveFocusCard({
       {(task.status === "todo" || task.status === "in_progress") &&
         (askingWhy ? (
           <View style={styles.ask}>
-            <Text style={styles.askTitle}>Bakit hindi ngayon?</Text>
+            <Text style={styles.askTitle}>{t("today.bakitHindiNgayon")}</Text>
             <View style={styles.reasons}>
               {CANT_NOW_REASONS.map((r) => {
                 const selected = picked === r && !typed.trim();
@@ -173,21 +175,21 @@ export function ActiveFocusCard({
                     style={[styles.reason, selected && styles.reasonSelected]}
                   >
                     <Text style={[styles.reasonText, selected && styles.reasonTextSelected]}>
-                      {r}
+                      {t(r)}
                     </Text>
                   </Pressable>
                 );
               })}
             </View>
             <TextField
-              label="O isulat dito"
+              label={t("today.oIsulatDito")}
               value={typed}
               onChangeText={setTyped}
-              placeholder="Hal. Wala pang sabon panlaba"
+              placeholder={t("today.halWalaPangSabonPanlaba")}
               maxLength={200}
             />
             <PrimaryButton
-              label="Ipaalam sa manager"
+              label={t("today.ipaalamSaManager")}
               loading={isHolding}
               disabled={!reason}
               onPress={() => {
@@ -195,7 +197,7 @@ export function ActiveFocusCard({
                 closeAsk();
               }}
             />
-            <PrimaryButton label="Huwag na" variant="secondary" onPress={closeAsk} />
+            <PrimaryButton label={t("today.huwagNa")} variant="secondary" onPress={closeAsk} />
           </View>
         ) : (
           !editing && (
@@ -204,7 +206,7 @@ export function ActiveFocusCard({
               accessibilityRole="button"
               style={styles.cantNow}
             >
-              <Text style={styles.cantNowText}>Hindi ko magagawa ngayon</Text>
+              <Text style={styles.cantNowText}>{t("today.hindiKoMagagawaNgayon")}</Text>
             </Pressable>
           )
         ))}
@@ -232,7 +234,7 @@ export function ActiveFocusCard({
             accessibilityRole="button"
             style={styles.cantNow}
           >
-            <Text style={styles.cantNowText}>Ayusin ang oras o note</Text>
+            <Text style={styles.cantNowText}>{t("today.ayusinAngOrasONote")}</Text>
           </Pressable>
         ))}
     </View>
@@ -255,7 +257,7 @@ const styles = StyleSheet.create({
   },
   title: {
     fontSize: 20,
-    fontWeight: "700",
+    fontFamily: fonts.displayBold,
     color: colors.ink,
   },
   from: {

@@ -1,4 +1,4 @@
-import { Alert, Pressable, StyleSheet, Text, View } from "react-native";
+import { Alert, Pressable, StyleSheet, View } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
 
 import { colors, fonts } from "@/lib/theme";
@@ -6,6 +6,8 @@ import { PrimaryButton } from "@/components/ui/primary-button";
 import type { GroceryItemRow, GroceryRun } from "@/services/api/grocery";
 
 import { runDay } from "./run-card";
+import { Text } from "@/components/ui/text";
+import { useT } from "@/lib/i18n/locale-context";
 
 /**
  * A pantry lead's run that isn't out yet: a draft she can send to a manager
@@ -29,11 +31,12 @@ export function LeadRunCard({
   onDelete: () => void;
   onBackToPool: (item: GroceryItemRow) => void;
 }) {
+  const t = useT();
   const pending = run.status === "pending";
   const confirmDelete = () =>
     Alert.alert(
-      `Burahin ang ${run.title}?`,
-      "Babalik sa Kailangan ang mga nakalista dito.",
+      t("pantry.burahinAng", { title: run.title }),
+      t("pantry.babalikSaKailanganAngMga"),
       [
         { text: "Kanselahin", style: "cancel" },
         { text: "Burahin", style: "destructive", onPress: onDelete },
@@ -52,7 +55,7 @@ export function LeadRunCard({
         </View>
         <View style={[styles.pill, pending && styles.pillPending]}>
           <Text style={[styles.pillText, pending && styles.pillTextPending]}>
-            {pending ? "Hinihintay ang manager" : "Draft"}
+            {pending ? t("pantry.hinihintayAngManager") : t("pantry.draft")}
           </Text>
         </View>
       </View>
@@ -67,37 +70,41 @@ export function LeadRunCard({
               {g.qty} {g.unit}
             </Text>
             <Pressable
+              accessibilityRole="button"
               onPress={() => onBackToPool(g)}
               hitSlop={8}
               disabled={busy}
-              accessibilityLabel={`Ibalik sa Kailangan ang ${g.name}`}
+              accessibilityLabel={t("pantry.ibalikSaKailanganAng", { name: g.name })}
               style={styles.iconButton}
             >
               <Ionicons name="arrow-undo-outline" size={18} color={colors.mutedInk} />
             </Pressable>
           </View>
         ))}
-        {items.length === 0 && <Text style={styles.sub}>Wala pang nakalista.</Text>}
+        {items.length === 0 && <Text style={styles.sub}>{t("pantry.walaPangNakalista")}</Text>}
       </View>
 
       {pending ? (
         <>
-          <Text style={styles.sub}>
-            Ang manager ang mag-a-approve at magbibigay ng pera para dito.
-          </Text>
-          <PrimaryButton label="Bawiin" variant="secondary" onPress={onWithdraw} loading={busy} />
+          <Text style={styles.sub}>{t("pantry.angManagerAngMagA")}</Text>
+          <PrimaryButton
+            label={t("pantry.bawiin")}
+            variant="secondary"
+            onPress={onWithdraw}
+            loading={busy}
+          />
         </>
       ) : (
         <View style={styles.actions}>
           <PrimaryButton
-            label="Burahin"
+            label={t("pantry.burahin")}
             variant="secondary"
             onPress={confirmDelete}
             disabled={busy}
             style={styles.action}
           />
           <PrimaryButton
-            label="Ipa-approve"
+            label={t("pantry.ipaApprove")}
             onPress={onSubmit}
             loading={busy}
             disabled={items.length === 0}
