@@ -1,10 +1,12 @@
 import { useState } from "react";
-import { Pressable, StyleSheet, Text, TextInput, View } from "react-native";
+import { Pressable, StyleSheet, View } from "react-native";
 
 import { colors } from "@/lib/theme";
 import { parseAmount } from "@/lib/money";
-import { CATEGORY_LABEL, CATEGORY_ORDER } from "@/lib/pantry";
+import { CATEGORY_KEY, CATEGORY_ORDER } from "@/lib/pantry";
 import type { PantryCategory } from "@/services/api/pantry";
+import { Text, TextInput } from "@/components/ui/text";
+import { useT } from "@/lib/i18n/locale-context";
 
 export interface ItemFormValues {
   name: string;
@@ -34,6 +36,7 @@ export function ItemForm({
   onSubmit: (values: ItemFormValues) => void;
   onCancel: () => void;
 }) {
+  const t = useT();
   const [name, setName] = useState(initial?.name ?? "");
   const [qty, setQty] = useState(initial ? String(initial.qty) : "1");
   const [unit, setUnit] = useState(initial?.unit ?? "pcs");
@@ -44,10 +47,10 @@ export function ItemForm({
   const submit = () => {
     const qtyN = parseAmount(qty);
     const parN = parseAmount(par);
-    if (!name.trim()) return setError("Lagyan ng pangalan.");
-    if (qtyN === null) return setError("Dami: numero lang, 0 pataas.");
-    if (!unit.trim()) return setError("Lagyan ng unit (hal. kg, pcs, pack).");
-    if (kind === "pantry" && parN === null) return setError("Laging may: numero lang, 0 pataas.");
+    if (!name.trim()) return setError(t("pantry.lagyanNgPangalan"));
+    if (qtyN === null) return setError(t("pantry.damiNumeroLang0Pataas"));
+    if (!unit.trim()) return setError(t("pantry.lagyanNgUnitHalKg"));
+    if (kind === "pantry" && parN === null) return setError(t("pantry.lagingMayNumeroLang0"));
     setError(null);
     onSubmit({
       name: name.trim(),
@@ -62,53 +65,55 @@ export function ItemForm({
       <TextInput
         value={name}
         onChangeText={setName}
-        placeholder={kind === "pantry" ? "Pangalan (hal. Bigas)" : "Bibilhin (hal. Kamatis)"}
+        placeholder={
+          kind === "pantry" ? t("pantry.pangalanHalBigas") : t("pantry.bibilhinHalKamatis")
+        }
         placeholderTextColor={colors.mutedInk}
         style={styles.input}
         autoFocus={!initial}
-        accessibilityLabel="Pangalan"
+        accessibilityLabel={t("pantry.pangalan")}
       />
       <View style={styles.row}>
         <View style={styles.cell}>
-          <Text style={styles.label}>{kind === "pantry" ? "Meron ngayon" : "Dami"}</Text>
+          <Text style={styles.label}>
+            {kind === "pantry" ? t("pantry.meronNgayon") : t("pantry.dami")}
+          </Text>
           <TextInput
             value={qty}
             onChangeText={setQty}
             keyboardType="decimal-pad"
             style={styles.input}
-            accessibilityLabel="Dami"
+            accessibilityLabel={t("pantry.dami")}
           />
         </View>
         <View style={styles.cell}>
-          <Text style={styles.label}>Unit</Text>
+          <Text style={styles.label}>{t("pantry.unit")}</Text>
           <TextInput
             value={unit}
             onChangeText={setUnit}
             autoCapitalize="none"
             style={styles.input}
-            accessibilityLabel="Unit"
+            accessibilityLabel={t("pantry.unit")}
           />
         </View>
         {kind === "pantry" && (
           <View style={styles.cell}>
-            <Text style={styles.label}>Laging may</Text>
+            <Text style={styles.label}>{t("pantry.lagingMay")}</Text>
             <TextInput
               value={par}
               onChangeText={setPar}
               keyboardType="decimal-pad"
               style={styles.input}
-              accessibilityLabel="Ilan ang dapat laging meron"
+              accessibilityLabel={t("pantry.ilanAngDapatLagingMeron")}
             />
           </View>
         )}
       </View>
       {kind === "pantry" && (
         <>
-          <Text style={styles.hint}>
-            Kapag ganito na lang o kulang pa, lalabas na &ldquo;Paubos&rdquo;.
-          </Text>
+          <Text style={styles.hint}>{t("pantry.kapagGanitoNaLangO")}</Text>
           <Text style={styles.label} nativeID="pantry-category-label">
-            Saang lalagyan
+            {t("pantry.saangLalagyan")}
           </Text>
           <View
             style={styles.categories}
@@ -117,6 +122,7 @@ export function ItemForm({
           >
             {CATEGORY_ORDER.map((c) => (
               <Pressable
+                hitSlop={4}
                 key={c}
                 onPress={() => setCategory(c)}
                 accessibilityRole="radio"
@@ -124,7 +130,7 @@ export function ItemForm({
                 style={[styles.chip, c === category && styles.chipOn]}
               >
                 <Text style={[styles.chipText, c === category && styles.chipTextOn]}>
-                  {CATEGORY_LABEL[c]}
+                  {t(CATEGORY_KEY[c])}
                 </Text>
               </Pressable>
             ))}
@@ -133,15 +139,23 @@ export function ItemForm({
       )}
       {error ? <Text style={styles.error}>{error}</Text> : null}
       <View style={styles.actions}>
-        <Pressable onPress={onCancel} disabled={saving} style={styles.secondary}>
-          <Text style={styles.secondaryText}>Kanselahin</Text>
+        <Pressable
+          accessibilityRole="button"
+          accessibilityState={{ disabled: saving }}
+          onPress={onCancel}
+          disabled={saving}
+          style={styles.secondary}
+        >
+          <Text style={styles.secondaryText}>{t("pantry.kanselahin")}</Text>
         </Pressable>
         <Pressable
+          accessibilityRole="button"
+          accessibilityState={{ disabled: saving, busy: saving }}
           onPress={submit}
           disabled={saving}
           style={[styles.primary, saving && styles.disabled]}
         >
-          <Text style={styles.primaryText}>{saving ? "Sandali…" : submitLabel}</Text>
+          <Text style={styles.primaryText}>{saving ? t("pantry.sandali") : submitLabel}</Text>
         </Pressable>
       </View>
     </View>

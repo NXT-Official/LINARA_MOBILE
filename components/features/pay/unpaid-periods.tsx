@@ -1,9 +1,11 @@
 import { useState } from "react";
-import { Pressable, StyleSheet, Text, View } from "react-native";
+import { Pressable, StyleSheet, View } from "react-native";
 
 import { colors, fonts } from "@/lib/theme";
 import { formatCutoffRange } from "@/lib/cutoff";
 import type { PayPeriod } from "@/services/api/pay-periods";
+import { Text } from "@/components/ui/text";
+import { useT } from "@/lib/i18n/locale-context";
 
 /**
  * Cutoffs that closed with no payment on record -- the same list the manager
@@ -14,6 +16,7 @@ import type { PayPeriod } from "@/services/api/pay-periods";
 const SHOWN = 3;
 
 export function UnpaidPeriods({ periods }: { periods: PayPeriod[] }) {
+  const t = useT();
   const [showAll, setShowAll] = useState(false);
   const unpaid = periods.filter((p) => !p.payslipId && !p.isCurrent);
   if (unpaid.length === 0) return null;
@@ -24,15 +27,12 @@ export function UnpaidPeriods({ periods }: { periods: PayPeriod[] }) {
 
   return (
     <View style={styles.card}>
-      <Text style={styles.title}>Walang naka-record na bayad · {unpaid.length} cutoff</Text>
-      <Text style={styles.sub}>
-        Tapos na ang mga cutoff na ito pero walang bayad sa record. Kung nabayaran ka na sa labas ng
-        Linara, hilingin sa employer mo na i-record ito para makumpirma mo.
-      </Text>
+      <Text style={styles.title}>{t("pay.unpaidTitle", { count: unpaid.length })}</Text>
+      <Text style={styles.sub}>{t("pay.taposNaAngMgaCutoff")}</Text>
       {shown.map((p) => (
         <Text key={p.fullStart} style={styles.period}>
           {formatCutoffRange(p.workedStart, p.workedEnd)}
-          {p.isFinal ? " · huling cutoff" : ""}
+          {p.isFinal ? t("pay.hulingCutoff") : ""}
         </Text>
       ))}
       {hidden > 0 ? (
@@ -41,7 +41,9 @@ export function UnpaidPeriods({ periods }: { periods: PayPeriod[] }) {
           onPress={() => setShowAll((v) => !v)}
           style={styles.toggle}
         >
-          <Text style={styles.toggleText}>{showAll ? "Itago" : `Ipakita ang ${hidden} pa`}</Text>
+          <Text style={styles.toggleText}>
+            {showAll ? t("pay.itago") : t("pay.ipakitaAngPa", { hidden })}
+          </Text>
         </Pressable>
       ) : null}
     </View>

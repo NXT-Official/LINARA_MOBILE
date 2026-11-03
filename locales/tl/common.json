@@ -1,0 +1,127 @@
+{
+  "language": {
+    "current": "Wika: {language}"
+  },
+  "tabs": {
+    "today": "Ngayon",
+    "week": "Linggo ko",
+    "pantry": "Pantry",
+    "pay": "Sahod ko",
+    "record": "Record ko"
+  },
+  "header": {
+    "pantry": "Pantry at palengke"
+  },
+  "common": {
+    "back": "Bumalik",
+    "sendToManager": "Ipadala sa manager",
+    "email": "Email",
+    "emailPlaceholder": "hal. rosa@gmail.com",
+    "password": "Password",
+    "haveAccount": "May account ka na? Mag-sign in",
+    "backToSignIn": "Bumalik sa sign in",
+    "tryAgain": "Subukan ulit",
+    "walaPangNapipili": "wala pang napipili",
+    "tapos": "Tapos",
+    "nagloLoad": "Naglo-load"
+  },
+  "startup": {
+    "title": "Medyo natatagalan",
+    "body": "Baka mahina ang internet. Subukan ulit, o mag-sign out at mag-sign in muli."
+  },
+  "signOut": {
+    "button": "Mag-sign out",
+    "confirm": "Sigurado ka? Kailangan mo ang email at password mo para makabalik.",
+    "cancel": "Huwag na",
+    "failed": "Hindi nakapag-sign out."
+  },
+  "plan": {
+    "tabClosed": "Hindi bukas sa household mo ngayon."
+  },
+  "manager": {
+    "canTReachYourDashboard": "Can't reach your dashboard",
+    "checkYourInternetConnectionThen": "Check your internet connection, then try again. Your household's data is safe.",
+    "tryAgain": "Try again",
+    "signOut": "Sign out",
+    "tingnanAngEmailMo": "Tingnan ang email mo",
+    "nagpadalaKamiNgConfirmationLink": "Nagpadala kami ng confirmation link. Buksan iyon, tapos mag-sign in dito gamit ang email at password mo."
+  },
+  "leaveKind": {
+    "sil": "SIL",
+    "inKindShort": "day off in kind",
+    "unpaidShort": "walang bayad",
+    "extraPaidShort": "bayad na day off",
+    "silHint": "May bayad. Bawas sa SIL mo ngayong taon ng serbisyo.",
+    "inKind": "Day off mula sa rest owed",
+    "inKindHint": "Bayad sa oras: galing sa rest owed mo.",
+    "unpaid": "Walang bayad",
+    "unpaidHint": "Ibabawas sa sahod ng cutoff na iyon.",
+    "extraPaid": "Dagdag na bayad na day off"
+  },
+  "request": {
+    "pending": "Hinihintay",
+    "approved": "Aprubado",
+    "declined": "Hindi pumayag",
+    "cancelled": "Kanselado"
+  },
+  "task": {
+    "done": "Tapos na",
+    "doing": "Ginagawa",
+    "onHold": "Naka-hold",
+    "toDo": "Gagawin",
+    "cancelled": "Kinansela"
+  },
+  "requestError": {
+    "offline": "Walang internet, kaya hindi pa ito naipadala. Subukan ulit kapag may signal na.",
+    "notSent": "Hindi naipadala. Subukan ulit mamaya.",
+    "notEnoughRestOwed": "Kulang ang rest owed mo para sa mga araw na ito. Pumili ng SIL o Walang bayad, o bawasan ang araw.",
+    "notEnoughSil": "Kulang na ang SIL mo para sa mga araw na ito.",
+    "silNotYet": "Wala ka pang SIL. Magsisimula ito pagkatapos ng isang taon ng serbisyo.",
+    "newServiceYear": "May bagong taon ng serbisyo sa gitna nito. Hatiin sa dalawang request.",
+    "datePassed": "Lumipas na ang petsang iyon. Pumili ng ibang araw.",
+    "overlaps": "May leave ka na sa mga araw na iyon.",
+    "restOffThatDay": "May rest off ka na sa araw na iyon. Kanselahin muna iyon.",
+    "max90": "Hanggang 90 araw lang ang isang request.",
+    "allRestDays": "Rest day mo lahat ng araw na iyon.",
+    "lastBeforeFirst": "Dapat sa unang araw o pagkatapos nito ang huling araw.",
+    "noShiftHours": "Hindi pa naka-set ang oras ng shift mo, kaya hindi mabilang ang rest owed. Sabihan ang manager mo.",
+    "alreadyStarted": "Nagsimula na ang leave na ito, kaya hindi na makakansela.",
+    "onPayslip": "Nasa payslip na ang leave na ito, kaya hindi na makakansela.",
+    "alreadyDecided": "Napagpasyahan na ang request na ito."
+  },
+  "serviceError": {
+    "offline": "Walang internet. Kumonekta muna, tapos subukan ulit.",
+    "unreachable": "Hindi maabot ang Linara ngayon. Subukan ulit mamaya.",
+    "wrongCredentials": "Mali ang email o password. Subukan ulit, po.",
+    "emailNotConfirmed": "Hindi pa na-confirm ang email mo. Buksan muna ang link sa inbox mo.",
+    "cantCheckAccount": "Hindi ma-check ang account mo ngayon. Tingnan ang internet, tapos subukan ulit.",
+    "setupUnfinished": "Hindi pa tapos ang setup ng account na ito. Employer: mag-log in sa {site} para tapusin ang household setup. Kasambahay: gamitin ang invite code mo sa \"Wala pang account? Gumawa ng account\" ➔ \"Kasambahay ako\".",
+    "linkJustSent": "Kakapadala lang namin ng link. Maghintay ng isang minuto bago humingi ulit.",
+    "unsyncedSignOut": "May {count} pang hindi na-sync. Kumonekta muna sa internet bago mag-sign out.",
+    "joinFailed": "Hindi nakasali. Subukan ulit.",
+    "stillEmployed": "May household ka pa ngayon. Isa lang ang pwedeng aktibo sa isang panahon.",
+    "codeUsed": "Hindi na magagamit ang code na ito. Humingi ng bago sa employer mo.",
+    "runNotCreated": "Hindi nagawa ang run.",
+    "itemsNotMoved": "Hindi nailagay sa run ang mga bibilhin. Subukan ulit.",
+    "itemsTaken": "Nabili na o nasa ibang run na ang mga pinili mo. Pumili ulit.",
+    "receiptNotSaved": "Hindi na-save ang resibo.",
+    "confirmEmailSent": "Nagpadala kami ng confirmation link sa {email}. Buksan ito, tapos bumalik dito at pindutin ulit ang button para matapos.",
+    "emailTaken": "May account na ang email na ito. Gamitin ang password mo noon, o mag-sign in at i-enter ang code sa My Record.",
+    "requestNotSent": "Hindi naipadala ang request.",
+    "lastDayFuture": "Ngayon o sa susunod na araw dapat ang huling araw mo.",
+    "mobileNumber": "Ilagay ang 11-digit na number, nagsisimula sa 09.",
+    "shareUnavailable": "Hindi available ang pag-share sa phone na ito.",
+    "shareTitle": "I-save o ipadala ang record mo"
+  },
+  "payMethod": {
+    "cash": "Cash",
+    "bank": "Bank transfer",
+    "other": "Iba pa"
+  },
+  "notifications": {
+    "channel": "Mga utos at pagbabago sa schedule"
+  },
+  "tabLock": {
+    "noHousehold": "bukas lang kapag may household ka"
+  }
+}

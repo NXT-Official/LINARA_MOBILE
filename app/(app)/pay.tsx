@@ -1,9 +1,10 @@
 import { useRef } from "react";
-import { ActivityIndicator, ScrollView, StyleSheet, Text, View } from "react-native";
+import { ScrollView, StyleSheet } from "react-native";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 
 import { useT } from "@/lib/i18n/locale-context";
 import { KeyboardScrollView } from "@/components/ui/keyboard-screen";
+import { PAY_HR_ENABLED } from "@/lib/pay-hr";
 import { colors, fonts } from "@/lib/theme";
 import { getHouseholdCutoff } from "@/services/api/cutoff";
 import { getMyHelperProfile } from "@/services/api/helper-profile";
@@ -38,6 +39,10 @@ import { PayslipHistory } from "@/components/features/pay/payslip-history";
 import { RestOwedCounter } from "@/components/features/pay/rest-owed-counter";
 import { ValeRequestForm } from "@/components/features/pay/vale-request-form";
 import { SignOutButton } from "@/components/features/account/sign-out-button";
+import { Text } from "@/components/ui/text";
+import { Skeleton } from "@/components/ui/skeleton";
+import { LoadError } from "@/components/ui/load-error";
+import { usePullRefresh } from "@/hooks/use-pull-refresh";
 
 /**
  * My Pay tab (roadmap Story 11). Digital payslip, vale request form, and
@@ -47,6 +52,7 @@ import { SignOutButton } from "@/components/features/account/sign-out-button";
 export default function PayScreen() {
   const queryClient = useQueryClient();
   const scrollRef = useRef<ScrollView>(null);
+  const pull = usePullRefresh();
   const t = useT();
 
   const profileQuery = useQuery({
@@ -213,42 +219,49 @@ export default function PayScreen() {
       style={styles.screen}
       contentContainerStyle={styles.content}
       keyboardShouldPersistTaps="handled"
+      refreshControl={pull.control}
     >
       <Text style={styles.header}>{t("tabs.pay")}</Text>
 
       {profileQuery.isLoading ? (
-        <View style={styles.loading}>
-          <ActivityIndicator color={colors.pineTeal} />
-        </View>
+        <Skeleton header={false} />
       ) : profileQuery.isError || !profileQuery.data ? (
-        <Text style={styles.errorText}>Hindi ma-load ang iyong sahod. Subukan ulit mamaya.</Text>
+        <LoadError
+          message={t("pay.hindiMaLoadAngIyong")}
+          onRetry={() => void profileQuery.refetch()}
+          retrying={profileQuery.isFetching}
+        />
       ) : (
         <>
-          <PaymentConfirmations />
+          {/* Where the household sends her pay. Not part of pay & HR: that
+              switch is about Linara's own staff (lib/pay-hr.ts). */}
           <PayoutAccountCard defaultName={profileQuery.data.name} />
-          <DigitalPayslip
-            monthlyRate={currentPeriod?.monthlyRate ?? profileQuery.data.monthlyRate}
-            paydayInterval={profileQuery.data.paydayInterval}
-            approvedValeTotal={approvedValeTotal}
-            cutoffStart={currentPeriod?.workedStart ?? cutoffQuery.data?.cutoffStart}
-            cutoffEnd={cutoffQuery.data?.cutoffEnd}
-            workedShare={workedShare}
-            unpaidLeave={unpaidLeaveQuery.data}
-            paid={(payslipsQuery.data ?? []).some(
-              (p) =>
-                p.kind === "regular" &&
-                p.payoutStatus === "succeeded" &&
-                p.cutoffEnd === cutoffQuery.data?.cutoffEnd,
-            )}
-          />
-          <UnpaidPeriods periods={periodsQuery.data ?? []} />
+          {PAY_HR_ENABLED && (
+            <>
+              <PaymentConfirmations />
+              <DigitalPayslip
+                monthlyRate={currentPeriod?.monthlyRate ?? profileQuery.data.monthlyRate}
+                paydayInterval={profileQuery.data.paydayInterval}
+                approvedValeTotal={approvedValeTotal}
+                cutoffStart={currentPeriod?.workedStart ?? cutoffQuery.data?.cutoffStart}
+                cutoffEnd={cutoffQuery.data?.cutoffEnd}
+                workedShare={workedShare}
+                unpaidLeave={unpaidLeaveQuery.data}
+                paid={(payslipsQuery.data ?? []).some(
+                  (p) =>
+                    p.kind === "regular" &&
+                    p.payoutStatus === "succeeded" &&
+                    p.cutoffEnd === cutoffQuery.data?.cutoffEnd,
+                )}
+              />
+              <UnpaidPeriods periods={periodsQuery.data ?? []} />
 
-          {!payslipsQuery.isLoading && <PayslipHistory payslips={payslipsQuery.data ?? []} />}
+              {!payslipsQuery.isLoading && <PayslipHistory payslips={payslipsQuery.data ?? []} />}
+            </>
+          )}
 
           {ledgerQuery.isLoading ? (
-            <View style={styles.loading}>
-              <ActivityIndicator color={colors.pineTeal} />
-            </View>
+            <Skeleton header={false} lines={2} />
           ) : (
             // The REDEEMABLE balance (accrued minus already-approved rest off),
             // not the raw accrual -- same number the manager's dashboard shows
@@ -293,10 +306,8 @@ export default function PayScreen() {
             />
           )}
 
-          {valesQuery.isLoading ? (
-            <View style={styles.loading}>
-              <ActivityIndicator color={colors.pineTeal} />
-            </View>
+          {!PAY_HR_ENABLED ? null : valesQuery.isLoading ? (
+            <Skeleton header={false} lines={2} />
           ) : (
             <ValeRequestForm
               vales={vales}
@@ -325,13 +336,5 @@ const styles = StyleSheet.create({
     fontFamily: fonts.displayBold,
     fontSize: 22,
     color: colors.ink,
-  },
-  loading: {
-    paddingVertical: 24,
-    alignItems: "center",
-  },
-  errorText: {
-    fontSize: 13,
-    color: colors.terracottaGold,
   },
 });

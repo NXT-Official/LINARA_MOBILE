@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { StyleSheet, Text, TextInput, View } from "react-native";
+import { StyleSheet, View } from "react-native";
 
 import { colors, fonts } from "@/lib/theme";
 import { parseAmount } from "@/lib/money";
@@ -9,10 +9,13 @@ import type { GroceryItemRow, GroceryRun } from "@/services/api/grocery";
 
 import { BudgetBar } from "./budget-bar";
 import { PalengkeChecklist } from "./palengke-checklist";
+import { Text, TextInput } from "@/components/ui/text";
+import { useT } from "@/lib/i18n/locale-context";
+import { intlLocale } from "@/lib/i18n/instance";
 
 export const runDay = (iso: string) => {
   const [y, m, d] = iso.split("-").map(Number);
-  return new Date(y, m - 1, d).toLocaleDateString("fil-PH", {
+  return new Date(y, m - 1, d).toLocaleDateString(intlLocale(), {
     weekday: "short",
     month: "short",
     day: "numeric",
@@ -47,6 +50,7 @@ export function RunCard({
   closing: boolean;
   onClose: (change: number | null) => Promise<boolean>;
 }) {
+  const t = useT();
   const [finishing, setFinishing] = useState(false);
   const spent = items.reduce((s, g) => s + (g.bought ? (g.actualCost ?? 0) : 0), 0);
   const expected = run.cashGiven === null ? null : Math.max(0, run.cashGiven - spent);
@@ -59,16 +63,14 @@ export function RunCard({
   const bought = items.length - unbought;
 
   const finish = async () => {
-    const t = change.trim();
-    const n = t === "" ? null : parseAmount(t);
-    if (t !== "" && n === null) {
-      setChangeError("Ilagay ang sukli bilang halaga, o iwanang blangko.");
+    const typedChange = change.trim();
+    const n = typedChange === "" ? null : parseAmount(typedChange);
+    if (typedChange !== "" && n === null) {
+      setChangeError(t("pantry.ilagayAngSukliBilangHalaga"));
       return;
     }
     if (n !== null && run.cashGiven !== null && n > run.cashGiven) {
-      setChangeError(
-        `Hindi puwedeng mas malaki ang sukli sa perang ibinigay (${formatPeso(run.cashGiven)}).`,
-      );
+      setChangeError(t("pantry.hindiPuwedengMasMalakiAng", { v1: formatPeso(run.cashGiven) }));
       return;
     }
     setChangeError(null);
@@ -83,7 +85,7 @@ export function RunCard({
           {[
             run.shopOn && runDay(run.shopOn),
             run.cashGiven !== null && `Pera: ${formatPeso(run.cashGiven)}`,
-            `${bought} sa ${items.length} nabili`,
+            t("pantry.saNabili", { bought, length: items.length }),
           ]
             .filter(Boolean)
             .join(" · ")}
@@ -95,7 +97,7 @@ export function RunCard({
 
       <PalengkeChecklist
         items={items}
-        emptyText="Wala pang laman ang run na ito."
+        emptyText={t("pantry.walaPangLamanAngRun")}
         canEdit={false}
         savingId={null}
         onToggle={onToggle}
@@ -106,32 +108,39 @@ export function RunCard({
 
       {finishing ? (
         <View style={styles.finish}>
-          <Text style={styles.label}>Sukli na ibinalik</Text>
+          <Text style={styles.label}>{t("pantry.sukliNaIbinalik")}</Text>
           {expected !== null && (
             <Text style={styles.sub}>
-              {formatPeso(run.cashGiven ?? 0)} − {formatPeso(spent)} nagastos ={" "}
-              {formatPeso(expected)}
+              {t("pantry.changeMath", {
+                given: formatPeso(run.cashGiven ?? 0),
+                spent: formatPeso(spent),
+                expected: formatPeso(expected),
+              })}
             </Text>
           )}
           <View style={styles.changeRow}>
-            <Text style={styles.peso}>₱</Text>
+            <Text style={styles.peso}>{t("pantry.text")}</Text>
             <TextInput
               value={change}
               onChangeText={setTyped}
               // Typing replaces the suggested amount instead of adding to it.
               selectTextOnFocus
               keyboardType="decimal-pad"
-              accessibilityLabel="Sukli na ibinalik"
+              accessibilityLabel={t("pantry.sukliNaIbinalik")}
               style={styles.changeInput}
             />
           </View>
           {changeError ? <Text style={styles.error}>{changeError}</Text> : null}
           {unbought > 0 && (
-            <Text style={styles.sub}>Ibabalik sa Kailangan ang {unbought} na hindi nabili.</Text>
+            <Text style={styles.sub}>{t("pantry.returnUnbought", { count: unbought })}</Text>
           )}
-          <PrimaryButton label="Isara ang run" onPress={() => void finish()} loading={closing} />
           <PrimaryButton
-            label="Hindi pa"
+            label={t("pantry.isaraAngRun")}
+            onPress={() => void finish()}
+            loading={closing}
+          />
+          <PrimaryButton
+            label={t("pantry.hindiPa")}
             variant="secondary"
             onPress={() => setFinishing(false)}
             disabled={closing}
@@ -140,14 +149,14 @@ export function RunCard({
       ) : (
         <View style={styles.actions}>
           <PrimaryButton
-            label={snapped ? "Kunan ulit ang resibo" : "Kunan ang resibo"}
+            label={snapped ? t("pantry.kunanUlitAngResibo") : t("pantry.kunanAngResibo")}
             variant="secondary"
             onPress={onSnap}
             loading={snapping}
             style={styles.action}
           />
           <PrimaryButton
-            label="Tapos na"
+            label={t("pantry.taposNa")}
             onPress={() => {
               setTyped(null);
               setChangeError(null);
@@ -199,6 +208,7 @@ const styles = StyleSheet.create({
     gap: 6,
   },
   peso: {
+    fontFamily: fonts.displayBold,
     fontSize: 18,
     color: colors.mutedInk,
   },

@@ -1,10 +1,12 @@
-import { StyleSheet, Text, View } from "react-native";
+import { StyleSheet, View } from "react-native";
 
 import { colors, fonts } from "@/lib/theme";
 import { formatPeso } from "@/lib/format";
 import { formatCutoffRange } from "@/lib/cutoff";
 import { forWorkedShare, netPayForCutoff, perCutoff } from "@/lib/net-pay";
 import { computeStatutorySplit, LegalContributionSplit } from "./legal-contribution-split";
+import { Text } from "@/components/ui/text";
+import { useT } from "@/lib/i18n/locale-context";
 
 /**
  * Digital payslip for the *current, not-yet-paid-out* cutoff (roadmap
@@ -46,6 +48,7 @@ export function DigitalPayslip({
    * (../LINARA/KNOWN_GAPS.md O55). Its exact figures are in PayslipHistory. */
   paid?: boolean;
 }) {
+  const t = useT();
   // The arithmetic lives in lib/net-pay.ts so it can be unit-tested without
   // rendering React Native, and so the rule this app displays is stated in one
   // place -- see that file, and ../LINARA/KNOWN_GAPS.md C41 for why "the three
@@ -65,7 +68,7 @@ export function DigitalPayslip({
   );
 
   const intervalLabel =
-    paydayInterval === "semi_monthly" ? "This cutoff (half-month)" : "This cutoff (monthly)";
+    paydayInterval === "semi_monthly" ? t("pay.thisCutoffHalfMonth") : t("pay.thisCutoffMonthly");
 
   return (
     <View style={styles.card}>
@@ -74,30 +77,26 @@ export function DigitalPayslip({
       </Text>
       <Text style={styles.netPay}>{formatPeso(netEstimate)}</Text>
       <Text style={styles.netPayHint}>
-        {paid
-          ? "Nabayaran na. Nasa Mga payslip sa ibaba ang eksaktong natanggap mo."
-          : "Tantiyang matatanggap mo"}
+        {paid ? t("pay.nabayaranNaNasaMgaPayslip") : t("pay.tantiyangMatatanggapMo")}
       </Text>
 
       <View style={styles.divider} />
 
       <View style={styles.lineRow}>
-        <Text style={styles.lineLabel}>Basic na sahod</Text>
+        <Text style={styles.lineLabel}>{t("pay.basicNaSahod")}</Text>
         <Text style={styles.lineValue}>{formatPeso(basePay)}</Text>
       </View>
       <View style={styles.lineRow}>
         {/* Ngayong cutoff: the table below is per month, and both are her
             share, so each says its period (QA LMM-A3). */}
-        <Text style={styles.lineLabel}>
-          Bahagi mo sa SSS / PhilHealth / Pag-IBIG (ngayong cutoff)
-        </Text>
+        <Text style={styles.lineLabel}>{t("pay.bahagiMoSaSssPhilhealth")}</Text>
         <Text style={[styles.lineValue, styles.deduction]}>
           − {formatPeso(employeeShareThisCutoff)}
         </Text>
       </View>
       {approvedValeTotal > 0 ? (
         <View style={styles.lineRow}>
-          <Text style={styles.lineLabel}>Bawas na vale</Text>
+          <Text style={styles.lineLabel}>{t("pay.bawasNaVale")}</Text>
           <Text style={[styles.lineValue, styles.deduction]}>
             − {formatPeso(approvedValeTotal)}
           </Text>
@@ -105,7 +104,12 @@ export function DigitalPayslip({
       ) : null}
       {leaveDeduction > 0 ? (
         <View style={styles.lineRow}>
-          <Text style={styles.lineLabel}>Leave na walang bayad ({unpaidLeave?.days} araw)</Text>
+          <Text style={styles.lineLabel}>
+            {t("pay.unpaidLeaveLine", {
+              days: unpaidLeave?.days ?? 0,
+              count: unpaidLeave?.days ?? 0,
+            })}
+          </Text>
           <Text style={[styles.lineValue, styles.deduction]}>− {formatPeso(leaveDeduction)}</Text>
         </View>
       ) : null}
@@ -127,7 +131,7 @@ const styles = StyleSheet.create({
   eyebrow: {
     fontSize: 13,
     fontWeight: "700",
-    color: colors.terracottaGold,
+    color: colors.terracottaInk,
   },
   netPay: {
     fontFamily: fonts.display,

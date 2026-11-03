@@ -1,13 +1,5 @@
 import { useRef, useState } from "react";
-import {
-  ActivityIndicator,
-  Pressable,
-  ScrollView,
-  Share,
-  StyleSheet,
-  Text,
-  View,
-} from "react-native";
+import { Pressable, ScrollView, Share, StyleSheet, View } from "react-native";
 import { router } from "expo-router";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 
@@ -24,7 +16,7 @@ import {
 } from "@/lib/record";
 import { useSession } from "@/lib/session-context";
 import { toIsoDate } from "@/lib/datetime-fields";
-import { DAY_NAMES } from "@/lib/week";
+import { dayNames } from "@/lib/week";
 import { getMyEmployments, type Employment } from "@/services/api/employment";
 import { getMyLeave } from "@/services/api/leave";
 import { giveNotice, withdrawNotice } from "@/services/api/pay-periods";
@@ -45,14 +37,19 @@ import { PaymentConfirmations } from "@/components/features/pay/payment-confirma
 import { DateTimeField } from "@/components/ui/date-time-field";
 import { PrimaryButton } from "@/components/ui/primary-button";
 import { TextField } from "@/components/ui/text-field";
+import { Text } from "@/components/ui/text";
+import { Skeleton } from "@/components/ui/skeleton";
+import { LoadError } from "@/components/ui/load-error";
+import { usePullRefresh } from "@/hooks/use-pull-refresh";
+import type { MessageKey } from "@/lib/i18n/instance";
 
-const FLAG_FIELDS: { value: TermsFlagField; label: string }[] = [
-  { value: "wage", label: "Sahod" },
-  { value: "shift", label: "Oras ng shift" },
-  { value: "restDay", label: "Rest day" },
-  { value: "station", label: "Trabaho" },
-  { value: "employment", label: "Stay-in / stay-out" },
-  { value: "other", label: "Iba pa" },
+const FLAG_FIELDS: { value: TermsFlagField; label: MessageKey }[] = [
+  { value: "wage", label: "record.flagWage" },
+  { value: "shift", label: "record.flagShift" },
+  { value: "restDay", label: "record.flagRestDay" },
+  { value: "station", label: "record.flagStation" },
+  { value: "employment", label: "record.flagEmployment" },
+  { value: "other", label: "record.flagOther" },
 ];
 
 const INVITE_CODE_LENGTH = 6;
@@ -81,6 +78,7 @@ const longDate = (value: string) => formatDateFil(asDay(value));
 export default function RecordScreen() {
   const { session } = useSession();
   const scrollRef = useRef<ScrollView>(null);
+  const pull = usePullRefresh();
   const t = useT();
   const employmentsQuery = useQuery({
     queryKey: ["my-employments", session?.user.id],
@@ -103,27 +101,29 @@ export default function RecordScreen() {
       style={styles.screen}
       contentContainerStyle={styles.content}
       keyboardShouldPersistTaps="handled"
+      refreshControl={pull.control}
     >
       <Text style={styles.header}>{t("tabs.record")}</Text>
       <Text style={styles.sub}>
-        {current
-          ? "Ang trabaho at sahod mo, sa iisang lugar."
-          : "Nandito pa rin ang record mo, kahit wala kang household ngayon."}
+        {current ? t("record.angTrabahoAtSahodMo") : t("record.nanditoPaRinAngRecord")}
       </Text>
 
       {employmentsQuery.isLoading ? (
-        <View style={styles.loading}>
-          <ActivityIndicator color={colors.pineTeal} />
-        </View>
+        <Skeleton header={false} lines={4} />
       ) : employmentsQuery.isError && !employmentsQuery.data ? (
-        <Text style={styles.errorText}>Hindi ma-load ang record mo. Subukan ulit mamaya.</Text>
+        <LoadError
+          message={t("record.hindiMaLoadAngRecord")}
+          onRetry={() => void employmentsQuery.refetch()}
+          retrying={employmentsQuery.isFetching}
+        />
       ) : (
         <>
           {/* A failed refresh over the copy kept on the phone (lib/query-persist.ts). */}
           {employmentsQuery.isError ? (
             <Text style={styles.savedNote}>
-              Walang internet. Ito ang record mo noong{" "}
-              {shortDate(new Date(employmentsQuery.dataUpdatedAt))}.
+              {t("record.offlineSaved", {
+                date: shortDate(new Date(employmentsQuery.dataUpdatedAt)),
+              })}
             </Text>
           ) : null}
           <PaymentConfirmations />
@@ -147,13 +147,14 @@ export default function RecordScreen() {
 
 /** No current household: how she gets her next one. */
 function JoinHouseholdCard() {
+  const t = useT();
   const [code, setCode] = useState("");
   const [error, setError] = useState<string | null>(null);
 
   const submit = () => {
     const trimmed = code.trim().toUpperCase();
     if (trimmed.length !== INVITE_CODE_LENGTH) {
-      setError(`Kailangan ${INVITE_CODE_LENGTH} characters ang invite code, po.`);
+      setError(t("record.kailanganCharactersAngInviteCode", { INVITE_CODE_LENGTH }));
       return;
     }
     setError(null);
@@ -162,33 +163,31 @@ function JoinHouseholdCard() {
 
   return (
     <View style={styles.card}>
-      <Text style={styles.cardTitle}>Wala kang household ngayon</Text>
-      <Text style={styles.cardSub}>
-        Kapag may bago kang employer, i-enter ang invite code na ibibigay nila. Makikita mo muna ang
-        terms bago ka sumali. Bubukas ulit ang Ngayon, Linggo ko, Pantry at Sahod ko pagkasali mo.
-      </Text>
+      <Text style={styles.cardTitle}>{t("record.walaKangHouseholdNgayon")}</Text>
+      <Text style={styles.cardSub}>{t("record.kapagMayBagoKangEmployer")}</Text>
       <TextField
-        label="Invite code"
+        label={t("record.inviteCode")}
         value={code}
         onChangeText={(text) => {
           setCode(text.toUpperCase());
           setError(null);
         }}
         error={error}
-        hint="6 na letra at numero"
+        hint={t("record.6NaLetraAtNumero")}
         autoCapitalize="characters"
         autoCorrect={false}
         maxLength={INVITE_CODE_LENGTH}
         returnKeyType="go"
         onSubmitEditing={submit}
       />
-      <PrimaryButton label="Tingnan ang terms" onPress={submit} disabled={!code.trim()} />
+      <PrimaryButton label={t("record.tingnanAngTerms")} onPress={submit} disabled={!code.trim()} />
     </View>
   );
 }
 
 /** Households she has left, each with the record they kept, as a PDF. */
 function PastEmployments({ past }: { past: Employment[] }) {
+  const t = useT();
   const [busyId, setBusyId] = useState<string | null>(null);
   const [failedId, setFailedId] = useState<string | null>(null);
 
@@ -206,26 +205,24 @@ function PastEmployments({ past }: { past: Employment[] }) {
 
   return (
     <View style={styles.card}>
-      <Text style={styles.cardTitle}>Mga dating trabaho</Text>
-      <Text style={styles.cardSub}>
-        Ang record na itinago ng bawat household. Hindi na ito nagbabago.
-      </Text>
+      <Text style={styles.cardTitle}>{t("record.mgaDatingTrabaho")}</Text>
+      <Text style={styles.cardSub}>{t("record.angRecordNaItinagoNg")}</Text>
       {past.map((e) => (
         <View key={e.helperId} style={styles.pastItem}>
-          <Text style={styles.pastTitle}>{e.householdName ?? "Household"}</Text>
+          <Text style={styles.pastTitle}>{e.householdName ?? t("record.household")}</Text>
           <Text style={styles.pastMeta}>
             {e.station} · {shortDate(asDay(e.startedAt))} –{" "}
             {e.endedOn ? shortDate(calendarDate(e.endedOn)) : "—"}
           </Text>
           <PrimaryButton
-            label="I-download ang record (PDF)"
+            label={t("record.iDownloadAngRecordPdf")}
             variant="secondary"
             loading={busyId === e.helperId}
             disabled={busyId !== null && busyId !== e.helperId}
             onPress={() => void download(e)}
           />
           {failedId === e.helperId ? (
-            <Text style={styles.error}>Hindi nagawa ang PDF. Subukan ulit.</Text>
+            <Text style={styles.error}>{t("record.hindiNagawaAngPdfSubukan")}</Text>
           ) : null}
         </View>
       ))}
@@ -242,6 +239,7 @@ const LEAVE_NAMES = {
 
 /** Her current household: terms on file (with the flag), work and pay, and sharing. */
 function CurrentRecord({ employment }: { employment: Employment }) {
+  const t = useT();
   const helperId = employment.helperId;
 
   const termsQuery = useQuery({
@@ -324,85 +322,87 @@ function CurrentRecord({ employment }: { employment: Employment }) {
   };
 
   if (loading) {
-    return (
-      <View style={styles.loading}>
-        <ActivityIndicator color={colors.pineTeal} />
-      </View>
-    );
+    return <Skeleton header={false} lines={4} />;
   }
   if (!terms) {
-    return <Text style={styles.errorText}>Hindi ma-load ang record mo. Subukan ulit mamaya.</Text>;
+    return (
+      <LoadError
+        message={t("record.hindiMaLoadAngRecord")}
+        onRetry={() => void termsQuery.refetch()}
+        retrying={termsQuery.isFetching}
+      />
+    );
   }
 
   return (
     <>
       <View style={styles.card}>
-        <Text style={styles.cardTitle}>Mga kondisyon na naka-file</Text>
-        <Text style={styles.cardSub}>
-          Ito ang record ng household tungkol sa trabaho mo. Parehong numero ang nakikita nila.
-        </Text>
-        <Row label="Trabaho" value={terms.station} />
+        <Text style={styles.cardTitle}>{t("record.mgaKondisyonNaNakaFile")}</Text>
+        <Text style={styles.cardSub}>{t("record.itoAngRecordNgHousehold")}</Text>
+        <Row label={t("record.trabaho")} value={terms.station} />
         {workplaces.length > 1 ? (
           <Row
-            label="Mga bahay"
+            label={t("record.mgaBahay")}
             value={workplaces
-              .map((w) => (w.isHome ? `${w.name} (dito ka naka-employ)` : w.name))
+              .map((w) => (w.isHome ? t("record.ditoKaNakaEmploy", { name: w.name }) : w.name))
               .join(", ")}
           />
         ) : null}
         {workplaces.some((w) => w.teamName) ? (
           <Row
-            label="Team"
+            label={t("record.team")}
             value={workplaces
               .filter((w) => w.teamName)
               .map((w) => (workplaces.length > 1 ? `${w.teamName} (${w.name})` : w.teamName))
               .join(", ")}
           />
         ) : terms.team ? (
-          <Row label="Team" value={terms.team} />
+          <Row label={t("record.team")} value={terms.team} />
         ) : null}
         {(coversQuery.data ?? []).length > 0 ? (
-          <Row label="Tumutulong din sa" value={(coversQuery.data ?? []).join(", ")} />
+          <Row label={t("record.tumutulongDinSa")} value={(coversQuery.data ?? []).join(", ")} />
         ) : null}
-        {terms.labels.length > 0 ? <Row label="Mga label" value={terms.labels.join(", ")} /> : null}
+        {terms.labels.length > 0 ? (
+          <Row label={t("record.mgaLabel")} value={terms.labels.join(", ")} />
+        ) : null}
         <Row
-          label="Tirahan"
+          label={t("record.tirahan")}
           value={
             terms.employment === "live-in"
               ? "Stay-in"
               : terms.employment === "live-out"
                 ? "Stay-out"
-                : "Hindi nakalagay"
+                : t("record.hindiNakalagay")
           }
         />
         <Row
-          label="Shift"
+          label={t("record.shift")}
           value={`${formatShiftTime(terms.shiftStart)} – ${formatShiftTime(terms.shiftEnd)}`}
         />
         {terms.breakStart && terms.breakEnd ? (
           <Row
-            label="Break"
+            label={t("record.break")}
             value={`${formatShiftTime(terms.breakStart)} – ${formatShiftTime(terms.breakEnd)}`}
           />
         ) : null}
-        <Row label="Rest day" value={DAY_NAMES[terms.weeklyRestDay] ?? "—"} />
-        <Row label="Sahod kada buwan" value={formatPeso(terms.monthlyRate)} />
+        <Row label={t("record.restDay")} value={dayNames()[terms.weeklyRestDay] ?? "—"} />
+        <Row label={t("record.sahodKadaBuwan")} value={formatPeso(terms.monthlyRate)} />
         <Row
-          label="Sweldo"
+          label={t("record.sweldo")}
           value={
             terms.paydayInterval === "semi_monthly"
-              ? "Dalawang beses kada buwan"
-              : "Isang beses kada buwan"
+              ? t("record.dalawangBesesKadaBuwan")
+              : t("record.isangBesesKadaBuwan")
           }
         />
 
         {flagMutation.isSuccess && !flagging ? (
-          <Text style={styles.sent}>Naipadala. Makikita ito ng manager sa Pass nila.</Text>
+          <Text style={styles.sent}>{t("record.naipadalaMakikitaItoNgManager")}</Text>
         ) : null}
 
         {flagging ? (
           <View style={styles.flagForm}>
-            <Text style={styles.flagTitle}>Alin ang mali?</Text>
+            <Text style={styles.flagTitle}>{t("record.alinAngMali")}</Text>
             <View style={styles.chips}>
               {FLAG_FIELDS.map((f) => {
                 const selected = f.value === field;
@@ -415,30 +415,30 @@ function CurrentRecord({ employment }: { employment: Employment }) {
                     style={[styles.chip, selected && styles.chipSelected]}
                   >
                     <Text style={[styles.chipText, selected && styles.chipTextSelected]}>
-                      {f.label}
+                      {t(f.label)}
                     </Text>
                   </Pressable>
                 );
               })}
             </View>
             <TextField
-              label="Ano ang tama? (kung meron)"
+              label={t("record.anoAngTamaKungMeron")}
               value={note}
               onChangeText={setNote}
-              placeholder="Hal. ₱9,000 ang napag-usapan"
+              placeholder={t("record.hal9000AngNapag")}
               maxLength={300}
               multiline
             />
             {flagMutation.isError ? (
-              <Text style={styles.error}>Hindi naipadala. Subukan ulit.</Text>
+              <Text style={styles.error}>{t("record.hindiNaipadalaSubukanUlit")}</Text>
             ) : null}
             <PrimaryButton
-              label="Ipadala sa manager"
+              label={t("record.ipadalaSaManager")}
               loading={flagMutation.isPending}
               onPress={() => flagMutation.mutate()}
             />
             <PrimaryButton
-              label="Huwag na"
+              label={t("record.huwagNa")}
               variant="secondary"
               onPress={() => setFlagging(false)}
             />
@@ -452,32 +452,38 @@ function CurrentRecord({ employment }: { employment: Employment }) {
             accessibilityRole="button"
             style={styles.link}
           >
-            <Text style={styles.linkText}>May mali? Sabihin sa manager</Text>
+            <Text style={styles.linkText}>{t("record.mayMaliSabihinSaManager")}</Text>
           </Pressable>
         )}
       </View>
 
       <View style={styles.card}>
-        <Text style={styles.cardTitle}>Trabaho at sahod</Text>
-        <Row label="Nasa record mula" value={longDate(terms.recordSince)} />
-        <Row label="Mga natapos na task" value={String(doneQuery.data ?? 0)} />
+        <Text style={styles.cardTitle}>{t("record.trabahoAtSahod")}</Text>
+        <Row label={t("record.nasaRecordMula")} value={longDate(terms.recordSince)} />
+        <Row label={t("record.mgaNataposNaTask")} value={String(doneQuery.data ?? 0)} />
         <Row
-          label="Sahod na natanggap"
-          value={`${pay.paidCount} payslip · ${formatPeso(pay.paidTotal)}`}
+          label={t("record.sahodNaNatanggap")}
+          value={t("record.payslip", {
+            paidCount: pay.paidCount,
+            count: pay.paidCount,
+            v2: formatPeso(pay.paidTotal),
+          })}
         />
-        {pay.lastPaidAt ? <Row label="Huling sahod" value={longDate(pay.lastPaidAt)} /> : null}
+        {pay.lastPaidAt ? (
+          <Row label={t("record.hulingSahod")} value={longDate(pay.lastPaidAt)} />
+        ) : null}
         <Row
-          label="Kinaltas para sa SSS, PhilHealth, Pag-IBIG"
+          label={t("record.kinaltasParaSaSssPhilhealth")}
           value={formatPeso(pay.deductedStatutory)}
         />
-        <Row label="Rest na nakuha" value={formatHoursMinutes(restTaken)} />
+        <Row label={t("record.restNaNakuha")} value={formatHoursMinutes(restTaken)} />
         {leaveByYear.length === 0 ? (
-          <Row label="Leave na nakuha" value="Wala pa" />
+          <Row label={t("record.leaveNaNakuha")} value="Wala pa" />
         ) : (
           leaveByYear.map((y) => (
             <Row
               key={y.year}
-              label={`Leave na nakuha (${y.year})`}
+              label={t("record.leaveNaNakuha2", { year: y.year })}
               value={leaveDaysLabel(y.days, LEAVE_NAMES, (n) => `${n} araw`)}
             />
           ))
@@ -485,19 +491,15 @@ function CurrentRecord({ employment }: { employment: Employment }) {
       </View>
 
       <PrimaryButton
-        label="I-download ang record ko (PDF)"
+        label={t("record.iDownloadAngRecordKo")}
         loading={pdfMutation.isPending}
         onPress={() => pdfMutation.mutate()}
       />
       {pdfMutation.isError ? (
-        <Text style={styles.error}>Hindi nagawa ang PDF. Subukan ulit.</Text>
+        <Text style={styles.error}>{t("record.hindiNagawaAngPdfSubukan")}</Text>
       ) : null}
-      <PrimaryButton label="Ibahagi bilang text" variant="secondary" onPress={share} />
-      <Text style={styles.footnote}>
-        Para sa loan, visa, o susunod na trabaho. Nasa phone mo ang PDF at kung saan mo ito i-save,
-        kahit umalis ka sa household na ito. Galing ang lahat ng ito sa record ng household sa
-        Linara.
-      </Text>
+      <PrimaryButton label={t("record.ibahagiBilangText")} variant="secondary" onPress={share} />
+      <Text style={styles.footnote}>{t("record.paraSaLoanVisaO")}</Text>
       <NoticeCard
         helperId={helperId}
         noticeLastDay={terms.noticeLastDay}
@@ -521,6 +523,7 @@ function NoticeCard({
   noticeLastDay: string | null;
   noticeNote: string | null;
 }) {
+  const t = useT();
   const queryClient = useQueryClient();
   const [open, setOpen] = useState(false);
   const [lastDay, setLastDay] = useState("");
@@ -543,19 +546,20 @@ function NoticeCard({
   if (noticeLastDay) {
     return (
       <View style={styles.card}>
-        <Text style={styles.cardTitle}>Nagbigay ka ng abiso</Text>
+        <Text style={styles.cardTitle}>{t("record.nagbigayKaNgAbiso")}</Text>
         <Text style={styles.cardSub}>
-          Huling araw mo: {longDate(noticeLastDay)}. Nakikita na ito ng manager mo. Sila ang
-          magtatapos ng employment, at doon aayusin ang huling sahod mo.
+          {t("record.noticeGiven", { date: longDate(noticeLastDay) })}
         </Text>
         {noticeNote ? <Text style={styles.cardSub}>“{noticeNote}”</Text> : null}
         <PrimaryButton
-          label="Bawiin ang abiso"
+          label={t("record.bawiinAngAbiso")}
           variant="secondary"
           loading={withdraw.isPending}
           onPress={() => withdraw.mutate()}
         />
-        {withdraw.isError ? <Text style={styles.error}>Hindi nabawi. Subukan ulit.</Text> : null}
+        {withdraw.isError ? (
+          <Text style={styles.error}>{t("record.hindiNabawiSubukanUlit")}</Text>
+        ) : null}
       </View>
     );
   }
@@ -563,7 +567,7 @@ function NoticeCard({
   if (!open) {
     return (
       <Pressable onPress={() => setOpen(true)} accessibilityRole="button" style={styles.link}>
-        <Text style={styles.linkText}>Aalis ka na ba? Magbigay ng abiso</Text>
+        <Text style={styles.linkText}>{t("record.aalisKaNaBaMagbigay")}</Text>
       </Pressable>
     );
   }
@@ -571,38 +575,39 @@ function NoticeCard({
   const today = toIsoDate(new Date());
   return (
     <View style={styles.card}>
-      <Text style={styles.cardTitle}>Magbigay ng abiso</Text>
-      <Text style={styles.cardSub}>
-        Sabihin sa household kung kailan ang huling araw mo. Mas mabuti kung may ilang araw pa
-        silang maghanda.
-      </Text>
+      <Text style={styles.cardTitle}>{t("record.magbigayNgAbiso")}</Text>
+      <Text style={styles.cardSub}>{t("record.sabihinSaHouseholdKungKailan")}</Text>
       <DateTimeField
-        label="Huling araw ng trabaho"
+        label={t("record.hulingArawNgTrabaho")}
         mode="date"
         value={lastDay}
         onChange={setLastDay}
         minimumIsoDate={today}
       />
       <TextField
-        label="Mensahe (kung meron)"
+        label={t("record.mensaheKungMeron")}
         value={note}
         onChangeText={setNote}
-        placeholder="Hal. Uuwi na ako sa probinsya"
+        placeholder={t("record.halUuwiNaAkoSa")}
         maxLength={300}
         multiline
       />
       {give.isError ? (
         <Text style={styles.error}>
-          {give.error instanceof Error ? give.error.message : "Hindi naipadala. Subukan ulit."}
+          {give.error instanceof Error ? give.error.message : t("record.hindiNaipadalaSubukanUlit")}
         </Text>
       ) : null}
       <PrimaryButton
-        label="Ipadala sa manager"
+        label={t("record.ipadalaSaManager")}
         loading={give.isPending}
         disabled={!lastDay}
         onPress={() => give.mutate()}
       />
-      <PrimaryButton label="Huwag na" variant="secondary" onPress={() => setOpen(false)} />
+      <PrimaryButton
+        label={t("record.huwagNa")}
+        variant="secondary"
+        onPress={() => setOpen(false)}
+      />
     </View>
   );
 }
@@ -622,8 +627,6 @@ const styles = StyleSheet.create({
   header: { fontFamily: fonts.displayBold, fontSize: 22, color: colors.ink },
   sub: { fontSize: 14, lineHeight: 20, color: colors.mutedInk },
   savedNote: { fontSize: 13, lineHeight: 18, color: colors.terracottaInk },
-  loading: { paddingVertical: 40, alignItems: "center" },
-  errorText: { fontSize: 14, color: colors.ink, textAlign: "center", paddingVertical: 24 },
   card: {
     borderRadius: 24,
     padding: 16,

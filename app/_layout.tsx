@@ -1,11 +1,18 @@
+// Hermes has no Intl.PluralRules; i18next needs it for plurals (lib/i18n/instance.ts).
+import "intl-pluralrules";
 import { useEffect } from "react";
 import { PersistQueryClientProvider } from "@tanstack/react-query-persist-client";
 import { Stack } from "expo-router";
 import { StatusBar } from "expo-status-bar";
 import * as SplashScreen from "expo-splash-screen";
 import { useFonts } from "expo-font";
-import { Fraunces_600SemiBold, Fraunces_700Bold } from "@expo-google-fonts/fraunces";
-import { NunitoSans_400Regular, NunitoSans_700Bold } from "@expo-google-fonts/nunito-sans";
+import { Fraunces_600SemiBold } from "@expo-google-fonts/fraunces";
+import { Literata_400Regular, Literata_600SemiBold } from "@expo-google-fonts/literata";
+import {
+  NunitoSans_400Regular,
+  NunitoSans_600SemiBold,
+  NunitoSans_700Bold,
+} from "@expo-google-fonts/nunito-sans";
 
 import { queryClient } from "@/lib/query-client";
 import { recordPersister, SAVED_RECORD_MAX_AGE, shouldSaveQuery } from "@/lib/query-persist";
@@ -34,15 +41,18 @@ function AppShell() {
  * Supabase session and the shared TanStack Query cache above every route,
  * then defers to file-based routing for the (auth)/(app) split.
  *
- * Also loads the brand's custom typography (roadmap Story 11 step 4;
+ * Also loads the brand's typography (roadmap Story 11 step 4, matched to
+ * the web in 2026-10: Literata headings, Nunito Sans body, Fraunces wordmark;
  * family names here must match lib/theme.ts's `fonts` tokens) before
  * revealing the app, so no screen ever flashes the system font first.
  */
 export default function RootLayout() {
   const [fontsLoaded] = useFonts({
     Fraunces_600SemiBold,
-    Fraunces_700Bold,
+    Literata_400Regular,
+    Literata_600SemiBold,
     NunitoSans_400Regular,
+    NunitoSans_600SemiBold,
     NunitoSans_700Bold,
   });
 

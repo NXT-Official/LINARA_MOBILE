@@ -1,11 +1,11 @@
 import { describe, expect, it } from "vitest";
 
-import { OFFLINE_SEND, requestErrorMessage } from "./request-error";
+import { offlineSendText, requestErrorMessage } from "./request-error";
 
 describe("requestErrorMessage", () => {
   it("offline says nothing was sent (QA LM-16)", () => {
-    expect(requestErrorMessage(null, true)).toBe(OFFLINE_SEND);
-    expect(requestErrorMessage("anything", true)).toBe(OFFLINE_SEND);
+    expect(requestErrorMessage(null, true)).toBe(offlineSendText());
+    expect(requestErrorMessage("anything", true)).toBe(offlineSendText());
   });
 
   it("a network failure reads as offline, never the raw error", () => {
@@ -15,7 +15,7 @@ describe("requestErrorMessage", () => {
       "Failed to fetch",
       "Request timed out",
     ]) {
-      expect(requestErrorMessage(raw, false)).toBe(OFFLINE_SEND);
+      expect(requestErrorMessage(raw, false)).toBe(offlineSendText());
     }
   });
 

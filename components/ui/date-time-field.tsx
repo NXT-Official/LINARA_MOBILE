@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { Platform, Pressable, StyleSheet, Text, View, type ViewStyle } from "react-native";
+import { Platform, Pressable, StyleSheet, View, type ViewStyle } from "react-native";
 import DateTimePicker, { type DateTimePickerEvent } from "@react-native-community/datetimepicker";
 
 import { colors } from "@/lib/theme";
@@ -11,6 +11,8 @@ import {
   toHm,
   toIsoDate,
 } from "@/lib/datetime-fields";
+import { Text } from "@/components/ui/text";
+import { useT } from "@/lib/i18n/locale-context";
 
 /**
  * A labeled field that opens the platform's own date or time picker, styled to
@@ -53,6 +55,7 @@ export function DateTimeField({
   placeholder?: string;
   containerStyle?: ViewStyle;
 }) {
+  const t = useT();
   const [open, setOpen] = useState(false);
 
   const parsed = mode === "date" ? parseIsoDate(value) : parseHm(value);
@@ -84,7 +87,7 @@ export function DateTimeField({
       <Pressable
         onPress={() => setOpen(true)}
         accessibilityRole="button"
-        accessibilityLabel={`${label}: ${value ? label_ : "wala pang napipili"}`}
+        accessibilityLabel={`${label}: ${value ? label_ : t("common.walaPangNapipili")}`}
         style={styles.field}
       >
         <Text style={[styles.valueText, !value && styles.placeholderText]}>{label_}</Text>
@@ -106,8 +109,13 @@ export function DateTimeField({
           {/* iOS keeps the wheel on screen, so it needs an explicit way out.
               Android's dialog supplies its own buttons. */}
           {Platform.OS === "ios" && (
-            <Pressable onPress={() => setOpen(false)} style={styles.done}>
-              <Text style={styles.doneText}>Tapos</Text>
+            <Pressable
+              accessibilityRole="button"
+              hitSlop={8}
+              onPress={() => setOpen(false)}
+              style={styles.done}
+            >
+              <Text style={styles.doneText}>{t("common.tapos")}</Text>
             </Pressable>
           )}
         </>

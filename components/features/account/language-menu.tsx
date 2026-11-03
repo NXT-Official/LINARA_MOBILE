@@ -1,10 +1,11 @@
 import { useState } from "react";
-import { Pressable, StyleSheet, Text, View } from "react-native";
+import { Pressable, StyleSheet, View } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
 
 import { colors } from "@/lib/theme";
 import { LOCALES, localeLabel } from "@/lib/i18n/locales";
 import { useLocale, useT } from "@/lib/i18n/locale-context";
+import { Text } from "@/components/ui/text";
 
 /**
  * Picks the app's language, as the Business Console's menu does. Opens in

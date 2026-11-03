@@ -4,6 +4,7 @@ import * as Notifications from "expo-notifications";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 
 import { supabase } from "@/services/supabase";
+import { tr } from "./i18n/instance";
 
 /**
  * Push notifications (../LINARA/KNOWN_GAPS.md O7). The web app decides when to
@@ -41,7 +42,7 @@ export async function registerForPush(): Promise<void> {
     if (Platform.OS === "android") {
       // Android 13+ needs a channel before it will show the permission prompt.
       await Notifications.setNotificationChannelAsync(ALERTS_CHANNEL, {
-        name: "Mga utos at pagbabago sa schedule",
+        name: tr("notifications.channel"),
         importance: Notifications.AndroidImportance.HIGH,
       });
     }

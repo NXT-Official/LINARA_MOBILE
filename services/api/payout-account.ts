@@ -1,6 +1,7 @@
 import { HOUSEHOLD_EVIDENCE_BUCKET, uploadEvidenceImage } from "@/services/media-upload";
 import { normalizeMobileNumber } from "@/lib/mobile-number";
 import { supabase } from "@/services/supabase";
+import { tr } from "@/lib/i18n/instance";
 
 /** Her GCash or Maya, as the manager will send to it. */
 export type PayoutMethod = "PH_GCASH" | "PH_PAYMAYA";
@@ -73,7 +74,7 @@ export async function saveMyPayoutAccount(input: {
   const { data: auth } = await supabase.auth.getUser();
   if (!auth.user) throw new Error("Not signed in");
   const number = normalizeMobileNumber(input.accountNumber);
-  if (!number) throw new Error("Ilagay ang 11-digit na number, nagsisimula sa 09.");
+  if (!number) throw new Error(tr("serviceError.mobileNumber"));
 
   let qrPath = input.removeQr ? null : input.currentQrPath;
   if (input.qrLocalUri) {

@@ -1,9 +1,9 @@
 import { useState } from "react";
-import { KeyboardAvoidingView, Pressable, ScrollView, StyleSheet, Text, View } from "react-native";
+import { KeyboardAvoidingView, Pressable, ScrollView, StyleSheet, View } from "react-native";
 import { router } from "expo-router";
 
 import { useT } from "@/lib/i18n/locale-context";
-import { colors } from "@/lib/theme";
+import { colors, fonts } from "@/lib/theme";
 import { queryClient } from "@/lib/query-client";
 import { accountKindKey } from "@/hooks/use-account-kind";
 import { supabase } from "@/services/supabase";
@@ -12,6 +12,7 @@ import { LanguageMenu } from "@/components/features/account/language-menu";
 import { TextField } from "@/components/ui/text-field";
 import { KEYBOARD_BEHAVIOR, useKeyboardOffset } from "@/components/ui/keyboard-screen";
 import { PrimaryButton } from "@/components/ui/primary-button";
+import { Text } from "@/components/ui/text";
 
 /**
  * Sign-in for a helper who has already claimed her account (KNOWN_GAPS.md
@@ -130,7 +131,7 @@ const styles = StyleSheet.create({
   },
   title: {
     fontSize: 28,
-    fontWeight: "700",
+    fontFamily: fonts.displayBold,
     color: colors.pineTeal,
   },
   subtitle: {
@@ -140,7 +141,7 @@ const styles = StyleSheet.create({
   },
   errorText: {
     fontSize: 13,
-    color: colors.terracottaGold,
+    color: colors.terracottaInk,
   },
   link: {
     textAlign: "center",

@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { ActivityIndicator, Pressable, ScrollView, StyleSheet, Text, View } from "react-native";
+import { Pressable, ScrollView, StyleSheet, View } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 
@@ -8,7 +8,7 @@ import { colors, fonts } from "@/lib/theme";
 import { formatClockTime, formatShiftTime } from "@/lib/format";
 import { startOfToday } from "@/lib/today";
 import {
-  MONTH_NAMES,
+  monthNames,
   addDays,
   buildDays,
   monthRange,
@@ -22,14 +22,19 @@ import { getMyHelperProfile } from "@/services/api/helper-profile";
 import { getMyLeave, type LeaveKind } from "@/services/api/leave";
 import { getMyRestOffRequests } from "@/services/api/rest-off";
 import { getMyTasksBetween, type WeekTask } from "@/services/api/tickets";
+import { Text } from "@/components/ui/text";
+import { Skeleton } from "@/components/ui/skeleton";
+import { LoadError } from "@/components/ui/load-error";
+import { usePullRefresh } from "@/hooks/use-pull-refresh";
+import type { MessageKey } from "@/lib/i18n/instance";
 
 type Mode = "week" | "month";
 
-const LEAVE_LABEL: Record<LeaveKind, string> = {
-  sil: "SIL",
-  in_kind: "day off in kind",
-  unpaid: "walang bayad",
-  extra_paid: "bayad na day off",
+const LEAVE_LABEL: Record<LeaveKind, MessageKey> = {
+  sil: "leaveKind.sil",
+  in_kind: "leaveKind.inKindShort",
+  unpaid: "leaveKind.unpaidShort",
+  extra_paid: "leaveKind.extraPaidShort",
 };
 
 /**
@@ -41,6 +46,7 @@ const LEAVE_LABEL: Record<LeaveKind, string> = {
  */
 export default function WeekScreen() {
   const queryClient = useQueryClient();
+  const pull = usePullRefresh();
   const t = useT();
   const [mode, setMode] = useState<Mode>("week");
   const [weekStart, setWeekStart] = useState(() => startOfToday(new Date()));
@@ -89,7 +95,10 @@ export default function WeekScreen() {
   const shiftLine = profile
     ? `${formatShiftTime(profile.shiftStart)} – ${formatShiftTime(profile.shiftEnd)}` +
       (profile.breakStart && profile.breakEnd
-        ? ` · break ${formatShiftTime(profile.breakStart)}–${formatShiftTime(profile.breakEnd)}`
+        ? t("week.break", {
+            v1: formatShiftTime(profile.breakStart),
+            v2: formatShiftTime(profile.breakEnd),
+          })
         : "")
     : "";
 
@@ -124,13 +133,17 @@ export default function WeekScreen() {
     : [];
 
   return (
-    <ScrollView style={styles.screen} contentContainerStyle={styles.content}>
+    <ScrollView
+      style={styles.screen}
+      contentContainerStyle={styles.content}
+      refreshControl={pull.control}
+    >
       <Text style={styles.header}>{t("tabs.week")}</Text>
-      <Text style={styles.sub}>
-        Ang shift mo, ang rest day at mga day off mo, at ang mga naka-schedule para sa iyo.
-      </Text>
+      <Text style={styles.sub}>{t("week.angShiftMoAngRest")}</Text>
 
       <View style={styles.toggle} accessibilityRole="tablist">
+        {/* Mode values, not words: each is shown through t() below. */}
+        {/* eslint-disable-next-line i18next/no-literal-string */}
         {(["week", "month"] as const).map((m) => (
           <Pressable
             key={m}
@@ -140,7 +153,7 @@ export default function WeekScreen() {
             style={[styles.toggleItem, mode === m && styles.toggleActive]}
           >
             <Text style={[styles.toggleText, mode === m && styles.toggleTextActive]}>
-              {m === "week" ? "Linggo" : "Buwan"}
+              {m === "week" ? t("week.linggo") : t("week.buwan")}
             </Text>
           </Pressable>
         ))}
@@ -150,7 +163,9 @@ export default function WeekScreen() {
         <Pressable
           onPress={() => step(-1)}
           accessibilityRole="button"
-          accessibilityLabel={mode === "week" ? "Nakaraang linggo" : "Nakaraang buwan"}
+          accessibilityLabel={
+            mode === "week" ? t("week.nakaraangLinggo") : t("week.nakaraangBuwan")
+          }
           style={styles.navButton}
         >
           <Ionicons name="chevron-back" size={22} color={colors.pineTeal} />
@@ -159,18 +174,24 @@ export default function WeekScreen() {
           <Text style={styles.navLabel}>
             {mode === "week"
               ? rangeLabel(weekStart, 7)
-              : `${MONTH_NAMES[month.month]} ${month.year}`}
+              : t("dates.monthYear", { month: monthNames()[month.month], year: month.year })}
           </Text>
           {!showingNow ? (
-            <Pressable onPress={goToday} accessibilityRole="button">
-              <Text style={styles.navToday}>Bumalik sa ngayon</Text>
+            <Pressable
+              hitSlop={{ top: 12, bottom: 12, left: 8, right: 8 }}
+              onPress={goToday}
+              accessibilityRole="button"
+            >
+              <Text style={styles.navToday}>{t("week.bumalikSaNgayon")}</Text>
             </Pressable>
           ) : null}
         </View>
         <Pressable
           onPress={() => step(1)}
           accessibilityRole="button"
-          accessibilityLabel={mode === "week" ? "Susunod na linggo" : "Susunod na buwan"}
+          accessibilityLabel={
+            mode === "week" ? t("week.susunodNaLinggo") : t("week.susunodNaBuwan")
+          }
           style={styles.navButton}
         >
           <Ionicons name="chevron-forward" size={22} color={colors.pineTeal} />
@@ -178,11 +199,13 @@ export default function WeekScreen() {
       </View>
 
       {profileQuery.isLoading || weekQuery.isLoading ? (
-        <View style={styles.loading}>
-          <ActivityIndicator color={colors.pineTeal} />
-        </View>
+        <Skeleton header={false} lines={4} />
       ) : !profile || weekQuery.isError ? (
-        <Text style={styles.errorText}>Hindi ma-load ang linggo mo. Subukan ulit mamaya.</Text>
+        <LoadError
+          message={t("week.hindiMaLoadAngLinggo")}
+          onRetry={() => void pull.refresh()}
+          retrying={profileQuery.isFetching || weekQuery.isFetching}
+        />
       ) : mode === "month" ? (
         <MonthGrid
           days={days}
@@ -197,33 +220,33 @@ export default function WeekScreen() {
           <View
             key={day.date.toISOString()}
             style={[styles.day, day.isRestDay && styles.restDay]}
-            accessibilityLabel={`${day.label}${day.isRestDay ? ", rest day" : ""}`}
+            accessibilityLabel={`${day.label}${day.isRestDay ? t("week.restDay") : ""}`}
           >
             <View style={styles.dayHead}>
               <Text style={styles.dayLabel}>{day.label}</Text>
-              {day.isToday ? <Text style={styles.todayTag}>Ngayon</Text> : null}
+              {day.isToday ? <Text style={styles.todayTag}>{t("week.ngayon")}</Text> : null}
             </View>
             <Text style={day.isRestDay ? styles.restLine : styles.shiftLine}>
-              {day.isRestDay ? "Rest day mo. Pahinga." : shiftLine}
+              {day.isRestDay ? t("week.restDayMoPahinga") : shiftLine}
             </Text>
             {day.leave.map((l) => (
               <Text key={l.id} style={l.status === "approved" ? styles.offLine : styles.offPending}>
-                {l.status === "approved" ? "Naka-leave" : "Hiniling na leave"} ·{" "}
-                {LEAVE_LABEL[l.kind]}
-                {l.status === "pending" ? " · naghihintay pa" : ""}
+                {l.status === "approved" ? t("week.nakaLeave") : t("week.hinilingNaLeave")} ·{" "}
+                {t(LEAVE_LABEL[l.kind])}
+                {l.status === "pending" ? t("week.naghihintayPa") : ""}
               </Text>
             ))}
             {day.timeOff.map((o) => (
               <Text key={o.id} style={o.status === "approved" ? styles.offLine : styles.offPending}>
-                {o.status === "approved" ? "Day off" : "Hiniling na day off"} ·{" "}
+                {o.status === "approved" ? t("week.dayOff") : t("week.hinilingNaDayOff")} ·{" "}
                 {formatShiftTime(o.startTime)} – {formatShiftTime(o.endTime)}
-                {o.status === "pending" ? " · naghihintay pa" : ""}
+                {o.status === "pending" ? t("week.naghihintayPa") : ""}
               </Text>
             ))}
             {day.tickets.length === 0 ? (
               day.isRestDay ? null : (
                 <Text style={styles.none}>
-                  {day.isPast ? "Walang naka-schedule." : "Wala pang naka-schedule."}
+                  {day.isPast ? t("week.walangNakaSchedule") : t("week.walaPangNakaSchedule")}
                 </Text>
               )
             ) : (
@@ -239,6 +262,7 @@ export default function WeekScreen() {
 }
 
 function WeekRow({ task, myUserId }: { task: WeekTask; myUserId: string }) {
+  const t = useT();
   const cancelled = task.status === "cancelled";
   // Done and cancelled both read as settled: muted and struck through.
   const done = task.status === "done" || cancelled;
@@ -246,7 +270,7 @@ function WeekRow({ task, myUserId }: { task: WeekTask; myUserId: string }) {
     task.createdById === myUserId
       ? "Ikaw"
       : task.createdByName
-        ? `Mula kay ${task.createdByName}`
+        ? t("week.mulaKay", { createdByName: task.createdByName })
         : null;
   return (
     <View style={styles.row}>
@@ -258,20 +282,24 @@ function WeekRow({ task, myUserId }: { task: WeekTask; myUserId: string }) {
               name="checkmark-circle"
               size={16}
               color={colors.pineTeal}
-              accessibilityLabel="Tapos na"
+              accessibilityLabel={t("week.taposNa")}
             />
           ) : null}
           <Text style={[styles.rowTitle, done && styles.rowDone]}>{task.title}</Text>
         </View>
         {task.appointmentTitle ? (
-          <Text style={styles.rowMeta}>Para sa {task.appointmentTitle}</Text>
+          <Text style={styles.rowMeta}>
+            {t("week.forAppointment", { title: task.appointmentTitle })}
+          </Text>
         ) : null}
         {from ? <Text style={styles.rowMeta}>{from}</Text> : null}
         <View style={styles.tags}>
-          {task.moved ? <Text style={styles.tagMoved}>Inilipat</Text> : null}
-          {task.waiting ? <Text style={styles.tagWaiting}>Pag-bukas ng board</Text> : null}
-          {task.status === "blocked" ? <Text style={styles.tagWaiting}>Naka-hold</Text> : null}
-          {cancelled ? <Text style={styles.tagWaiting}>Kinansela ng manager</Text> : null}
+          {task.moved ? <Text style={styles.tagMoved}>{t("week.inilipat")}</Text> : null}
+          {task.waiting ? <Text style={styles.tagWaiting}>{t("week.pagBukasNgBoard")}</Text> : null}
+          {task.status === "blocked" ? (
+            <Text style={styles.tagWaiting}>{t("week.nakaHold")}</Text>
+          ) : null}
+          {cancelled ? <Text style={styles.tagWaiting}>{t("week.kinanselaNgManager")}</Text> : null}
         </View>
       </View>
     </View>
@@ -296,16 +324,6 @@ const styles = StyleSheet.create({
     fontSize: 14,
     lineHeight: 20,
     color: colors.mutedInk,
-  },
-  loading: {
-    paddingVertical: 40,
-    alignItems: "center",
-  },
-  errorText: {
-    fontSize: 14,
-    color: colors.ink,
-    textAlign: "center",
-    paddingVertical: 24,
   },
   day: {
     borderRadius: 24,
@@ -357,7 +375,7 @@ const styles = StyleSheet.create({
     borderColor: colors.border,
   },
   toggleItem: {
-    minHeight: 40,
+    minHeight: 48,
     paddingHorizontal: 18,
     borderRadius: 10,
     justifyContent: "center",

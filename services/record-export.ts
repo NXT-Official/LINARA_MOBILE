@@ -10,6 +10,7 @@ import { getMyLeave } from "@/services/api/leave";
 import { getMyPayslips } from "@/services/api/payslips";
 import { getMyTasksDone, getMyTermsOnFile } from "@/services/api/record";
 import { getMyRestOffRequests } from "@/services/api/rest-off";
+import { tr } from "@/lib/i18n/instance";
 
 /**
  * Everything one employment's PDF needs, read fresh. Works for a household
@@ -60,11 +61,11 @@ export async function shareRecordPdf(input: RecordPdfInput): Promise<void> {
   await printed.move(named);
 
   if (!(await Sharing.isAvailableAsync())) {
-    throw new Error("Hindi available ang pag-share sa phone na ito.");
+    throw new Error(tr("serviceError.shareUnavailable"));
   }
   await Sharing.shareAsync(named.uri, {
     mimeType: "application/pdf",
     UTI: "com.adobe.pdf",
-    dialogTitle: "I-save o ipadala ang record mo",
+    dialogTitle: tr("serviceError.shareTitle"),
   });
 }

@@ -1,12 +1,14 @@
 import { useState } from "react";
-import { Pressable, StyleSheet, Text, View } from "react-native";
+import { Pressable, StyleSheet, View } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
 
 import { colors } from "@/lib/theme";
-import { CATEGORY_LABEL, rowActions, STOCK_LABEL, stockState, unitFor } from "@/lib/pantry";
+import { CATEGORY_KEY, rowActions, STOCK_KEY, stockState, unitFor } from "@/lib/pantry";
 import type { PantryItemRow } from "@/services/api/pantry";
 
 import { ItemForm, type ItemFormValues } from "./item-form";
+import { Text } from "@/components/ui/text";
+import { useT } from "@/lib/i18n/locale-context";
 
 /**
  * Pantry stock (roadmap Story 8, step 1), one card with a line per item.
@@ -21,7 +23,7 @@ import { ItemForm, type ItemFormValues } from "./item-form";
  */
 export function PantryStockList({
   items,
-  emptyText = "Walang laman sa pantry list.",
+  emptyText,
   canManage,
   listedIds,
   savingId,
@@ -42,12 +44,13 @@ export function PantryStockList({
   onList: (item: PantryItemRow) => void;
   onMarkOut: (item: PantryItemRow, alreadyListed: boolean) => void;
 }) {
+  const t = useT();
   const [editingId, setEditingId] = useState<string | null>(null);
 
   if (items.length === 0) {
     return (
       <View style={styles.emptyCard}>
-        <Text style={styles.emptyText}>{emptyText}</Text>
+        <Text style={styles.emptyText}>{emptyText ?? t("pantry.walangLamanSaPantryList")}</Text>
       </View>
     );
   }
@@ -81,27 +84,33 @@ export function PantryStockList({
                 disabled={!canManage}
                 onPress={() => setEditingId(item.id)}
                 accessibilityRole={canManage ? "button" : undefined}
-                accessibilityHint={canManage ? "Ayusin ang item" : undefined}
+                accessibilityHint={canManage ? t("pantry.ayusinAngItem") : undefined}
               >
                 <View style={styles.nameRow}>
                   <Text style={styles.name}>{item.name}</Text>
                   {state !== "ok" && (
                     <View style={[styles.badge, state === "out" && styles.badgeOut]}>
-                      <Text style={styles.badgeText}>{STOCK_LABEL[state]}</Text>
+                      <Text style={styles.badgeText}>{t(STOCK_KEY[state])}</Text>
                     </View>
                   )}
                 </View>
                 <Text style={styles.parText}>
-                  Laging may {item.par} {unitFor(item.par, item.unit)} ·{" "}
-                  {CATEGORY_LABEL[item.category]}
+                  {t("pantry.parLine", {
+                    par: item.par,
+                    unit: unitFor(item.par, item.unit),
+                    category: t(CATEGORY_KEY[item.category]),
+                  })}
                 </Text>
               </Pressable>
               {canManage ? (
                 <View style={styles.stepper}>
                   <Pressable
+                    accessibilityRole="button"
+                    hitSlop={4}
                     onPress={() => onStep(item, -1)}
                     disabled={item.qty <= 0}
-                    accessibilityLabel={`Bawasan ang ${item.name}`}
+                    accessibilityState={{ disabled: item.qty <= 0 }}
+                    accessibilityLabel={t("pantry.bawasanAng", { name: item.name })}
                     style={[styles.stepButton, item.qty <= 0 && styles.stepDisabled]}
                   >
                     <Ionicons name="remove" size={16} color={colors.ink} />
@@ -110,8 +119,10 @@ export function PantryStockList({
                     {item.qty} <Text style={styles.unitText}>{unitFor(item.qty, item.unit)}</Text>
                   </Text>
                   <Pressable
+                    accessibilityRole="button"
+                    hitSlop={4}
                     onPress={() => onStep(item, 1)}
-                    accessibilityLabel={`Dagdagan ang ${item.name}`}
+                    accessibilityLabel={t("pantry.dagdaganAng", { name: item.name })}
                     style={styles.stepButton}
                   >
                     <Ionicons name="add" size={16} color={colors.ink} />
@@ -125,32 +136,38 @@ export function PantryStockList({
             </View>
 
             <View style={styles.actions}>
-              {offers.listedNote && <Text style={styles.listedText}>Nasa palengke list na</Text>}
+              {offers.listedNote && (
+                <Text style={styles.listedText}>{t("pantry.nasaPalengkeListNa")}</Text>
+              )}
               {offers.list && (
                 <Pressable
+                  accessibilityRole="button"
                   onPress={() => onList(item)}
                   disabled={saving}
-                  hitSlop={6}
+                  hitSlop={{ top: 12, bottom: 12, left: 6, right: 6 }}
                   style={styles.action}
-                  accessibilityLabel={`Ilagay ang ${item.name} sa palengke list`}
+                  accessibilityLabel={t("pantry.ilagayAngSaPalengkeList", { name: item.name })}
                 >
                   <Ionicons name="cart-outline" size={15} color={colors.pineTeal} />
-                  <Text style={styles.actionText}>Ilista sa palengke</Text>
+                  <Text style={styles.actionText}>{t("pantry.ilistaSaPalengke")}</Text>
                 </Pressable>
               )}
               {offers.markOut && (
                 <Pressable
+                  accessibilityRole="button"
                   onPress={() => onMarkOut(item, listed)}
                   disabled={saving}
-                  hitSlop={6}
+                  hitSlop={{ top: 12, bottom: 12, left: 6, right: 6 }}
                   style={styles.action}
-                  accessibilityLabel={`Ubos na ang ${item.name}`}
+                  accessibilityLabel={t("pantry.ubosNaAng", { name: item.name })}
                   accessibilityHint={
-                    listed ? "Gagawing zero ang bilang" : "Gagawing zero at ililista sa palengke"
+                    listed
+                      ? t("pantry.gagawingZeroAngBilang")
+                      : t("pantry.gagawingZeroAtIlilistaSa")
                   }
                 >
                   <Ionicons name="close-circle-outline" size={15} color={colors.terracottaInk} />
-                  <Text style={[styles.actionText, styles.actionOut]}>Ubos na</Text>
+                  <Text style={[styles.actionText, styles.actionOut]}>{t("pantry.ubosNa")}</Text>
                 </Pressable>
               )}
             </View>

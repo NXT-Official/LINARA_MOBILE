@@ -1,11 +1,13 @@
-import { StyleSheet, Text, View } from "react-native";
+import { StyleSheet, View } from "react-native";
 
 import { colors } from "@/lib/theme";
 import { formatPeso } from "@/lib/format";
 import type { GroceryRun } from "@/services/api/grocery";
+import { Text } from "@/components/ui/text";
+import { intlLocale } from "@/lib/i18n/instance";
 
 const closedOn = (iso: string) =>
-  new Date(iso).toLocaleDateString("fil-PH", { month: "short", day: "numeric" });
+  new Date(iso).toLocaleDateString(intlLocale(), { month: "short", day: "numeric" });
 
 /** Her last few closed runs: what each cost against the cash, and the change. */
 export function PastRuns({ runs, spent }: { runs: GroceryRun[]; spent: Record<string, number> }) {
