@@ -83,6 +83,8 @@
     "flagRestDay": "休日",
     "flagStation": "仕事",
     "flagEmployment": "住み込み / 通い",
-    "flagOther": "その他"
+    "flagOther": "その他",
+    "walaPa": "まだありません",
+    "leaveDays": "{count}日"
   }
 }

@@ -123,5 +123,10 @@
   },
   "tabLock": {
     "noHousehold": "bukas lang kapag may household ka"
+  },
+  "time": {
+    "clock": "{h}:{mm} {period}",
+    "am": "AM",
+    "pm": "PM"
   }
 }

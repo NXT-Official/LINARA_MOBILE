@@ -83,6 +83,8 @@
     "flagRestDay": "Rest day",
     "flagStation": "Trabaho",
     "flagEmployment": "Stay-in / stay-out",
-    "flagOther": "Iba pa"
+    "flagOther": "Iba pa",
+    "walaPa": "Wala pa",
+    "leaveDays": "{count} araw"
   }
 }

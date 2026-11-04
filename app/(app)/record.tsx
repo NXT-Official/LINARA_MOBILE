@@ -8,7 +8,7 @@ import { KeyboardScrollView } from "@/components/ui/keyboard-screen";
 import { colors, fonts } from "@/lib/theme";
 import { formatDateFil, formatHoursMinutes, formatPeso, formatShiftTime } from "@/lib/format";
 import {
-  leaveDaysLabel,
+  leaveTakenText,
   recordShareText,
   restTakenMinutes,
   summarizeLeave,
@@ -135,7 +135,7 @@ export default function RecordScreen() {
           />
         </>
       )}
-      <LanguageMenu />
+      <LanguageMenu onOpen={() => scrollRef.current?.scrollToEnd({ animated: true })} />
       {/* Here as well as My Pay: My Record is the one tab that always opens,
           even with no household, so she can always sign out. */}
       {employmentsQuery.isLoading ? null : (
@@ -229,13 +229,6 @@ function PastEmployments({ past }: { past: Employment[] }) {
     </View>
   );
 }
-
-const LEAVE_NAMES = {
-  sil: "SIL",
-  extra_paid: "dagdag na may bayad",
-  in_kind: "day off in kind",
-  unpaid: "walang bayad",
-} as const;
 
 /** Her current household: terms on file (with the flag), work and pay, and sharing. */
 function CurrentRecord({ employment }: { employment: Employment }) {
@@ -478,13 +471,13 @@ function CurrentRecord({ employment }: { employment: Employment }) {
         />
         <Row label={t("record.restNaNakuha")} value={formatHoursMinutes(restTaken)} />
         {leaveByYear.length === 0 ? (
-          <Row label={t("record.leaveNaNakuha")} value="Wala pa" />
+          <Row label={t("record.leaveNaNakuha")} value={leaveTakenText(undefined)} />
         ) : (
           leaveByYear.map((y) => (
             <Row
               key={y.year}
               label={t("record.leaveNaNakuha2", { year: y.year })}
-              value={leaveDaysLabel(y.days, LEAVE_NAMES, (n) => `${n} araw`)}
+              value={leaveTakenText(y.days)}
             />
           ))
         )}

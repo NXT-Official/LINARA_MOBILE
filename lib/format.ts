@@ -9,14 +9,22 @@ export function weekdayName(weeklyRestDay: number): string {
   return dayNames()[weeklyRestDay] ?? "—";
 }
 
-/** Formats a Postgres TIME string ("HH:MM:SS") as "6:00 AM". */
+/**
+ * Formats a Postgres TIME string ("HH:MM:SS") in her language: "6:00 AM",
+ * "6:00 a. m.", "上午6:00", "午前6:00" (QA staging-1103 F2). The pattern and
+ * AM/PM words come from the catalog (common.json `time`), not the phone's
+ * Intl, so every phone shows the same thing.
+ */
 export function formatShiftTime(time: string): string {
   const [hoursStr, minutesStr] = time.split(":");
   const hours = Number(hoursStr);
   const minutes = Number(minutesStr);
-  const period = hours >= 12 ? "PM" : "AM";
   const displayHours = hours % 12 === 0 ? 12 : hours % 12;
-  return `${displayHours}:${minutes.toString().padStart(2, "0")} ${period}`;
+  return tr("time.clock", {
+    h: displayHours,
+    mm: minutes.toString().padStart(2, "0"),
+    period: tr(hours >= 12 ? "time.pm" : "time.am"),
+  });
 }
 
 /** A ticket's scheduled instant as the phone's local "7:30 PM". */

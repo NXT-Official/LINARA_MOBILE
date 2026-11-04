@@ -1,4 +1,5 @@
 import { formatHoursMinutes, formatPeso } from "./format";
+import { tr } from "./i18n/instance";
 
 /** The slice of a payslip My Record needs (services/api/payslips.ts `Payslip`). */
 export interface RecordPayslip {
@@ -87,6 +88,27 @@ export function leaveDaysLabel(
   return LEAVE_ORDER.filter((k) => (days[k] ?? 0) > 0)
     .map((k) => `${unit(days[k] ?? 0)} ${names[k]}`)
     .join(", ");
+}
+
+/**
+ * Record's "Leave taken" value in the language she's using: "None yet" when
+ * there's none, else "3 days SIL, 1 day unpaid" (QA staging-1103 F1). The
+ * shared text and the PDF stay in English (recordShareText, record-pdf.ts).
+ */
+export function leaveTakenText(
+  days: Partial<Record<RecordLeave["kind"], number>> | undefined,
+): string {
+  if (!days || !LEAVE_ORDER.some((k) => (days[k] ?? 0) > 0)) return tr("record.walaPa");
+  return leaveDaysLabel(
+    days,
+    {
+      sil: tr("leaveKind.sil"),
+      extra_paid: tr("leaveKind.extraPaidShort"),
+      in_kind: tr("leaveKind.inKindShort"),
+      unpaid: tr("leaveKind.unpaidShort"),
+    },
+    (n) => tr("record.leaveDays", { count: n }),
+  );
 }
 
 const LEAVE_SHARE_NAMES: Record<RecordLeave["kind"], string> = {

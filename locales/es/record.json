@@ -85,6 +85,10 @@
     "flagRestDay": "Día de descanso",
     "flagStation": "Trabajo",
     "flagEmployment": "Con o sin vivienda",
-    "flagOther": "Otro"
+    "flagOther": "Otro",
+    "walaPa": "Ninguno aún",
+    "leaveDays_one": "{count} día",
+    "leaveDays_many": "{count} días",
+    "leaveDays_other": "{count} días"
   }
 }

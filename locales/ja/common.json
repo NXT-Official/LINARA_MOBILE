@@ -123,5 +123,10 @@
   },
   "tabLock": {
     "noHousehold": "家庭に参加すると開きます"
+  },
+  "time": {
+    "clock": "{period}{h}:{mm}",
+    "am": "午前",
+    "pm": "午後"
   }
 }
