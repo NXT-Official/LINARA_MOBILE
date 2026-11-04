@@ -125,5 +125,10 @@
   },
   "tabLock": {
     "noHousehold": "se abre cuando tengas un hogar"
+  },
+  "time": {
+    "clock": "{h}:{mm} {period}",
+    "am": "a. m.",
+    "pm": "p. m."
   }
 }

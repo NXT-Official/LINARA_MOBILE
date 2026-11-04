@@ -1,7 +1,9 @@
-import { describe, expect, it } from "vitest";
+import { afterEach, describe, expect, it } from "vitest";
 
+import { i18n } from "./i18n/instance";
 import {
   leaveDaysLabel,
+  leaveTakenText,
   recordShareText,
   restTakenMinutes,
   summarizeLeave,
@@ -111,6 +113,42 @@ describe("summarizeLeave", () => {
       { year: 2026, days: { sil: 5, unpaid: 1 } },
       { year: 2025, days: { in_kind: 1 } },
     ]);
+  });
+
+  describe("leaveTakenText, in her language (QA staging-1103 F1)", () => {
+    afterEach(async () => {
+      await i18n.changeLanguage("tl");
+    });
+
+    it("says none yet in each language, never the Taglish words outside Taglish", async () => {
+      const seen: Record<string, string> = {};
+      for (const lang of ["tl", "en", "es", "zh-CN", "ja"]) {
+        await i18n.changeLanguage(lang);
+        seen[lang] = leaveTakenText(undefined);
+      }
+      expect(seen.tl).toBe("Wala pa");
+      expect(seen.en).toBe("None yet");
+      for (const lang of ["en", "es", "zh-CN", "ja"]) expect(seen[lang]).not.toBe("Wala pa");
+      // An empty year reads the same as no leave at all.
+      await i18n.changeLanguage("tl");
+      expect(leaveTakenText({})).toBe(seen.tl);
+      expect(leaveTakenText({ sil: 0 })).toBe(seen.tl);
+    });
+
+    it("counts days and names kinds in the language, one day vs many", async () => {
+      await i18n.changeLanguage("en");
+      expect(leaveTakenText({ unpaid: 1, sil: 3 })).toBe("3 days SIL, 1 day unpaid");
+      await i18n.changeLanguage("es");
+      expect(leaveTakenText({ unpaid: 2, in_kind: 1 })).toBe(
+        "1 día día libre compensado, 2 días sin goce de sueldo",
+      );
+      await i18n.changeLanguage("ja");
+      const ja = leaveTakenText({ extra_paid: 2 });
+      expect(ja).toContain("有給の休み");
+      expect(ja).not.toMatch(/araw|bayad|days?\b/);
+      await i18n.changeLanguage("tl");
+      expect(leaveTakenText({ unpaid: 1, sil: 3 })).toBe("3 araw SIL, 1 araw walang bayad");
+    });
   });
 
   it("labels the kinds in a fixed order", () => {

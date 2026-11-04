@@ -84,6 +84,9 @@
     "flagRestDay": "Rest day",
     "flagStation": "Work",
     "flagEmployment": "Stay-in / stay-out",
-    "flagOther": "Other"
+    "flagOther": "Other",
+    "walaPa": "None yet",
+    "leaveDays_one": "{count} day",
+    "leaveDays_other": "{count} days"
   }
 }

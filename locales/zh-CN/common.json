@@ -123,5 +123,10 @@
   },
   "tabLock": {
     "noHousehold": "有了家庭后才能打开"
+  },
+  "time": {
+    "clock": "{period}{h}:{mm}",
+    "am": "上午",
+    "pm": "下午"
   }
 }
