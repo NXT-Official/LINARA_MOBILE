@@ -4,6 +4,7 @@ import {
   RecordingPresets,
   useAudioRecorder as useExpoAudioRecorder,
 } from "expo-audio";
+import { useT } from "@/lib/i18n/locale-context";
 
 /**
  * Engineering safety cap on a single scratchpad voice note -- not a product
@@ -27,6 +28,7 @@ interface UseAudioRecorderResult {
  * "Expo HAS CHANGED" banner.
  */
 export function useAudioRecorder(): UseAudioRecorderResult {
+  const t = useT();
   const recorder = useExpoAudioRecorder(RecordingPresets.HIGH_QUALITY);
   const [isRecording, setIsRecording] = useState(false);
   const autoStopTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
@@ -42,7 +44,7 @@ export function useAudioRecorder(): UseAudioRecorderResult {
   const startRecording = useCallback(async () => {
     const permission = await requestRecordingPermissionsAsync();
     if (!permission.granted) {
-      throw new Error("Microphone permission was not granted.");
+      throw new Error(t("today.microphonePermissionWasNotGranted"));
     }
 
     await recorder.prepareToRecordAsync();
@@ -53,7 +55,7 @@ export function useAudioRecorder(): UseAudioRecorderResult {
       recorder.stop().catch(() => {});
       setIsRecording(false);
     }, MAX_RECORDING_MS);
-  }, [recorder]);
+  }, [recorder, t]);
 
   const stopRecording = useCallback(async (): Promise<string | null> => {
     if (autoStopTimer.current) {

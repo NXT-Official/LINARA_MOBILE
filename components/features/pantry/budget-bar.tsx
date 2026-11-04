@@ -1,8 +1,10 @@
 import { useState } from "react";
-import { Pressable, StyleSheet, Text, TextInput, View } from "react-native";
+import { Pressable, StyleSheet, View } from "react-native";
 
-import { colors } from "@/lib/theme";
+import { colors, fonts } from "@/lib/theme";
 import { parseAmount } from "@/lib/money";
+import { Text, TextInput } from "@/components/ui/text";
+import { useT } from "@/lib/i18n/locale-context";
 
 function fmtPeso(amount: number): string {
   return `₱${Math.round(amount).toLocaleString()}`;
@@ -26,6 +28,7 @@ export function BudgetBar({
   budget: number;
   onChangeBudget?: (n: number) => void;
 }) {
+  const t = useT();
   const [editing, setEditing] = useState(false);
   const [draft, setDraft] = useState(String(budget));
 
@@ -58,7 +61,12 @@ export function BudgetBar({
               style={styles.budgetInput}
             />
           ) : onChangeBudget ? (
-            <Pressable onPress={() => setEditing(true)}>
+            <Pressable
+              accessibilityRole="button"
+              accessibilityLabel={t("pantry.palitanAngBudget", { v1: fmtPeso(budget) })}
+              hitSlop={14}
+              onPress={() => setEditing(true)}
+            >
               <Text style={styles.budget}>/ {fmtPeso(budget)}</Text>
             </Pressable>
           ) : (
@@ -67,8 +75,8 @@ export function BudgetBar({
         </View>
         <Text style={[styles.remaining, over && styles.remainingOver]}>
           {over
-            ? `sobra ng ${fmtPeso(spent - budget)}`
-            : `${fmtPeso(budget - spent)} pa ang natitira`}
+            ? t("pantry.sobraNg", { v1: fmtPeso(spent - budget) })
+            : t("pantry.paAngNatitira", { v1: fmtPeso(budget - spent) })}
         </Text>
       </View>
       <View style={styles.track}>
@@ -99,7 +107,7 @@ const styles = StyleSheet.create({
   },
   spent: {
     fontSize: 22,
-    fontWeight: "700",
+    fontFamily: fonts.displayBold,
     color: colors.ink,
   },
   budget: {
@@ -120,7 +128,7 @@ const styles = StyleSheet.create({
     color: colors.mutedInk,
   },
   remainingOver: {
-    color: "#C24E30",
+    color: colors.statusLateInk,
   },
   track: {
     marginTop: 10,
@@ -135,6 +143,6 @@ const styles = StyleSheet.create({
     backgroundColor: colors.pineTeal,
   },
   fillOver: {
-    backgroundColor: "#C24E30",
+    backgroundColor: colors.statusLate,
   },
 });

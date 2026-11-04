@@ -10,6 +10,7 @@ import {
   setRunStatus,
   type GroceryRun,
 } from "@/services/api/grocery";
+import { useT } from "@/lib/i18n/locale-context";
 
 /**
  * Her grocery runs in one house (../LINARA/supabase/add-grocery-runs.sql):
@@ -19,6 +20,7 @@ import {
  * the rest of the palengke edits.
  */
 export function useGroceryRuns(householdId: string | null) {
+  const t = useT();
   const queryClient = useQueryClient();
   const [busy, setBusy] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
@@ -80,13 +82,13 @@ export function useGroceryRuns(householdId: string | null) {
       step(
         "new-run",
         () => createDraftRun(householdId as string, title, itemIds, shopOn),
-        "Hindi nagawa ang run.",
+        t("pantry.hindiNagawaAngRun"),
       ),
     submit: (run: GroceryRun) =>
-      step(run.id, () => setRunStatus(run.id, "pending"), "Hindi naipadala sa manager."),
+      step(run.id, () => setRunStatus(run.id, "pending"), t("pantry.hindiNaipadalaSaManager")),
     withdraw: (run: GroceryRun) =>
-      step(run.id, () => setRunStatus(run.id, "draft"), "Hindi nabawi."),
-    remove: (run: GroceryRun) => step(run.id, () => deleteRun(run.id), "Hindi nabura."),
+      step(run.id, () => setRunStatus(run.id, "draft"), t("pantry.hindiNabawi")),
+    remove: (run: GroceryRun) => step(run.id, () => deleteRun(run.id), t("pantry.hindiNabura")),
     close: (run: GroceryRun, change: number | null) =>
       step(
         run.id,
@@ -101,10 +103,10 @@ export function useGroceryRuns(householdId: string | null) {
             }
           }
         },
-        "Hindi natapos ang run.",
+        t("pantry.hindiNataposAngRun"),
       ),
     backToPool: (itemId: string) =>
-      step(itemId, () => moveGroceryItems([itemId], null), "Hindi naibalik."),
+      step(itemId, () => moveGroceryItems([itemId], null), t("pantry.hindiNaibalik")),
   };
 }
 

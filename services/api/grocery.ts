@@ -1,4 +1,5 @@
 import { supabase } from "@/services/supabase";
+import { tr } from "@/lib/i18n/instance";
 
 export interface GroceryItemRow {
   id: string;
@@ -211,7 +212,7 @@ export async function createDraftRun(
     .insert({ household_id: householdId, title, shop_on: shopOn })
     .select("id")
     .single();
-  if (error || !data) throw new Error(error?.message ?? "Hindi nagawa ang run.");
+  if (error || !data) throw new Error(error?.message ?? tr("serviceError.runNotCreated"));
   const runId = data.id as string;
   if (!itemIds.length) return runId;
   // Only lines still to buy and still in Kailangan: one ticked bought or put on
@@ -226,11 +227,7 @@ export async function createDraftRun(
     .select("id");
   if (moveError || !moved?.length) {
     await supabase.from("grocery_runs").delete().eq("id", runId);
-    throw new Error(
-      moveError
-        ? "Hindi nailagay sa run ang mga bibilhin. Subukan ulit."
-        : "Nabili na o nasa ibang run na ang mga pinili mo. Pumili ulit.",
-    );
+    throw new Error(moveError ? tr("serviceError.itemsNotMoved") : tr("serviceError.itemsTaken"));
   }
   return runId;
 }
@@ -379,7 +376,7 @@ export async function recordGroceryReceipt(
     .select("id, created_at")
     .single();
   if (error || !data) {
-    throw new Error(error?.message ?? "Hindi na-save ang resibo.");
+    throw new Error(error?.message ?? tr("serviceError.receiptNotSaved"));
   }
   return { id: data.id, createdAt: data.created_at };
 }

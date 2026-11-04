@@ -1,3 +1,5 @@
+import { tr } from "./i18n/instance";
+
 /**
  * The Worker's Station is day-by-day, the same rule the manager's Pass follows
  * (../LINARA/src/features/tasks/task.utils.ts `isLaterThanToday`): today's
@@ -106,10 +108,10 @@ export function summarizeToday(tickets: DayTicket[], now: Date) {
 /** "Magandang umaga / tanghali / hapon / gabi" by the hour, not always "umaga". */
 export function greetingFor(now: Date): string {
   const h = now.getHours();
-  if (h >= 5 && h < 11) return "Magandang umaga";
-  if (h >= 11 && h < 13) return "Magandang tanghali";
-  if (h >= 13 && h < 18) return "Magandang hapon";
-  return "Magandang gabi";
+  if (h >= 5 && h < 11) return tr("greeting.morning");
+  if (h >= 11 && h < 13) return tr("greeting.noon");
+  if (h >= 13 && h < 18) return tr("greeting.afternoon");
+  return tr("greeting.evening");
 }
 
 export type DayPhase = "rest_day" | "night" | "before_shift" | "on_shift" | "after_shift";

@@ -1,9 +1,9 @@
-import { ActivityIndicator, Linking, ScrollView, StyleSheet, Text, View } from "react-native";
+import { ActivityIndicator, Linking, ScrollView, StyleSheet, View } from "react-native";
 import { router, useLocalSearchParams } from "expo-router";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 
 import { useT } from "@/lib/i18n/locale-context";
-import { colors } from "@/lib/theme";
+import { colors, fonts } from "@/lib/theme";
 import { PRIVACY_URL, TERMS_URL } from "@/lib/legal";
 import { formatShiftTime, weekdayName } from "@/lib/format";
 import { useSession } from "@/lib/session-context";
@@ -11,6 +11,7 @@ import { textParts } from "@/lib/i18n/translate";
 import { joinHousehold } from "@/services/api/employment";
 import { verifyInviteCode } from "@/services/api/handshake";
 import { PrimaryButton } from "@/components/ui/primary-button";
+import { Text } from "@/components/ui/text";
 
 function TermRow({ label, value }: { label: string; value: string }) {
   return (
@@ -165,11 +166,11 @@ const styles = StyleSheet.create({
   eyebrow: {
     fontSize: 13,
     fontWeight: "700",
-    color: colors.terracottaGold,
+    color: colors.terracottaInk,
   },
   title: {
     fontSize: 22,
-    fontWeight: "700",
+    fontFamily: fonts.displayBold,
     color: colors.ink,
   },
   loading: {

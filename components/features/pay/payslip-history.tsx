@@ -1,31 +1,34 @@
-import { StyleSheet, Text, View } from "react-native";
+import { StyleSheet, View } from "react-native";
 
 import { colors, fonts } from "@/lib/theme";
 import { formatPeso } from "@/lib/format";
 import { formatCutoffRange } from "@/lib/cutoff";
-import { METHOD_LABEL, type Payslip, type PayoutStatus } from "@/services/api/payslips";
+import { methodLabel, type Payslip, type PayoutStatus } from "@/services/api/payslips";
+import { Text } from "@/components/ui/text";
+import { useT } from "@/lib/i18n/locale-context";
+import type { MessageKey } from "@/lib/i18n/instance";
 
 /** Where a payment made outside Linara stands with her. */
 const ACK_LABEL = {
-  pending: "Hinihintay ang sagot mo",
-  confirmed: "Kinumpirma mo",
-  disputed: "Sinabi mong hindi natanggap",
+  pending: "ack.pending",
+  confirmed: "ack.confirmed",
+  disputed: "ack.disputed",
 } as const;
 
-const STATUS_LABEL: Record<PayoutStatus, string> = {
-  pending_send: "Sinesend...",
-  processing: "Pinoproseso",
-  succeeded: "Nabayaran",
-  failed: "Hindi na-send",
-  needs_review: "Nire-review",
+const STATUS_LABEL: Record<PayoutStatus, MessageKey> = {
+  pending_send: "payout.sending",
+  processing: "payout.processing",
+  succeeded: "payout.paid",
+  failed: "payout.failed",
+  needs_review: "payout.review",
 };
 
 const STATUS_COLOR: Record<PayoutStatus, string> = {
   pending_send: colors.mutedInk,
-  processing: colors.terracottaGold,
+  processing: colors.terracottaInk,
   succeeded: colors.pineTeal,
-  failed: colors.terracottaGold,
-  needs_review: colors.terracottaGold,
+  failed: colors.terracottaInk,
+  needs_review: colors.terracottaInk,
 };
 
 /**
@@ -35,25 +38,31 @@ const STATUS_COLOR: Record<PayoutStatus, string> = {
  * web Money tab, not something a helper triggers from here.
  */
 export function PayslipHistory({ payslips }: { payslips: Payslip[] }) {
+  const t = useT();
   if (payslips.length === 0) return null;
 
   return (
     <View style={styles.card}>
-      <Text style={styles.eyebrow}>Mga payslip</Text>
+      <Text style={styles.cardTitle} accessibilityRole="header">
+        {t("pay.mgaPayslip")}
+      </Text>
       {payslips.map((p) => (
         <View key={p.id} style={styles.row}>
           <View style={styles.rowLeft}>
             <Text style={styles.amount}>{formatPeso(p.netPay)}</Text>
             <Text style={styles.meta}>
               {p.kind === "thirteenth_month"
-                ? `13th-month pay ${p.cutoffEnd.slice(0, 4)}`
+                ? t("pay.13thMonthPay", { v1: p.cutoffEnd.slice(0, 4) })
                 : formatCutoffRange(p.cutoffStart, p.cutoffEnd)}{" "}
-              · {METHOD_LABEL[p.payoutChannelCode] ?? "Iba pa"}
+              · {methodLabel(p.payoutChannelCode)}
             </Text>
             {p.unpaidLeaveDeduction > 0 ? (
               <Text style={styles.meta}>
-                Bawas na leave na walang bayad: {formatPeso(p.unpaidLeaveDeduction)} (
-                {p.unpaidLeaveDays} araw)
+                {t("pay.leaveDeductionLine", {
+                  amount: formatPeso(p.unpaidLeaveDeduction),
+                  days: p.unpaidLeaveDays,
+                  count: p.unpaidLeaveDays,
+                })}
               </Text>
             ) : null}
           </View>
@@ -64,11 +73,11 @@ export function PayslipHistory({ payslips }: { payslips: Payslip[] }) {
                 { color: p.helperAck === "confirmed" ? colors.pineTeal : colors.terracottaInk },
               ]}
             >
-              {ACK_LABEL[p.helperAck]}
+              {t(ACK_LABEL[p.helperAck])}
             </Text>
           ) : (
             <Text style={[styles.status, { color: STATUS_COLOR[p.payoutStatus] }]}>
-              {STATUS_LABEL[p.payoutStatus]}
+              {t(STATUS_LABEL[p.payoutStatus])}
             </Text>
           )}
         </View>
@@ -86,10 +95,12 @@ const styles = StyleSheet.create({
     borderColor: colors.border,
     gap: 10,
   },
-  eyebrow: {
-    fontSize: 13,
-    fontWeight: "700",
-    color: colors.terracottaGold,
+  // The card's own title, like the rest of the app's cards (was a small
+  // coloured label above nothing: an eyebrow, audit 2026-10-29).
+  cardTitle: {
+    fontFamily: fonts.display,
+    fontSize: 17,
+    color: colors.ink,
   },
   row: {
     flexDirection: "row",

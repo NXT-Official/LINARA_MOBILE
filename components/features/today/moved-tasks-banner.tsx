@@ -1,17 +1,20 @@
 import { useEffect, useState } from "react";
-import { StyleSheet, Text, View } from "react-native";
+import { StyleSheet, View } from "react-native";
 import { useQuery } from "@tanstack/react-query";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 
 import { colors } from "@/lib/theme";
 import { formatClockTime } from "@/lib/format";
-import { DAY_NAMES } from "@/lib/week";
+import { dayNames } from "@/lib/week";
 import { getMovedTasks, type MovedTask } from "@/services/api/tickets";
 import { PrimaryButton } from "@/components/ui/primary-button";
+import { Text } from "@/components/ui/text";
+import { useT } from "@/lib/i18n/locale-context";
 
 const SEEN_KEY = "linara.seenMovedTasks";
 
-const dayAndTime = (iso: string) => `${DAY_NAMES[new Date(iso).getDay()]}, ${formatClockTime(iso)}`;
+const dayAndTime = (iso: string) =>
+  `${dayNames()[new Date(iso).getDay()]}, ${formatClockTime(iso)}`;
 
 /** A move is "seen" per ticket and time, so a second move of the same task shows again. */
 const moveKey = (t: MovedTask) => `${t.id}@${t.scheduledStart}`;
@@ -33,6 +36,7 @@ async function readSeen(): Promise<string[]> {
  * phone only; there's no column for it and none is needed.
  */
 export function MovedTasksBanner({ helperId }: { helperId: string }) {
+  const t = useT();
   const movedQuery = useQuery({
     queryKey: ["moved-tasks", helperId],
     queryFn: () => getMovedTasks(helperId),
@@ -61,19 +65,24 @@ export function MovedTasksBanner({ helperId }: { helperId: string }) {
 
   return (
     <View style={styles.card} accessibilityRole="alert">
-      <Text style={styles.title}>May binago sa schedule mo</Text>
-      {unseen.map((t) => (
-        <Text key={moveKey(t)} style={styles.line}>
-          <Text style={styles.task}>{t.title}</Text> — {dayAndTime(t.scheduledStart)} na ngayon
-          {t.previousStart ? ` (dati ${dayAndTime(t.previousStart)})` : ""}
-          {t.appointmentTitle
-            ? `, dahil binago ang ${t.appointmentTitle}.`
-            : t.movedBy
-              ? `. Inilipat ni ${t.movedBy}.`
-              : ". Inilipat ng manager."}
+      <Text style={styles.title}>{t("today.mayBinagoSaScheduleMo")}</Text>
+      {unseen.map((task) => (
+        <Text key={moveKey(task)} style={styles.line}>
+          <Text style={styles.task}>{task.title}</Text>:{" "}
+          {t("today.movedNow", { when: dayAndTime(task.scheduledStart) })}
+          {task.previousStart ? t("today.movedWas", { when: dayAndTime(task.previousStart) }) : ""}
+          {task.appointmentTitle
+            ? t("today.movedBecause", { appointment: task.appointmentTitle })
+            : task.movedBy
+              ? t("today.movedBy", { name: task.movedBy })
+              : t("today.inilipatNgManager")}
         </Text>
       ))}
-      <PrimaryButton label="Nakita ko" variant="secondary" onPress={() => void markSeen()} />
+      <PrimaryButton
+        label={t("today.nakitaKo")}
+        variant="secondary"
+        onPress={() => void markSeen()}
+      />
     </View>
   );
 }

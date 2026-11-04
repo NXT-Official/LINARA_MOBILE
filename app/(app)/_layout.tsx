@@ -7,11 +7,14 @@ import { useQuery } from "@tanstack/react-query";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 
 import { useT } from "@/lib/i18n/locale-context";
+import { featureOpen } from "@/lib/plan";
 import { colors } from "@/lib/theme";
 import { useSession } from "@/lib/session-context";
 import { getMyEmployments } from "@/services/api/employment";
 import { useAccountKind } from "@/hooks/use-account-kind";
+import { useHouseholdPlan } from "@/hooks/use-household-plan";
 import { StartupWait } from "@/components/ui/startup-wait";
+import { Text } from "@/components/ui/text";
 
 /**
  * A tab she can see but not open: no household means no board, pantry, week
@@ -22,16 +25,19 @@ function LockedTab({
   children,
   style,
   label,
+  reason,
 }: {
   children?: ReactNode;
   style?: StyleProp<ViewStyle>;
   label: string;
+  /** Why it's closed, read after the tab's name. */
+  reason: string;
 }) {
   return (
     <View
       style={[style, styles.locked]}
       accessible
-      accessibilityLabel={`${label}, bukas lang kapag may household ka`}
+      accessibilityLabel={`${label}, ${reason}`}
       accessibilityState={{ disabled: true }}
     >
       {children}
@@ -68,6 +74,7 @@ export default function AppTabsLayout() {
     // A household can end her employment while the app is open.
     refetchInterval: 5 * 60_000,
   });
+  const householdPlanQuery = useHouseholdPlan();
 
   if (isLoading || (session && (employmentsQuery.isLoading || kindQuery.isLoading))) {
     return <StartupWait />;
@@ -92,12 +99,19 @@ export default function AppTabsLayout() {
     return <Redirect href="/(app)/record" />;
   }
 
+  // Her household's plan can leave Pantry closed (lib/plan.ts); a deep link
+  // there lands on Today instead.
+  const pantryOpen = featureOpen("pantry", householdPlanQuery.data);
+  if (employed && !pantryOpen && pathname === "/pantry") {
+    return <Redirect href="/(app)/today" />;
+  }
+
   const lockedButton = (label: string) =>
     employed
       ? {}
       : {
           tabBarButton: (props: { children?: ReactNode; style?: StyleProp<ViewStyle> }) => (
-            <LockedTab style={props.style} label={label}>
+            <LockedTab style={props.style} label={label} reason={t("tabLock.noHousehold")}>
               {props.children}
             </LockedTab>
           ),
@@ -105,6 +119,10 @@ export default function AppTabsLayout() {
 
   return (
     <Tabs
+      // Back from another tab returns to Today before it leaves the app.
+      // Between households Today sends her straight back to My Record, so
+      // Back there just leaves (no loop between the two).
+      backBehavior={employed ? "firstRoute" : "none"}
       screenOptions={{
         headerShown: false,
         sceneStyle: { paddingTop: insets.top, backgroundColor: colors.sand },
@@ -115,7 +133,13 @@ export default function AppTabsLayout() {
           borderTopColor: colors.border,
         },
         // DESIGN.md's smallest size; the navigator's default label is smaller.
-        tabBarLabelStyle: { fontSize: 13 },
+        // Five labels share the bar, so they grow with her font setting only
+        // up to 1.15x: at 1.3x "Linggo ko" and "Record ko" were cut off.
+        tabBarLabel: ({ color, children }) => (
+          <Text style={[styles.tabLabel, { color }]} numberOfLines={1} maxFontSizeMultiplier={1.15}>
+            {children}
+          </Text>
+        ),
       }}
     >
       <Tabs.Screen
@@ -141,7 +165,19 @@ export default function AppTabsLayout() {
         options={{
           title: t("tabs.pantry"),
           tabBarIcon: ({ color, size }) => <Ionicons name="basket" size={size} color={color} />,
-          ...lockedButton(t("tabs.pantry")),
+          ...(employed && !pantryOpen
+            ? {
+                tabBarButton: (props: { children?: ReactNode; style?: StyleProp<ViewStyle> }) => (
+                  <LockedTab
+                    style={props.style}
+                    label={t("tabs.pantry")}
+                    reason={t("plan.tabClosed")}
+                  >
+                    {props.children}
+                  </LockedTab>
+                ),
+              }
+            : lockedButton(t("tabs.pantry"))),
         }}
       />
       <Tabs.Screen
@@ -166,6 +202,9 @@ export default function AppTabsLayout() {
 }
 
 const styles = StyleSheet.create({
+  tabLabel: {
+    fontSize: 13,
+  },
   locked: {
     flex: 1,
     alignItems: "center",

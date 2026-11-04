@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { Pressable, StyleSheet, Text, View } from "react-native";
+import { Pressable, StyleSheet, View } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 
@@ -19,13 +19,16 @@ import type { Workplaces } from "@/hooks/use-workplaces";
 import { PlaceTag } from "@/components/features/workplace/place-tag";
 
 import { TaskUpdates } from "./task-updates";
+import { Text } from "@/components/ui/text";
+import { useT } from "@/lib/i18n/locale-context";
+import type { MessageKey } from "@/lib/i18n/instance";
 
-const STATUS: Record<TodayTask["status"], { label: string; color: string }> = {
-  done: { label: "Tapos na", color: colors.pineTeal },
-  in_progress: { label: "Ginagawa", color: colors.terracottaGold },
-  blocked: { label: "Naka-hold", color: colors.terracottaInk },
-  todo: { label: "Gagawin", color: colors.mutedInk },
-  cancelled: { label: "Kinansela", color: colors.mutedInk },
+const STATUS: Record<TodayTask["status"], { label: MessageKey; color: string }> = {
+  done: { label: "task.done", color: colors.pineTeal },
+  in_progress: { label: "task.doing", color: colors.terracottaInk },
+  blocked: { label: "task.onHold", color: colors.terracottaInk },
+  todo: { label: "task.toDo", color: colors.mutedInk },
+  cancelled: { label: "task.cancelled", color: colors.mutedInk },
 };
 
 /**
@@ -59,6 +62,7 @@ export function TodayTaskList({
   /** Shown when today has no task. Without it an empty day shows nothing. */
   emptyText?: string;
 }) {
+  const t = useT();
   const queryClient = useQueryClient();
   const [open, setOpen] = useState(true);
   const [expandedId, setExpandedId] = useState<string | null>(null);
@@ -124,7 +128,7 @@ export function TodayTaskList({
     },
     onError: (_err, _task, context) => {
       if (context) queryClient.setQueryData(["today-tasks", helperId], context.previous);
-      setToggleError("Hindi na-save. Subukan ulit.");
+      setToggleError(t("today.hindiNaSaveSubukanUlit"));
       onChanged();
     },
     onSuccess: (result) => {
@@ -163,10 +167,10 @@ export function TodayTaskList({
         style={styles.header}
       >
         <View style={styles.headerText}>
-          <Text style={styles.title}>Lahat ng task ngayon</Text>
+          <Text style={styles.title}>{t("today.lahatNgTaskNgayon")}</Text>
           <Text style={styles.sub}>
-            {done} sa {tasks.length} tapos na
-            {open && done < tasks.length ? " · i-tsek ang natapos mo" : ""}
+            {t("today.doneOfTotal", { done, total: tasks.length })}
+            {open && done < tasks.length ? t("today.iTsekAngNataposMo") : ""}
           </Text>
         </View>
         <Ionicons name={open ? "chevron-up" : "chevron-down"} size={22} color={colors.mutedInk} />
@@ -187,7 +191,7 @@ export function TodayTaskList({
                     accessibilityState={{ checked: isDone }}
                     accessibilityLabel={task.title}
                     accessibilityHint={
-                      isDone ? "Ibalik bilang hindi pa tapos" : "Markahang tapos na"
+                      isDone ? t("today.ibalikBilangHindiPaTapos") : t("today.markahangTaposNa")
                     }
                     hitSlop={6}
                     style={styles.check}
@@ -220,7 +224,9 @@ export function TodayTaskList({
                         from={task.from}
                         to={task.to}
                       />
-                      <Text style={[styles.status, { color: status.color }]}>{status.label}</Text>
+                      <Text style={[styles.status, { color: status.color }]}>
+                        {t(status.label)}
+                      </Text>
                     </View>
                     <Ionicons
                       name={expanded ? "chevron-up" : "chatbubble-ellipses-outline"}
@@ -233,7 +239,9 @@ export function TodayTaskList({
                   <View style={styles.detail}>
                     {task.notes ? <Text style={styles.note}>{task.notes}</Text> : null}
                     {task.status === "blocked" && task.blockReason ? (
-                      <Text style={styles.note}>Naka-hold: {task.blockReason}</Text>
+                      <Text style={styles.note}>
+                        {t("today.onHoldReason", { reason: task.blockReason })}
+                      </Text>
                     ) : null}
                     <TaskUpdates ticketId={task.id} myUserId={myUserId} />
                   </View>
@@ -250,9 +258,12 @@ export function TodayTaskList({
 
 /** "Ngayon": where the clock is, in the timeline layout. */
 function NowLine({ at }: { at: number }) {
+  const t = useT();
   return (
-    <View style={styles.nowLine} accessibilityLabel="Ngayon">
-      <Text style={styles.nowText}>Ngayon · {formatClockTime(new Date(at).toISOString())}</Text>
+    <View style={styles.nowLine} accessibilityLabel={t("today.ngayon")}>
+      <Text style={styles.nowText}>
+        {t("today.nowAt", { time: formatClockTime(new Date(at).toISOString()) })}
+      </Text>
       <View style={styles.nowRule} />
     </View>
   );

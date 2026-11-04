@@ -1,14 +1,15 @@
 import { useState } from "react";
-import { KeyboardAvoidingView, ScrollView, StyleSheet, Text, View } from "react-native";
+import { KeyboardAvoidingView, ScrollView, StyleSheet, View } from "react-native";
 import { router, useLocalSearchParams } from "expo-router";
 
 import { useT } from "@/lib/i18n/locale-context";
-import { colors } from "@/lib/theme";
+import { colors, fonts } from "@/lib/theme";
 import { textParts } from "@/lib/i18n/translate";
 import { claimProfile } from "@/services/api/handshake";
 import { TextField } from "@/components/ui/text-field";
 import { KEYBOARD_BEHAVIOR, useKeyboardOffset } from "@/components/ui/keyboard-screen";
 import { PrimaryButton } from "@/components/ui/primary-button";
+import { Text } from "@/components/ui/text";
 
 const MIN_PASSWORD_LENGTH = 6;
 
@@ -150,11 +151,11 @@ const styles = StyleSheet.create({
   eyebrow: {
     fontSize: 13,
     fontWeight: "700",
-    color: colors.terracottaGold,
+    color: colors.terracottaInk,
   },
   title: {
     fontSize: 22,
-    fontWeight: "700",
+    fontFamily: fonts.displayBold,
     color: colors.ink,
   },
   introCard: {
@@ -178,7 +179,7 @@ const styles = StyleSheet.create({
   },
   errorText: {
     fontSize: 13,
-    color: colors.terracottaGold,
+    color: colors.terracottaInk,
   },
   actions: {
     flexDirection: "row",

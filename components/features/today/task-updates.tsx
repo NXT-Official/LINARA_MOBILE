@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { ActivityIndicator, Alert, Pressable, StyleSheet, Text, View } from "react-native";
+import { ActivityIndicator, Alert, Pressable, StyleSheet, View } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 
@@ -7,9 +7,12 @@ import { colors } from "@/lib/theme";
 import { addTaskComment, deleteTaskComment, getTaskComments } from "@/services/api/ticket-comments";
 import { TextField } from "@/components/ui/text-field";
 import { PrimaryButton } from "@/components/ui/primary-button";
+import { Text } from "@/components/ui/text";
+import { useT } from "@/lib/i18n/locale-context";
+import { intlLocale } from "@/lib/i18n/instance";
 
 const stamp = (iso: string) =>
-  new Date(iso).toLocaleString("en-PH", {
+  new Date(iso).toLocaleString(intlLocale(), {
     month: "short",
     day: "numeric",
     hour: "numeric",
@@ -23,6 +26,7 @@ const stamp = (iso: string) =>
  * Checks for the manager's replies every 15 seconds while it's on screen.
  */
 export function TaskUpdates({ ticketId, myUserId }: { ticketId: string; myUserId: string }) {
+  const t = useT();
   const queryClient = useQueryClient();
   const key = ["task-comments", ticketId];
   const commentsQuery = useQuery({
@@ -46,8 +50,8 @@ export function TaskUpdates({ ticketId, myUserId }: { ticketId: string; myUserId
 
   return (
     <View style={styles.wrap}>
-      <Text style={styles.title}>Mga update</Text>
-      <Text style={styles.sub}>Makikita ito ng employer mo, at puwede rin silang sumagot.</Text>
+      <Text style={styles.title}>{t("today.mgaUpdate")}</Text>
+      <Text style={styles.sub}>{t("today.makikitaItoNgEmployerMo")}</Text>
 
       {commentsQuery.isLoading ? (
         <ActivityIndicator color={colors.pineTeal} />
@@ -56,21 +60,21 @@ export function TaskUpdates({ ticketId, myUserId }: { ticketId: string; myUserId
           <View key={c.id} style={styles.comment}>
             <View style={styles.commentHead}>
               <Text style={styles.author}>
-                {c.authorId === myUserId ? "Ikaw" : c.authorName || "Someone"}
+                {c.authorId === myUserId ? t("today.ikaw") : c.authorName || t("today.someone")}
               </Text>
               <Text style={styles.time}>
                 {stamp(c.createdAt)}
-                {c.editedAt ? " · binago" : ""}
+                {c.editedAt ? t("today.binago") : ""}
               </Text>
               {c.authorId === myUserId ? (
                 <Pressable
                   accessibilityRole="button"
-                  accessibilityLabel="Burahin ang update"
+                  accessibilityLabel={t("today.burahinAngUpdate")}
                   hitSlop={8}
                   onPress={() =>
                     Alert.alert(
-                      "Burahin ang update?",
-                      "Mawawala ito sa task para sa lahat.",
+                      t("today.burahinAngUpdate2"),
+                      t("today.mawawalaItoSaTaskPara"),
                       [
                         { text: "Huwag", style: "cancel" },
                         {
@@ -93,20 +97,20 @@ export function TaskUpdates({ ticketId, myUserId }: { ticketId: string; myUserId
       )}
 
       <TextField
-        label="Magdagdag ng update"
+        label={t("today.magdagdagNgUpdate")}
         value={draft}
         onChangeText={setDraft}
-        placeholder="Hal. Naubos na ang sabon, bumili ako"
+        placeholder={t("today.halNaubosNaAngSabon")}
         maxLength={1000}
         multiline
       />
       {post.isError ? (
         <Text style={styles.error}>
-          {post.error instanceof Error ? post.error.message : "Hindi naipadala. Subukan ulit."}
+          {post.error instanceof Error ? post.error.message : t("today.hindiNaipadalaSubukanUlit")}
         </Text>
       ) : null}
       <PrimaryButton
-        label="Ipadala ang update"
+        label={t("today.ipadalaAngUpdate")}
         variant="secondary"
         loading={post.isPending}
         disabled={!draft.trim()}

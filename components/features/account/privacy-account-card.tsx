@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { Linking, Pressable, StyleSheet, Text, View } from "react-native";
+import { Linking, Pressable, StyleSheet, View } from "react-native";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 
 import { colors, fonts } from "@/lib/theme";
@@ -12,6 +12,8 @@ import {
 } from "@/services/api/account";
 import { PrimaryButton } from "@/components/ui/primary-button";
 import { TextField } from "@/components/ui/text-field";
+import { Text } from "@/components/ui/text";
+import { useT } from "@/lib/i18n/locale-context";
 
 const longDate = (iso: string) => formatDateFil(new Date(iso));
 
@@ -35,6 +37,7 @@ export function PrivacyAccountCard({
   /** She already gave notice, so the first step is done (QA F-LM-010). */
   noticeGiven?: boolean;
 }) {
+  const t = useT();
   const queryClient = useQueryClient();
   const requestQuery = useQuery({
     queryKey: ["my-deletion-request"],
@@ -58,66 +61,64 @@ export function PrivacyAccountCard({
 
   return (
     <View style={styles.card}>
-      <Text style={styles.title}>Privacy at account</Text>
+      <Text style={styles.title}>{t("record.privacyAtAccount")}</Text>
       <View style={styles.links}>
         <Pressable
           accessibilityRole="link"
           onPress={() => void Linking.openURL(PRIVACY_URL)}
           style={styles.link}
         >
-          <Text style={styles.linkText}>Patakaran sa privacy</Text>
+          <Text style={styles.linkText}>{t("record.patakaranSaPrivacy")}</Text>
         </Pressable>
         <Pressable
           accessibilityRole="link"
           onPress={() => void Linking.openURL(TERMS_URL)}
           style={styles.link}
         >
-          <Text style={styles.linkText}>Mga tuntunin</Text>
+          <Text style={styles.linkText}>{t("record.mgaTuntunin")}</Text>
         </Pressable>
       </View>
 
       {pending ? (
         <>
           <Text style={styles.body}>
-            Humiling ka noong {longDate(pending.requestedAt)} na burahin ang account mo. Gagawin ito
-            sa loob ng {DELETION_WINDOW_DAYS} araw. Hanggang doon, gumagana pa rin ang lahat.
+            {t("record.deletionPending", {
+              date: longDate(pending.requestedAt),
+              days: DELETION_WINDOW_DAYS,
+            })}
           </Text>
           <PrimaryButton
-            label="Huwag nang burahin"
+            label={t("record.huwagNangBurahin")}
             variant="secondary"
             loading={keep.isPending}
             onPress={() => keep.mutate()}
           />
-          {keep.isError ? <Text style={styles.error}>Hindi nabawi. Subukan ulit.</Text> : null}
+          {keep.isError ? (
+            <Text style={styles.error}>{t("record.hindiNabawiSubukanUlit")}</Text>
+          ) : null}
         </>
       ) : asking && employed ? (
         <>
+          <Text style={styles.body}>{t("record.mayTrabahoKaPaKaya")}</Text>
           <Text style={styles.body}>
-            May trabaho ka pa, kaya hindi pa mabubura ang account mo. Kailangan munang matapos ang
-            employment mo, para maayos ang huling sahod at record mo.
+            {noticeGiven ? t("record.1NakapagbigayKaNaNg") : t("record.1MagbigayNgAbisoSa")}
           </Text>
-          <Text style={styles.body}>
-            {noticeGiven
-              ? "1. Nakapagbigay ka na ng abiso. Nakikita na ito ng employer mo."
-              : '1. Magbigay ng abiso sa employer mo: "Aalis ka na ba? Magbigay ng abiso", sa itaas.'}
-          </Text>
-          <Text style={styles.body}>2. Tatapusin nila ang employment mo sa huling araw mo.</Text>
-          <Text style={styles.body}>3. Bumalik dito at burahin ang account mo.</Text>
-          <PrimaryButton label="Sige" variant="secondary" onPress={() => setAsking(false)} />
+          <Text style={styles.body}>{t("record.2TatapusinNilaAngEmployment")}</Text>
+          <Text style={styles.body}>{t("record.3BumalikDitoAtBurahin")}</Text>
+          <PrimaryButton
+            label={t("record.sige")}
+            variant="secondary"
+            onPress={() => setAsking(false)}
+          />
         </>
       ) : asking ? (
         <>
           <Text style={styles.body}>
-            Mabubura ang login mo, ang profile mo at ang private notes mo, sa loob ng{" "}
-            {DELETION_WINDOW_DAYS} araw. Puwede mo pa itong bawiin hanggang doon.
+            {t("record.deletionWhat", { days: DELETION_WINDOW_DAYS })}
           </Text>
-          <Text style={styles.body}>
-            Ang payslips, oras at leave mo ay mananatili sa household na pinagtrabahuhan mo nang
-            hindi bababa sa tatlong taon, dahil iyon ang hinihingi ng batas. Kung gusto mo ng kopya,
-            i-download muna ang PDF ng record mo sa itaas.
-          </Text>
+          <Text style={styles.body}>{t("record.angPayslipsOrasAtLeave")}</Text>
           <TextField
-            label="Bakit? (kung meron)"
+            label={t("record.bakitKungMeron")}
             value={note}
             onChangeText={setNote}
             maxLength={300}
@@ -125,19 +126,25 @@ export function PrivacyAccountCard({
           />
           {ask.isError ? (
             <Text style={styles.error}>
-              {ask.error instanceof Error ? ask.error.message : "Hindi naipadala. Subukan ulit."}
+              {ask.error instanceof Error
+                ? ask.error.message
+                : t("record.hindiNaipadalaSubukanUlit")}
             </Text>
           ) : null}
           <PrimaryButton
-            label="Burahin ang account ko"
+            label={t("record.burahinAngAccountKo")}
             loading={ask.isPending}
             onPress={() => ask.mutate()}
           />
-          <PrimaryButton label="Huwag na" variant="secondary" onPress={() => setAsking(false)} />
+          <PrimaryButton
+            label={t("record.huwagNa")}
+            variant="secondary"
+            onPress={() => setAsking(false)}
+          />
         </>
       ) : (
         <Pressable accessibilityRole="button" onPress={() => setAsking(true)} style={styles.link}>
-          <Text style={styles.dangerText}>Burahin ang account ko</Text>
+          <Text style={styles.dangerText}>{t("record.burahinAngAccountKo")}</Text>
         </Pressable>
       )}
     </View>

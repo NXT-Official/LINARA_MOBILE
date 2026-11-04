@@ -1,11 +1,13 @@
 import { useState } from "react";
-import { StyleSheet, Text, View } from "react-native";
+import { StyleSheet, View } from "react-native";
 
 import { colors } from "@/lib/theme";
 import { combineLocalDateTime, toHm, toIsoDate } from "@/lib/datetime-fields";
 import { DateTimeField } from "@/components/ui/date-time-field";
 import { PrimaryButton } from "@/components/ui/primary-button";
 import { TextField } from "@/components/ui/text-field";
+import { Text } from "@/components/ui/text";
+import { useT } from "@/lib/i18n/locale-context";
 
 export type TaskEdit = { scheduledStart: string; notes: string | null };
 
@@ -32,6 +34,7 @@ export function EditTaskForm({
   onSave: (edit: TaskEdit) => void;
   onCancel: () => void;
 }) {
+  const t = useT();
   const start = new Date(scheduledStart);
   const [day, setDay] = useState(toIsoDate(start));
   const [time, setTime] = useState(toHm(start));
@@ -45,10 +48,10 @@ export function EditTaskForm({
 
   return (
     <View style={styles.form}>
-      <Text style={styles.title}>Ayusin ang oras o note</Text>
+      <Text style={styles.title}>{t("today.ayusinAngOrasONote")}</Text>
       <View style={styles.row}>
         <DateTimeField
-          label="Araw"
+          label={t("today.araw")}
           mode="date"
           value={day}
           onChange={setDay}
@@ -56,7 +59,7 @@ export function EditTaskForm({
           containerStyle={styles.half}
         />
         <DateTimeField
-          label="Oras"
+          label={t("today.oras")}
           mode="time"
           value={time}
           onChange={setTime}
@@ -64,25 +67,23 @@ export function EditTaskForm({
         />
       </View>
       <TextField
-        label="Note"
+        label={t("today.note")}
         value={note}
         onChangeText={setNote}
-        placeholder="Hal. Gagawin pagkatapos mananghalian"
+        placeholder={t("today.halGagawinPagkataposMananghalian")}
         maxLength={500}
         multiline
       />
-      {laterDay ? (
-        <Text style={styles.hint}>Mawawala ito sa Ngayon at lalabas sa Linggo ko.</Text>
-      ) : null}
-      <Text style={styles.hint}>Makikita ito ng manager.</Text>
+      {laterDay ? <Text style={styles.hint}>{t("today.mawawalaItoSaNgayonAt")}</Text> : null}
+      <Text style={styles.hint}>{t("today.makikitaItoNgManager")}</Text>
       {error ? <Text style={styles.error}>{error}</Text> : null}
       <PrimaryButton
-        label="I-save"
+        label={t("today.iSave")}
         loading={saving}
         disabled={!changed}
         onPress={() => at && onSave({ scheduledStart: at.toISOString(), notes: nextNotes })}
       />
-      <PrimaryButton label="Huwag na" variant="secondary" onPress={onCancel} />
+      <PrimaryButton label={t("today.huwagNa")} variant="secondary" onPress={onCancel} />
     </View>
   );
 }

@@ -1,6 +1,7 @@
 import { MANAGER_DASHBOARD_URL } from "@/lib/env";
 import { joinHousehold } from "@/services/api/employment";
 import { supabase } from "@/services/supabase";
+import { tr } from "@/lib/i18n/instance";
 
 /**
  * The Supabase client here isn't generated against a Database type, so
@@ -144,9 +145,7 @@ export async function claimProfile(
     });
 
     if (signInError?.code === "email_not_confirmed") {
-      throw new Error(
-        `Nagpadala kami ng confirmation link sa ${email}. Buksan ito, tapos bumalik dito at pindutin ulit ang button para matapos.`,
-      );
+      throw new Error(tr("serviceError.confirmEmailSent", { email }));
     }
     if (signInError || !signInData.session) {
       throw new Error(signInError?.message || "Auth signin failed after registration");
@@ -192,9 +191,7 @@ async function joinWithExistingAccount(
 ): Promise<ClaimedSession> {
   const { data, error } = await supabase.auth.signInWithPassword({ email, password: pass });
   if (error || !data.session) {
-    throw new Error(
-      "May account na ang email na ito. Gamitin ang password mo noon, o mag-sign in at i-enter ang code sa My Record.",
-    );
+    throw new Error(tr("serviceError.emailTaken"));
   }
   const joined = await joinHousehold(code);
   return {

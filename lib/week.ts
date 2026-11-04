@@ -1,33 +1,20 @@
 import { toIsoDate } from "./datetime-fields";
 import { startOfToday } from "./today";
+import { tr, trList } from "./i18n/instance";
 
-/** Sunday-first, matching Date.getDay() and helper_profiles.weekly_rest_day. */
-export const DAY_NAMES = [
-  "Linggo",
-  "Lunes",
-  "Martes",
-  "Miyerkules",
-  "Huwebes",
-  "Biyernes",
-  "Sabado",
-] as const;
-
-const MONTHS = ["Ene", "Peb", "Mar", "Abr", "May", "Hun", "Hul", "Ago", "Set", "Okt", "Nob", "Dis"];
-
-export const MONTH_NAMES = [
-  "Enero",
-  "Pebrero",
-  "Marso",
-  "Abril",
-  "Mayo",
-  "Hunyo",
-  "Hulyo",
-  "Agosto",
-  "Setyembre",
-  "Oktubre",
-  "Nobyembre",
-  "Disyembre",
-];
+/**
+ * Sunday-first day names, matching Date.getDay() and
+ * helper_profiles.weekly_rest_day, in the language she's using now
+ * (locales/<lang>/dates.json).
+ */
+export const dayNames = (): string[] => trList("dates.days");
+/** Short month names ("Okt"), in the current language. */
+export const monthsShort = (): string[] => trList("dates.monthsShort");
+/** Full month names ("Oktubre"), in the current language. */
+export const monthNames = (): string[] => trList("dates.monthsLong");
+/** "Okt 8", in the current language's order. */
+export const monthDay = (d: Date): string =>
+  tr("dates.monthDay", { month: monthsShort()[d.getMonth()], day: d.getDate() });
 
 export interface WeekTicket {
   id: string;
@@ -103,7 +90,11 @@ export function buildDays<T extends WeekTicket>(
       .sort((a, b) => Date.parse(a.scheduledStart) - Date.parse(b.scheduledStart));
     return {
       date,
-      label: `${DAY_NAMES[date.getDay()]}, ${MONTHS[date.getMonth()]} ${date.getDate()}`,
+      label: tr("dates.weekdayMonthDay", {
+        weekday: dayNames()[date.getDay()],
+        month: monthsShort()[date.getMonth()],
+        day: date.getDate(),
+      }),
       isToday: date.getTime() === today,
       isPast: date.getTime() < today,
       isRestDay: date.getDay() === weeklyRestDay,
@@ -145,5 +136,5 @@ export function monthRange(year: number, month: number): { start: Date; count: n
 /** "Okt 1 – Okt 7". */
 export function rangeLabel(start: Date, count: number): string {
   const end = addDays(start, count - 1);
-  return `${MONTHS[start.getMonth()]} ${start.getDate()} – ${MONTHS[end.getMonth()]} ${end.getDate()}`;
+  return tr("dates.range", { from: monthDay(start), to: monthDay(end) });
 }

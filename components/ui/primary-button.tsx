@@ -1,6 +1,7 @@
-import { ActivityIndicator, Pressable, StyleSheet, Text, type ViewStyle } from "react-native";
+import { ActivityIndicator, Pressable, StyleSheet, type ViewStyle } from "react-native";
 
 import { colors } from "@/lib/theme";
+import { Text } from "@/components/ui/text";
 
 /**
  * Full-width, thumb-friendly action button shared by the onboarding stack.
@@ -26,6 +27,8 @@ export function PrimaryButton({
 
   return (
     <Pressable
+      accessibilityRole="button"
+      accessibilityState={{ disabled: isDisabled, busy: Boolean(loading) }}
       onPress={onPress}
       disabled={isDisabled}
       style={({ pressed }) => [

@@ -1,9 +1,11 @@
-import { ActivityIndicator, Image, StyleSheet, Text, View } from "react-native";
+import { ActivityIndicator, Image, StyleSheet, View } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
 
-import { colors } from "@/lib/theme";
+import { colors, fonts } from "@/lib/theme";
 import { PrimaryButton } from "@/components/ui/primary-button";
 import type { PalengkeTicket } from "@/services/api/tickets";
+import { Text } from "@/components/ui/text";
+import { useT } from "@/lib/i18n/locale-context";
 
 /**
  * Completes the active Palengke Run ticket with a receipt photo (roadmap
@@ -29,13 +31,12 @@ export function ReceiptCaptureCard({
   onCapture: () => void;
   onComplete: () => void;
 }) {
+  const t = useT();
   return (
     <View style={styles.card}>
-      <Text style={styles.eyebrow}>Palengke Run</Text>
+      <Text style={styles.eyebrow}>{t("pantry.palengkeRun")}</Text>
       <Text style={styles.title}>{ticket.title}</Text>
-      <Text style={styles.subtitle}>
-        Kumuha ng larawan ng resibo bago tapusin ang Palengke Run na ito.
-      </Text>
+      <Text style={styles.subtitle}>{t("pantry.kumuhaNgLarawanNgResibo2")}</Text>
 
       {receiptUri ? (
         <View style={styles.receiptRow}>
@@ -43,16 +44,16 @@ export function ReceiptCaptureCard({
           <View style={styles.receiptInfo}>
             <View style={styles.receiptAttachedRow}>
               <Ionicons name="checkmark-circle" size={16} color={colors.pineTeal} />
-              <Text style={styles.receiptAttachedText}>Naka-attach na ang resibo</Text>
+              <Text style={styles.receiptAttachedText}>{t("pantry.nakaAttachNaAngResibo")}</Text>
             </View>
             <Text style={styles.receiptRetake} onPress={onCapture}>
-              Kumuha ulit
+              {t("pantry.kumuhaUlit")}
             </Text>
           </View>
         </View>
       ) : (
         <PrimaryButton
-          label="Kumuha ng larawan ng resibo"
+          label={t("pantry.kumuhaNgLarawanNgResibo")}
           variant="secondary"
           loading={uploading}
           onPress={onCapture}
@@ -62,12 +63,12 @@ export function ReceiptCaptureCard({
       {uploading && !receiptUri ? (
         <View style={styles.uploadingRow}>
           <ActivityIndicator size="small" color={colors.pineTeal} />
-          <Text style={styles.uploadingText}>Ina-upload ang resibo...</Text>
+          <Text style={styles.uploadingText}>{t("pantry.inaUploadAngResibo")}</Text>
         </View>
       ) : null}
 
       <PrimaryButton
-        label="Tapos na ang run"
+        label={t("pantry.taposNaAngRun")}
         disabled={!receiptUri}
         loading={completing}
         onPress={onComplete}
@@ -88,11 +89,11 @@ const styles = StyleSheet.create({
   eyebrow: {
     fontSize: 13,
     fontWeight: "700",
-    color: colors.terracottaGold,
+    color: colors.terracottaInk,
   },
   title: {
     fontSize: 17,
-    fontWeight: "700",
+    fontFamily: fonts.displayBold,
     color: colors.ink,
   },
   subtitle: {

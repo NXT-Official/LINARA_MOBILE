@@ -1,7 +1,9 @@
-import { Pressable, ScrollView, StyleSheet, Text } from "react-native";
+import { Pressable, ScrollView, StyleSheet } from "react-native";
 
 import { colors } from "@/lib/theme";
 import type { Workplaces } from "@/hooks/use-workplaces";
+import { Text } from "@/components/ui/text";
+import { useT } from "@/lib/i18n/locale-context";
 
 /**
  * Which house she's looking at, for a helper who works in more than one of
@@ -16,10 +18,11 @@ export function HouseSwitcher({
   /** Offer "Lahat" (every house): Today does; the pantry doesn't. */
   allowAll?: boolean;
 }) {
+  const t = useT();
   if (!places.multi) return null;
   const active = allowAll ? places.house : places.oneHouse;
   const chips = [
-    ...(allowAll ? [{ key: "all", label: "Lahat ng bahay" }] : []),
+    ...(allowAll ? [{ key: "all", label: t("today.lahatNgBahay") }] : []),
     ...places.workplaces.map((w) => ({ key: w.householdId, label: w.name })),
   ];
   return (

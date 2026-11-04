@@ -1,27 +1,4 @@
-import type { Locale } from "./locales";
-import { en } from "./messages/en";
-import { es } from "./messages/es";
-import { ja } from "./messages/ja";
-import { tl, type MessageKey } from "./messages/tl";
-import { zhCN } from "./messages/zh-CN";
-
-export type { MessageKey };
-
-export const MESSAGES: Record<Locale, Record<MessageKey, string>> = {
-  tl,
-  en,
-  es,
-  "zh-CN": zhCN,
-  ja,
-};
-
-export type Vars = Record<string, string | number>;
-
-/** Fills `{name}` placeholders. A missing value leaves the placeholder showing. */
-export function translate(locale: Locale, key: MessageKey, vars?: Vars): string {
-  const text = MESSAGES[locale][key] ?? tl[key];
-  return vars ? text.replace(/\{(\w+)\}/g, (m, k: string) => String(vars[k] ?? m)) : text;
-}
+export { translate, type MessageKey, type Vars } from "./instance";
 
 /**
  * A text split around its placeholders, for a sentence with a link or bold

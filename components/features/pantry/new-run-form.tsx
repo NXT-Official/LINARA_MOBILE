@@ -1,10 +1,12 @@
 import { useState } from "react";
-import { Pressable, StyleSheet, Text, TextInput, View } from "react-native";
+import { Pressable, StyleSheet, View } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
 
 import { colors } from "@/lib/theme";
 import { PrimaryButton } from "@/components/ui/primary-button";
 import type { GroceryItemRow } from "@/services/api/grocery";
+import { Text, TextInput } from "@/components/ui/text";
+import { useT } from "@/lib/i18n/locale-context";
 
 /**
  * A pantry lead makes a draft run from what's in Kailangan: a name and the
@@ -21,6 +23,7 @@ export function NewRunForm({
   onSubmit: (title: string, itemIds: string[]) => void;
   onCancel: () => void;
 }) {
+  const t = useT();
   const toBuy = pool.filter((g) => !g.bought);
   const [title, setTitle] = useState("Palengke");
   const [picked, setPicked] = useState<Set<string>>(() => new Set(toBuy.map((g) => g.id)));
@@ -39,23 +42,23 @@ export function NewRunForm({
   const chosen = toBuy.filter((g) => picked.has(g.id)).map((g) => g.id);
 
   const submit = () => {
-    if (!title.trim()) return setError("Lagyan ng pangalan ang run.");
-    if (chosen.length === 0) return setError("Pumili ng kahit isang bibilhin.");
+    if (!title.trim()) return setError(t("pantry.lagyanNgPangalanAngRun"));
+    if (chosen.length === 0) return setError(t("pantry.pumiliNgKahitIsangBibilhin"));
     setError(null);
     onSubmit(title.trim(), chosen);
   };
 
   return (
     <View style={styles.card}>
-      <Text style={styles.label}>Pangalan ng run</Text>
+      <Text style={styles.label}>{t("pantry.pangalanNgRun")}</Text>
       <TextInput
         value={title}
         onChangeText={setTitle}
         maxLength={60}
-        accessibilityLabel="Pangalan ng run"
+        accessibilityLabel={t("pantry.pangalanNgRun")}
         style={styles.input}
       />
-      <Text style={styles.label}>Mga bibilhin · {chosen.length}</Text>
+      <Text style={styles.label}>{t("pantry.toBuyCount", { count: chosen.length })}</Text>
       <View style={styles.list}>
         {toBuy.map((g) => {
           const on = picked.has(g.id);
@@ -82,11 +85,14 @@ export function NewRunForm({
         })}
       </View>
       {error ? <Text style={styles.error}>{error}</Text> : null}
-      <Text style={styles.hint}>
-        Draft muna ito. Ipa-approve mo sa manager, at siya ang magbibigay ng pera.
-      </Text>
-      <PrimaryButton label="Gawin ang draft" onPress={submit} loading={saving} />
-      <PrimaryButton label="Kanselahin" variant="secondary" onPress={onCancel} disabled={saving} />
+      <Text style={styles.hint}>{t("pantry.draftMunaItoIpaApprove")}</Text>
+      <PrimaryButton label={t("pantry.gawinAngDraft")} onPress={submit} loading={saving} />
+      <PrimaryButton
+        label={t("pantry.kanselahin")}
+        variant="secondary"
+        onPress={onCancel}
+        disabled={saving}
+      />
     </View>
   );
 }

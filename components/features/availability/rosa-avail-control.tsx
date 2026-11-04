@@ -1,16 +1,19 @@
-import { Pressable, StyleSheet, Text, View } from "react-native";
+import { Pressable, StyleSheet, View } from "react-native";
 
 import { colors } from "@/lib/theme";
 import type { RosaAvailabilityStatus } from "@/lib/availability";
+import { Text } from "@/components/ui/text";
+import { useT } from "@/lib/i18n/locale-context";
+import type { MessageKey } from "@/lib/i18n/instance";
 
 function formatTimeOfDay(ts: number): string {
   return new Date(ts).toLocaleTimeString([], { hour: "numeric", minute: "2-digit" });
 }
 
-const STATUS_LABEL: Record<RosaAvailabilityStatus["status"], string> = {
-  on_shift: "Naka-shift",
-  available: "Available",
-  off: "Off",
+const STATUS_LABEL: Record<RosaAvailabilityStatus["status"], MessageKey> = {
+  on_shift: "availability.onShift",
+  available: "availability.available",
+  off: "availability.off",
 };
 
 /**
@@ -28,40 +31,44 @@ export function RosaAvailControl({
   onAvailable: (hours: number) => void;
   onOff: () => void;
 }) {
+  const t = useT();
   const onShift = status.status === "on_shift";
 
   return (
     <View style={styles.container}>
       <View style={styles.headerRow}>
-        <Text style={styles.label}>Available ka ba?</Text>
+        <Text style={styles.label}>{t("today.availableKaBa")}</Text>
         <View style={styles.pill}>
           <View
             style={[
               styles.pillDot,
               {
                 backgroundColor: onShift
-                  ? "#8FE3C4"
+                  ? colors.shiftDot
                   : status.status === "available"
                     ? colors.terracottaGold
                     : "rgba(253,251,246,0.5)",
               },
             ]}
           />
-          <Text style={styles.pillText}>{STATUS_LABEL[status.status]}</Text>
+          <Text style={styles.pillText}>{t(STATUS_LABEL[status.status])}</Text>
         </View>
       </View>
 
       {status.status === "available" && status.until ? (
-        <Text style={styles.detail}>Hanggang {formatTimeOfDay(status.until)}</Text>
+        <Text style={styles.detail}>
+          {t("today.availableUntil", { time: formatTimeOfDay(status.until) })}
+        </Text>
       ) : null}
       {status.timeOff ? (
-        <Text style={styles.detail}>Day off mo ngayon. Aprobado ng manager.</Text>
+        <Text style={styles.detail}>{t("today.dayOffMoNgayonAprobado")}</Text>
       ) : null}
 
       {!onShift && (
         <View style={styles.actions}>
           {status.status === "available" ? (
             <Pressable
+              accessibilityRole="button"
               onPress={onOff}
               style={({ pressed }) => [
                 styles.touchTarget,
@@ -69,13 +76,14 @@ export function RosaAvailControl({
                 pressed && styles.pressed,
               ]}
             >
-              <Text style={styles.secondaryButtonText}>Gawing Off</Text>
+              <Text style={styles.secondaryButtonText}>{t("today.gawingOff")}</Text>
             </Pressable>
           ) : status.quiet ? (
-            <Text style={styles.detail}>Hindi puwedeng mag-Available sa oras ng pahinga.</Text>
+            <Text style={styles.detail}>{t("today.hindiPuwedengMagAvailableSa")}</Text>
           ) : (
             <>
               <Pressable
+                accessibilityRole="button"
                 onPress={() => onAvailable(1)}
                 style={({ pressed }) => [
                   styles.touchTarget,
@@ -83,9 +91,10 @@ export function RosaAvailControl({
                   pressed && styles.pressed,
                 ]}
               >
-                <Text style={styles.primaryButtonText}>Available nang 1 oras</Text>
+                <Text style={styles.primaryButtonText}>{t("today.availableNang1Oras")}</Text>
               </Pressable>
               <Pressable
+                accessibilityRole="button"
                 onPress={() => onAvailable(2)}
                 style={({ pressed }) => [
                   styles.touchTarget,
@@ -93,7 +102,7 @@ export function RosaAvailControl({
                   pressed && styles.pressed,
                 ]}
               >
-                <Text style={styles.primaryButtonText}>Available nang 2 oras</Text>
+                <Text style={styles.primaryButtonText}>{t("today.availableNang2Oras")}</Text>
               </Pressable>
             </>
           )}
@@ -106,9 +115,9 @@ export function RosaAvailControl({
 const styles = StyleSheet.create({
   container: {
     marginTop: 16,
-    borderRadius: 16,
-    padding: 12,
-    backgroundColor: "rgba(253,251,246,0.12)",
+    paddingTop: 14,
+    borderTopWidth: StyleSheet.hairlineWidth,
+    borderTopColor: "rgba(253,251,246,0.3)",
   },
   headerRow: {
     flexDirection: "row",

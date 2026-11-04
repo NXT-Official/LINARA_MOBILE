@@ -311,7 +311,7 @@ export function recordPdfHtml(r: RecordPdfInput): string {
 <html lang="en">
 <head>
 <meta charset="utf-8" />
-<title>Work record — ${escapeHtml(r.name)}</title>
+<title>Work record: ${escapeHtml(r.name)}</title>
 <style>
   @page { margin: 48px 44px; }
   * { box-sizing: border-box; }

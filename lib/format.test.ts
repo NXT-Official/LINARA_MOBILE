@@ -1,6 +1,34 @@
-import { describe, expect, it } from "vitest";
+import { afterEach, describe, expect, it } from "vitest";
 
-import { formatClockTime, formatDateFil, formatTimeSpan } from "./format";
+import { formatClockTime, formatDateFil, formatShiftTime, formatTimeSpan } from "./format";
+import { i18n } from "./i18n/instance";
+
+describe("formatShiftTime in her language (QA staging-1103 F2)", () => {
+  afterEach(async () => {
+    await i18n.changeLanguage("tl");
+  });
+
+  it.each([
+    ["tl", "06:00:00", "6:00 AM"],
+    ["tl", "19:30:00", "7:30 PM"],
+    ["en", "00:00:00", "12:00 AM"],
+    ["en", "12:05:00", "12:05 PM"],
+    ["es", "06:00:00", "6:00 a. m."],
+    ["es", "19:30:00", "7:30 p. m."],
+    ["zh-CN", "06:00:00", "上午6:00"],
+    ["zh-CN", "19:30:00", "下午7:30"],
+    ["ja", "06:00:00", "午前6:00"],
+    ["ja", "19:30:00", "午後7:30"],
+  ])("%s %s -> %s", async (lang, time, expected) => {
+    await i18n.changeLanguage(lang);
+    expect(formatShiftTime(time)).toBe(expected);
+  });
+
+  it("a task's clock time follows the language too", async () => {
+    await i18n.changeLanguage("ja");
+    expect(formatClockTime(new Date(2026, 9, 6, 14, 0).toISOString())).toBe("午後2:00");
+  });
+});
 
 describe("formatTimeSpan", () => {
   // Built from local parts, so the test reads the same in any time zone.

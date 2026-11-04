@@ -1,4 +1,4 @@
-import { StyleSheet, Text, View } from "react-native";
+import { StyleSheet, View } from "react-native";
 
 import { colors, fonts } from "@/lib/theme";
 import { greetingFor } from "@/lib/today";
@@ -7,6 +7,8 @@ import { firstNameOf } from "@/lib/names";
 import type { RosaAvailabilityStatus } from "@/lib/availability";
 import { RosaAvailControl } from "@/components/features/availability/rosa-avail-control";
 import type { HelperProfileSummary } from "@/services/api/helper-profile";
+import { Text } from "@/components/ui/text";
+import { useT } from "@/lib/i18n/locale-context";
 
 /**
  * The helper's greeting, shift snapshot, and reachability control -- sits
@@ -24,28 +26,23 @@ export function DignityHeader({
   onAvailable: (hours: number) => void;
   onOff: () => void;
 }) {
+  const t = useT();
   // Her own name, not a title saved with it ("Kuya Marito" is Marito).
   const firstName = firstNameOf(profile.name);
 
   return (
     <View style={styles.card}>
-      <Text style={styles.eyebrow}>Station ni {firstName}</Text>
-      <Text style={styles.greeting}>
+      <Text style={styles.greeting} accessibilityRole="header">
         {greetingFor(new Date())}, {firstName}.
       </Text>
-
-      <View style={styles.statsRow}>
-        <View style={styles.statTile}>
-          <Text style={styles.statLabel}>Shift mo ngayon</Text>
-          <Text style={styles.statValue}>
-            {formatShiftTime(profile.shiftStart)} – {formatShiftTime(profile.shiftEnd)}
-          </Text>
-        </View>
-        <View style={styles.statTile}>
-          <Text style={styles.statLabel}>Rest day</Text>
-          <Text style={styles.statValue}>{weekdayName(profile.weeklyRestDay)}</Text>
-        </View>
-      </View>
+      {/* Her day in one line; the tiles that held it were cards in a card. */}
+      <Text style={styles.shiftLine}>
+        {t("today.shiftLine", {
+          start: formatShiftTime(profile.shiftStart),
+          end: formatShiftTime(profile.shiftEnd),
+          restDay: weekdayName(profile.weeklyRestDay),
+        })}
+      </Text>
 
       <RosaAvailControl status={availability} onAvailable={onAvailable} onOff={onOff} />
     </View>
@@ -58,37 +55,15 @@ const styles = StyleSheet.create({
     padding: 20,
     backgroundColor: colors.pineTeal,
   },
-  eyebrow: {
-    fontSize: 13,
-    fontWeight: "700",
-    color: "rgba(253,251,246,0.7)",
-  },
   greeting: {
-    marginTop: 6,
     fontFamily: fonts.displayBold,
     fontSize: 24,
     color: colors.cardCream,
   },
-  statsRow: {
-    marginTop: 16,
-    flexDirection: "row",
-    gap: 12,
-  },
-  statTile: {
-    flex: 1,
-    borderRadius: 16,
-    padding: 12,
-    backgroundColor: "rgba(253,251,246,0.1)",
-  },
-  statLabel: {
-    fontSize: 13,
-    fontWeight: "700",
-    color: "rgba(253,251,246,0.7)",
-  },
-  statValue: {
-    marginTop: 3,
+  shiftLine: {
+    marginTop: 6,
     fontSize: 14,
-    fontWeight: "700",
-    color: colors.cardCream,
+    lineHeight: 20,
+    color: "rgba(253,251,246,0.85)",
   },
 });

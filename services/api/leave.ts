@@ -1,6 +1,7 @@
 import { isOffline } from "@/lib/network";
-import { OFFLINE_SEND, requestErrorMessage } from "@/lib/request-error";
+import { offlineSendText, requestErrorMessage } from "@/lib/request-error";
 import { supabase } from "@/services/supabase";
+import { tr } from "@/lib/i18n/instance";
 
 /**
  * Leave: whole days off (../LINARA/supabase/add-leave.sql,
@@ -109,7 +110,7 @@ export async function requestLeave(
   endDate: string,
   note?: string,
 ): Promise<{ requestId: string; days: number; minutes: number }> {
-  if (await isOffline()) throw new Error(OFFLINE_SEND);
+  if (await isOffline()) throw new Error(offlineSendText());
   const { data, error } = await supabase.rpc("request_leave", {
     p_helper_id: helperId,
     p_kind: kind,
@@ -125,13 +126,13 @@ export async function requestLeave(
   const row = (
     data as { request_id: string; requested_days: number; requested_minutes: number }[] | null
   )?.[0];
-  if (!row) throw new Error("Hindi naipadala ang request.");
+  if (!row) throw new Error(tr("serviceError.requestNotSent"));
   return { requestId: row.request_id, days: row.requested_days, minutes: row.requested_minutes };
 }
 
 /** A pending request, or approved leave that hasn't started yet. */
 export async function cancelLeave(requestId: string): Promise<void> {
-  if (await isOffline()) throw new Error(OFFLINE_SEND);
+  if (await isOffline()) throw new Error(offlineSendText());
   const { error } = await supabase.rpc("cancel_leave_request", { p_request_id: requestId });
   if (error) throw new Error(requestErrorMessage(error.message, false));
 }
@@ -142,7 +143,7 @@ export async function ackLeave(
   ack: "confirmed" | "disputed",
   note?: string,
 ): Promise<void> {
-  if (await isOffline()) throw new Error(OFFLINE_SEND);
+  if (await isOffline()) throw new Error(offlineSendText());
   const { error } = await supabase.rpc("ack_leave", {
     p_request_id: requestId,
     p_ack: ack,

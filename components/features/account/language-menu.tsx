@@ -1,17 +1,19 @@
 import { useState } from "react";
-import { Pressable, StyleSheet, Text, View } from "react-native";
+import { Pressable, StyleSheet, View } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
 
 import { colors } from "@/lib/theme";
 import { LOCALES, localeLabel } from "@/lib/i18n/locales";
 import { useLocale, useT } from "@/lib/i18n/locale-context";
+import { Text } from "@/components/ui/text";
 
 /**
  * Picks the app's language, as the Business Console's menu does. Opens in
  * place rather than as a dialog, so hardware Back never has a sheet to close.
- * Each option is written in its own language.
+ * Each option is written in its own language. `onOpen` lets a screen bring
+ * the opened list into view when the menu sits at its bottom (QA staging-1103 F3).
  */
-export function LanguageMenu() {
+export function LanguageMenu({ onOpen }: { onOpen?: () => void } = {}) {
   const { locale, setLocale } = useLocale();
   const t = useT();
   const [open, setOpen] = useState(false);
@@ -19,7 +21,10 @@ export function LanguageMenu() {
   return (
     <View style={styles.wrap}>
       <Pressable
-        onPress={() => setOpen((o) => !o)}
+        onPress={() => {
+          if (!open && onOpen) requestAnimationFrame(onOpen);
+          setOpen((o) => !o);
+        }}
         accessibilityRole="button"
         accessibilityState={{ expanded: open }}
         accessibilityLabel={t("language.current", { language: localeLabel(locale) })}

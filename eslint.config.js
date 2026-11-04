@@ -6,6 +6,7 @@ import tsPlugin from "@typescript-eslint/eslint-plugin";
 import reactPlugin from "eslint-plugin-react";
 import hooksPlugin from "eslint-plugin-react-hooks";
 import prettierPlugin from "eslint-plugin-prettier";
+import i18nextPlugin from "eslint-plugin-i18next";
 
 export default [
   ...expoConfig,
@@ -58,6 +59,47 @@ export default [
           trailingComma: "all",
           printWidth: 100,
           tabWidth: 2,
+        },
+      ],
+    },
+  },
+  {
+    // 5. Every word she reads comes from locales/ (lib/i18n): a string typed
+    // straight into a screen would stay Taglish in every language.
+    files: ["app/**/*.tsx", "components/**/*.tsx"],
+    plugins: { i18next: i18nextPlugin },
+    rules: {
+      "i18next/no-literal-string": [
+        "error",
+        {
+          mode: "jsx-only",
+          // The app's own translators take keys, not words.
+          callees: {
+            exclude: [
+              "i18n(ext)?",
+              "t",
+              "tr",
+              "trList",
+              "require",
+              "addEventListener",
+              "removeEventListener",
+              // Methods called on any value, e.g. note.id.startsWith("pending-").
+              ".*\.(includes|indexOf|startsWith|endsWith|has|get)",
+            ],
+          },
+          "jsx-attributes": {
+            include: [
+              "label",
+              "placeholder",
+              "title",
+              "hint",
+              "message",
+              "accessibilityLabel",
+              "accessibilityHint",
+              "openLabel",
+              "emptyText",
+            ],
+          },
         },
       ],
     },
